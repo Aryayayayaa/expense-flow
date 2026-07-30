@@ -1,4 +1,9 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "ExpenseFlow Home Page",
+};
 
 export default function Home() {
   return (
