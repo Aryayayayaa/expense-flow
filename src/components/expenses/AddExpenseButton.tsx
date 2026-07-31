@@ -1,4 +1,5 @@
 "use client";
+import AddExpenseForm from "./AddExpenseForm";
 
 import { useState } from "react";
 
@@ -17,9 +18,10 @@ export default function AddExpenseButton() {
 
       {isFormOpen && (
         <div>
-          <h2>Add Expense Form</h2>
-
-          <p>The form will be built in the next lessons.</p>
+          <h2 style={{ fontSize: "20px", fontWeight: "bold" }}>
+            Add Expense Form
+          </h2>
+          <AddExpenseForm />
         </div>
       )}
     </section>
