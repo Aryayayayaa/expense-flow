@@ -1,14 +1,18 @@
-import AddExpenseButton from "@/components/expenses/AddExpenseButton";
+"use client";
+
+import { useState } from "react";
+import ExpenseList from "@/components/expenses/ExpenseList";
+
+import type { Expense } from "@/types/expense";
 
 export default function ExpensesPage() {
+  const [expenses] = useState<Expense[]>([]);
+
   return (
     <main>
-      <h1 className="text-center" style={{ fontSize: "30px" }}>
-        Expenses
-      </h1>
-      <hr />
-      <br />
-      <AddExpenseButton />
+      <h1>Expenses</h1>
+
+      <ExpenseList expenses={expenses} />
     </main>
   );
 }
