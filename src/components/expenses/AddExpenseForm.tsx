@@ -21,7 +21,13 @@ export default function AddExpenseForm() {
       return;
     }
 
-    onAddExpense(newExpense);
+    // onAddExpense(newExpense);
+    console.log({
+      title,
+      amount,
+      category,
+      date,
+    });
 
     alert("Expense Saved!");
 
