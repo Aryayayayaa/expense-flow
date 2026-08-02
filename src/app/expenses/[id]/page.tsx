@@ -1,10 +1,10 @@
-type Props = {
+type ExpensePageProps = {
   params: Promise<{
     id: string;
   }>;
 };
 
-export default async function ({ params }: Props) {
+export default async function ExpensePage({ params }: ExpensePageProps) {
   const { id } = await params;
 
   return (

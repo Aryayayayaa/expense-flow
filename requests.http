@@ -1,0 +1,21 @@
+//GET http://localhost:3000/api/expenses
+
+//GET http://localhost:3000/api/expenses/1
+
+POST http://localhost:3000/api/expenses
+Content-Type: application/json
+
+{
+  "title": "Coffee",
+  "amount": 250,
+  "category": "Food"
+}
+
+# PATCH http://localhost:3000/api/expenses/1
+# Content-Type: application/json
+
+# {
+#   "amount": 1800
+# }
+
+#DELETE http://localhost:3000/api/expenses/3
