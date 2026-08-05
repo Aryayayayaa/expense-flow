@@ -9,13 +9,13 @@ import { loginSchema } from "../schemas/login-schema";
 
 export async function registerUserAction( prevState: unknown, formData: FormData) {
   // Convert FormData to a normal object
-  const values = {
+  const values = { 
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
   };
 
-  // Validate input
+  // Validating the input
   const result = registerSchema.safeParse(values);
 
   if (!result.success) {

@@ -6,7 +6,7 @@ import { RegisterState } from "../types/auth";
 
 const initialState: RegisterState = {
   success: false,
-  errors: {},
+  errors: {}
 };
 
 export default function LoginForm() {
