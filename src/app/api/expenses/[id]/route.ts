@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { deleteExpense, getExpense, updateExpense } from "@/lib/expenses";
+import {
+  deleteExpense,
+  getExpense,
+  updateExpense,
+} from "@/features/expenses/lib/expenses";
 
 type RouteContext = {
   params: Promise<{

@@ -1,4 +1,4 @@
-import type { Expense } from "@/types/expense";
+import type { Expense } from "@/features/expenses/types/expense";
 
 type ExpenseListProps = {
   expenses: Expense[];

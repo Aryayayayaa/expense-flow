@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import ExpenseList from "@/components/expenses/ExpenseList";
+import ExpenseList from "@/features/expenses/components/ExpenseList";
 
-import type { Expense } from "@/types/expense";
+import type { Expense } from "@/features/expenses/types/expense";
 
 export default function ExpensesPage() {
   const [expenses] = useState<Expense[]>([]);

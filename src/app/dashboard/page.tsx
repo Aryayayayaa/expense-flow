@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   description: "Track company expenses and approvals efficiently.",
 };
 
-export default function DashboardPage() {
-  return <h1>Dashboard</h1>;
+export default async function Dashboard() {
+  return (
+    <h1 className="text-3xl text-center font-bold">
+      Welcome to the Dashboard!
+    </h1>
+  );
 }

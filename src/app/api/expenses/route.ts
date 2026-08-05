@@ -1,5 +1,5 @@
-import { getExpenses } from "@/lib/expenses";
-import { createExpense } from "@/lib/expenses";
+import { getExpenses } from "@/features/expenses/lib/expenses";
+import { createExpense } from "@/features/expenses/lib/expenses";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
