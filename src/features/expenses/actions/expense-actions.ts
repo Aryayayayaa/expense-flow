@@ -1,49 +1,65 @@
 "use server";
+import { revalidatePath } from "next/cache";
 
 import {
   createExpense,
   deleteExpense,
   updateExpense,
 } from "@/features/expenses/lib/expenses";
-import { revalidatePath } from "next/cache";
+import { expenseSchema } from "../schemas/expense-schema";
+import { capitalize } from "@/utils/capitalize";
 
-("use server");
-
-export async function createExpenseAction(formData: FormData) {
+export async function createExpenseAction(prevState: unknown,formData: FormData) {
   try {
-    const title = String(formData.get("title"));
-    if (!title.trim()) {
-      throw new Error("Title is required");
+    const values = {
+      title: capitalize(String(formData.get("title"))),
+      amount: formData.get("amount"),
+      category: capitalize(String(formData.get("category"))),
+    };
+
+    const result = expenseSchema.safeParse(values);
+
+    if (!result.success) {
+      return {
+        success: false,
+        errors: result.error.flatten().fieldErrors,
+        message: "",
+      };
     }
-    const amount = Number(formData.get("amount"));
-    const category = String(formData.get("category"));
-    await createExpense({
-      title,
-      amount,
-      category,
-    });
+    await createExpense(result.data);
     revalidatePath("/expenses");
     return {
       success: true,
+      errors: {},
+      message: "Expense created successfully.",
     };
-  } catch (error) {
+  } catch(error) {
+    console.error("Create Expense Error:");
     console.error(error);
-
     return {
       success: false,
+      errors: {},
+      message: "Unable to create expense.",
     };
   }
 }
 
 export async function updateExpenseAction(id: number, formData: FormData) {
-  const title = String(formData.get("title"));
-  const amount = Number(formData.get("amount"));
-  const category = String(formData.get("category"));
-  await updateExpense(id, {
-    title,
-    amount,
-    category,
-  });
+  const values = {
+    title: capitalize(String(formData.get("title"))),
+    amount: formData.get("amount"),
+    category: capitalize(String(formData.get("category"))),
+  };
+
+  const result = expenseSchema.safeParse(values);
+
+  if (!result.success) {
+    return {
+      success: false,
+      errors: result.error.flatten().fieldErrors,
+    };
+  }
+  await updateExpense(id, result.data)
   revalidatePath("/expenses");
 }
 
