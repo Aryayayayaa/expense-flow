@@ -29,7 +29,7 @@ model User {
 model Expense {
   id           Int      @id @default(autoincrement())
   title        String
-  amount       Float
+  amount       Decimal @db.Decimal(12,2)
   category     String
 
   expenseDate  DateTime?

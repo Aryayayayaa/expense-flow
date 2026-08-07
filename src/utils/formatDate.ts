@@ -1,6 +1,15 @@
-export function formatDate(date: Date | string) {
+export function formatDate(date: Date) {
   return new Intl.DateTimeFormat("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(date));
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export function formatTime(date: Date) {
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
 }

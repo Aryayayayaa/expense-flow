@@ -14,6 +14,11 @@ export const expenseSchema = z.object({
   category: z
     .string()
     .min(1, "Category is required"),
+
+  expenseDate: z.coerce.date().max(
+    new Date(),
+    "Expense date and time cannot be in the future."
+  ),
 });
 
 export type ExpenseFormData = z.infer<typeof expenseSchema>;

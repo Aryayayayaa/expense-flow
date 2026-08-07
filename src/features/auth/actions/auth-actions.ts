@@ -79,6 +79,14 @@ export async function loginUserAction(
     };
   }
 
+  if (!user.password) {
+    return {
+      success: false,
+      errors: {},
+      message: "Invalid email or password.",
+    };
+  }
+
   const passwordMatches = await bcrypt.compare(
     result.data.password,
     user.password

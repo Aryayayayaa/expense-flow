@@ -1,71 +1,90 @@
 "use client";
 
 import { useState } from "react";
+import { Calendar, Clock, Tag, Pencil, Trash2 } from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
-import { formatDate } from "@/utils/formatDate";
+import { formatDate, formatTime } from "@/utils/formatDate";
+import { getCategoryColor } from "@/utils/categoryColor";
 
 import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
 import { Expense } from "@/features/expenses/types/expense";
 
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
-import DeleteExpenseDialog from "@/components/dialogs/DeleteExpenseDialog";
+//import DeleteExpenseDialog from "@/components/dialogs/DeleteExpenseDialog";
 
-export default function ExpenseCard({
-  expense,
-}: {
+type ExpenseCardProps = {
   expense: Expense;
-}) {
+  onEdit: (expense: Expense) => void;
+};
+
+export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  //const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   return (
     <Card className="flex min-h-60 flex-col">
       <div className="space-y-2">
-          <h2 className="text-2xl font-bold break-words leading-tight">
-              {expense.title}
-          </h2>
+        <h2 className="mb-3 text-3xl font-semibold break-words">
+          {expense.title}
+        </h2>
 
-          <p className="text-3xl font-bold text-green-600">
-              {formatCurrency(expense.amount)}
-          </p>
+        <p className="text-2xl font-bold text-green-600 tracking-tight">
+          {formatCurrency(expense.amount)}
+        </p>
       </div>
 
-      <p className="text-gray-600">
-        Category: {expense.category}
-      </p>
+      <div
+        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${getCategoryColor(expense.category)}`}
+      >
+        <Tag size={16} />
+        <span>{expense.category}</span>
+      </div>
 
-      <p className="text-sm text-gray-500">
-        {formatDate(expense.createdAt)}
-      </p>
+      <div className="space-y-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2">
+          <Calendar size={16} />
+          <span>{formatDate(expense.expenseDate ?? expense.createdAt)}</span>
+        </div>
 
-      <div className="mt-4 flex gap-3">
+        <div className="flex items-center gap-2">
+          <Clock size={16} />
+          <span>{formatTime(expense.expenseDate ?? expense.createdAt)}</span>
+        </div>
+      </div>
+
+      <hr className="my-5 border-gray-200" />
+
+      <div className="grid grid-cols-2 gap-3">
         <Button
           type="button"
-          variant="primary"
+          className="w-full flex items-center justify-center gap-2"
+          onClick={() => onEdit(expense)}
         >
+          <Pencil size={18} />
           Edit
         </Button>
 
-        <Button
-          type="submit"
-          variant="danger"
-          onClick={() => setOpenDeleteDialog(true)}
+        <form
+          action={deleteAction}
+          className="w-full"
+          onSubmit={(e) => {
+            if (!confirm("Are you sure you want to delete this expense?")) {
+              e.preventDefault();
+            }
+          }}
         >
-          Delete
-        </Button>
+          <Button
+            type="submit"
+            variant="danger"
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <Trash2 size={18} />
+            Delete
+          </Button>
+        </form>
       </div>
-      
-      <DeleteExpenseDialog
-        open={openDeleteDialog}
-        onCancel={() => setOpenDeleteDialog(false)}
-        onConfirm={async () => {
-          await deleteAction();
-          setOpenDeleteDialog(false);
-        }}
-      />
-      
     </Card>
   );
 }

@@ -20,7 +20,9 @@ export async function createExpense(data: {
   title: string;
   amount: number;
   category: string;
+  expenseDate: Date;
 }) {
+  console.log("Saving to Prisma:", data);
   return prisma.expense.create({
     data,
   });
@@ -32,6 +34,7 @@ export async function updateExpense(
     title: string;
     amount: number;
     category: string;
+    expenseDate: Date;
   }>,
 ) {
   return prisma.expense.update({

@@ -4,11 +4,10 @@ import EmptyState from "@/components/feedback/EmptyState";
 
 type ExpenseListProps = {
   expenses: Expense[];
+  onEdit: (expense: Expense) => void;
 };
 
-export default function ExpenseList({
-  expenses,
-}: ExpenseListProps) {
+export default function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
   if (expenses.length === 0) {
     return (
       <EmptyState
@@ -21,10 +20,7 @@ export default function ExpenseList({
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
       {expenses.map((expense) => (
-        <ExpenseCard
-          key={expense.id}
-          expense={expense}
-        />
+        <ExpenseCard key={expense.id} expense={expense} onEdit={onEdit} />
       ))}
     </div>
   );
