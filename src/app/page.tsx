@@ -12,12 +12,12 @@ export default function HomePage() {
         </p>
 
         <div className="mt-10 flex justify-center gap-4">
-          <Link
+          {/* <Link
             href="/expenses"
             className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
           >
             Expenses
-          </Link>
+          </Link> */}
 
           <Link
             href="/login"
