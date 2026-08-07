@@ -23,7 +23,7 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   //const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   return (
-    <Card className="flex min-h-60 flex-col">
+    <Card className="flex min-h-60 flex-col text-black">
       <div className="space-y-2">
         <h2 className="mb-3 text-3xl font-semibold break-words">
           {expense.title}

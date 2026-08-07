@@ -115,7 +115,7 @@ export default function AddExpenseForm({
 
           setPending(false);
         }}
-        className="space-y-5"
+        className="space-y-5 text-black"
       >
         <div className="border-b pb-4">
           <h2 className="text-2xl font-semibold">

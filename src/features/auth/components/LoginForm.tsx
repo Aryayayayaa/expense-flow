@@ -12,11 +12,12 @@ const initialState: RegisterState = {
 export default function LoginForm() {
   const [state, formAction, pending] = useActionState(
     loginUserAction,
-    initialState
+    initialState,
   );
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
+      <h1 className="text-3xl font-bold">Login Page</h1>
       <div>
         <label>Email</label>
 
@@ -27,9 +28,7 @@ export default function LoginForm() {
         />
 
         {state.errors?.email && (
-          <p className="text-red-500 text-sm">
-            {state.errors.email[0]}
-          </p>
+          <p className="text-red-500 text-sm">{state.errors.email[0]}</p>
         )}
       </div>
 
@@ -43,9 +42,7 @@ export default function LoginForm() {
         />
 
         {state.errors?.password && (
-          <p className="text-red-500 text-sm">
-            {state.errors.password[0]}
-          </p>
+          <p className="text-red-500 text-sm">{state.errors.password[0]}</p>
         )}
       </div>
 
@@ -57,11 +54,7 @@ export default function LoginForm() {
         {pending ? "Logging in..." : "Login"}
       </button>
 
-      {state.success && (
-        <p className="text-green-600">
-          Login successful!
-        </p>
-      )}
+      {state.success && <p className="text-green-600">Login successful!</p>}
     </form>
   );
 }

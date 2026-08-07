@@ -12,24 +12,19 @@ const initialState: RegisterState = {
 export default function RegisterForm() {
   const [state, formAction, pending] = useActionState(
     registerUserAction,
-    initialState
+    initialState,
   );
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
+      <h1 className="text-3xl font-bold">Register Page</h1>
       <div>
         <label>Name</label>
 
-        <input
-          type="text"
-          name="name"
-          className="border rounded p-2 w-full"
-        />
+        <input type="text" name="name" className="border rounded p-2 w-full" />
 
         {state.errors?.name && (
-          <p className="text-red-500 text-sm">
-            {state.errors.name[0]}
-          </p>
+          <p className="text-red-500 text-sm">{state.errors.name[0]}</p>
         )}
       </div>
 
@@ -43,9 +38,7 @@ export default function RegisterForm() {
         />
 
         {state.errors?.email && (
-          <p className="text-red-500 text-sm">
-            {state.errors.email[0]}
-          </p>
+          <p className="text-red-500 text-sm">{state.errors.email[0]}</p>
         )}
       </div>
 
@@ -59,9 +52,7 @@ export default function RegisterForm() {
         />
 
         {state.errors?.password && (
-          <p className="text-red-500 text-sm">
-            {state.errors.password[0]}
-          </p>
+          <p className="text-red-500 text-sm">{state.errors.password[0]}</p>
         )}
       </div>
 
@@ -74,9 +65,7 @@ export default function RegisterForm() {
       </button>
 
       {state.success && (
-        <p className="text-green-600">
-          Registration successful!
-        </p>
+        <p className="text-green-600">Registration successful!</p>
       )}
     </form>
   );
