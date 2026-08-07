@@ -1,5 +1,5 @@
 import ExpenseCard from "./ExpenseCard";
-import type { Expense } from "@/features/expenses/types/expense";
+import { Expense } from "@prisma/client";
 import EmptyState from "@/components/feedback/EmptyState";
 
 type ExpenseListProps = {

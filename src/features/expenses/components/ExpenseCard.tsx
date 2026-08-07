@@ -8,11 +8,10 @@ import { formatDate, formatTime } from "@/utils/formatDate";
 import { getCategoryColor } from "@/utils/categoryColor";
 
 import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
-import { Expense } from "@/features/expenses/types/expense";
+import { Expense } from "@prisma/client";
 
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
-//import DeleteExpenseDialog from "@/components/dialogs/DeleteExpenseDialog";
 
 type ExpenseCardProps = {
   expense: Expense;

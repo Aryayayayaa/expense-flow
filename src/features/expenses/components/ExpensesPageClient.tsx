@@ -6,7 +6,7 @@ import AddExpenseForm from "./AddExpenseForm";
 import ExpenseList from "./ExpenseList";
 import SummaryCard from "./SummaryCard";
 
-import { Expense } from "@/features/expenses/types/expense";
+import { Expense } from "@prisma/client";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 

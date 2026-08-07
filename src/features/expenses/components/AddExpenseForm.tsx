@@ -11,7 +11,7 @@ import Card from "@/components/common/Card";
 
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
 
-import type { Expense } from "@/features/expenses/types/expense";
+import { Expense } from "@prisma/client";
 
 type AddExpenseFormProps = {
   editingExpense: Expense | null;

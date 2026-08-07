@@ -1,6 +1,6 @@
 "use client";
 
-import { Expense } from "@/features/expenses/types/expense";
+import { Expense } from "@prisma/client";
 import Button from "@/components/common/Button";
 
 type EditExpenseDialogProps = {
