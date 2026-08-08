@@ -14,12 +14,23 @@ import { redirect } from "next/navigation";
 
 import { Wallet, Calendar, Folder } from "lucide-react";
 
-export default async function ExpensesPage() {
+type ExpensesPageProps = {
+  searchParams: Promise<{
+    search?: string;
+  }>;
+};
+
+export default async function ExpensesPage({
+  searchParams,
+}: ExpensesPageProps) {
   const session = await auth();
+
+  const { search = "" } = await searchParams;
+
   if (!session?.user?.id) {
     return null;
   }
-  const expenses = await getExpenses(Number(session.user.id));
+  const expenses = await getExpenses(Number(session.user.id), search);
 
   const totalExpenses = expenses.reduce(
     (sum, expense) => sum + Number(expense.amount),
