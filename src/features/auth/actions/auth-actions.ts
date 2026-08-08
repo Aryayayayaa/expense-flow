@@ -6,10 +6,12 @@ import { createUser, getUserByEmail } from "../lib/users";
 import { registerSchema } from "../schemas/register-schema";
 import { loginSchema } from "../schemas/login-schema";
 
-
-export async function registerUserAction( prevState: unknown, formData: FormData) {
+export async function registerUserAction(
+  prevState: unknown,
+  formData: FormData,
+) {
   // Convert FormData to a normal object
-  const values = { 
+  const values = {
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
@@ -49,11 +51,7 @@ export async function registerUserAction( prevState: unknown, formData: FormData
   redirect("/login");
 }
 
-
-export async function loginUserAction(
-  prevState: unknown,
-  formData: FormData
-) {
+export async function loginUserAction(prevState: unknown, formData: FormData) {
   const values = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -79,9 +77,18 @@ export async function loginUserAction(
     };
   }
 
+  if (user.password === null) {
+    return {
+      success: false,
+      errors: {
+        password: ["Invalid email or password."],
+      },
+    };
+  }
+
   const passwordMatches = await bcrypt.compare(
     result.data.password,
-    user.password
+    user.password,
   );
 
   if (!passwordMatches) {
