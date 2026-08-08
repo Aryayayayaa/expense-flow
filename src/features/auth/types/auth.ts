@@ -10,6 +10,7 @@ export interface CreateUserData {
   password: string;
 }
 
+
 export interface RegisterState {
   success: boolean;
   errors?: Record<string, string[]>;

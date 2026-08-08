@@ -19,7 +19,7 @@ export async function registerUserAction(
     password: formData.get("password"),
   };
 
-  // Validate input
+  // Validating the input
   const result = registerSchema.safeParse(values);
 
   if (!result.success) {
