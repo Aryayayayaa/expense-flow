@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { loginUserAction } from "../actions/auth-actions";
-import { RegisterState } from "../types/auth";
+import { AuthState } from "../types/auth";
 
-const initialState: RegisterState = {
+const initialState: AuthState = {
   success: false,
   errors: {},
+  message: "",
 };
 
 export default function LoginForm() {
@@ -17,6 +19,9 @@ export default function LoginForm() {
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
+      <Link href="/" className="text-sm text-blue-600 hover:underline">
+        ← Back to Home
+      </Link>
       <h1 className="text-3xl font-bold">Login Page</h1>
       <div>
         <label>Email</label>

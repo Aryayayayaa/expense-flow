@@ -1,13 +1,17 @@
 "use server";
 import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
+import { signIn } from "@/auth";
 
 import { createUser, getUserByEmail } from "../lib/users";
 import { registerSchema } from "../schemas/register-schema";
 import { loginSchema } from "../schemas/login-schema";
+import { AuthState } from "../types/auth";
 
-
-export async function registerUserAction( prevState: unknown, formData: FormData) {
+export async function registerUserAction(
+  prevState: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   // Convert FormData to a normal object
   const values = {
     name: formData.get("name"),
@@ -22,6 +26,7 @@ export async function registerUserAction( prevState: unknown, formData: FormData
     return {
       success: false,
       errors: result.error.flatten().fieldErrors,
+      message: "",
     };
   }
 
@@ -47,13 +52,18 @@ export async function registerUserAction( prevState: unknown, formData: FormData
   });
 
   redirect("/login");
+
+  return {
+    success: true,
+    errors: {},
+    message: "",
+  };
 }
 
-
 export async function loginUserAction(
-  prevState: unknown,
-  formData: FormData
-) {
+  prevState: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const values = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -89,7 +99,7 @@ export async function loginUserAction(
 
   const passwordMatches = await bcrypt.compare(
     result.data.password,
-    user.password
+    user.password,
   );
 
   if (!passwordMatches) {
@@ -101,7 +111,14 @@ export async function loginUserAction(
     };
   }
 
+  await signIn("credentials", {
+    email: result.data.email,
+    password: result.data.password,
+    redirectTo: "/expenses",
+  });
   return {
     success: true,
+    errors: {},
+    message: "",
   };
 }

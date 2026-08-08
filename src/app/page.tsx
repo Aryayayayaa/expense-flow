@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 px-6">
-      <div className="max-w-2xl rounded-2xl bg-white p-10 text-center shadow-xl">
+    <main className="flex min-h-screen items-center justify-center bg-gray-250 px-6">
+      <div className="max-w-2xl rounded-3xl bg-white/80 backdrop-blur-sm p-16 text-center shadow-xl">
         <h1 className="text-5xl font-bold text-gray-900">💸 ExpenseFlow</h1>
 
         <p className="mt-4 text-lg text-gray-600">

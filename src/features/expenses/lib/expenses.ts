@@ -1,17 +1,21 @@
 import { prisma } from "@/lib/prisma";
 
-export async function getExpenses() {
+export async function getExpenses(userId: number) {
   return prisma.expense.findMany({
+    where: {
+      userId,
+    },
     orderBy: {
       createdAt: "desc",
     },
   });
 }
 
-export async function getExpense(id: number) {
-  return prisma.expense.findUnique({
+export async function getExpense(id: number, userId: number) {
+  return prisma.expense.findFirst({
     where: {
       id,
+      userId,
     },
   });
 }
@@ -21,6 +25,7 @@ export async function createExpense(data: {
   amount: number;
   category: string;
   expenseDate: Date;
+  userId: number;
 }) {
   console.log("Saving to Prisma:", data);
   return prisma.expense.create({
@@ -30,6 +35,7 @@ export async function createExpense(data: {
 
 export async function updateExpense(
   id: number,
+  userId: number,
   data: Partial<{
     title: string;
     amount: number;
@@ -37,6 +43,17 @@ export async function updateExpense(
     expenseDate: Date;
   }>,
 ) {
+  const expense = await prisma.expense.findFirst({
+    where: {
+      id,
+      userId,
+    },
+  });
+
+  if (!expense) {
+    throw new Error("Expense not found.");
+  }
+
   return prisma.expense.update({
     where: {
       id,
@@ -45,7 +62,18 @@ export async function updateExpense(
   });
 }
 
-export async function deleteExpense(id: number) {
+export async function deleteExpense(id: number, userId: number) {
+  const expense = await prisma.expense.findFirst({
+    where: {
+      id,
+      userId,
+    },
+  });
+
+  if (!expense) {
+    throw new Error("Expense not found.");
+  }
+
   return prisma.expense.delete({
     where: {
       id,

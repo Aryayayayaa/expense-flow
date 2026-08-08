@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 import {
   createExpense,
@@ -14,6 +15,15 @@ export async function createExpenseAction(
   formData: FormData,
 ) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        errors: {},
+        message: "Please login to create expenses.",
+      };
+    }
+
     const selectedCategory = String(formData.get("category"));
     const customCategory = String(formData.get("customCategory") ?? "").trim();
     const category =
@@ -36,9 +46,9 @@ export async function createExpenseAction(
       };
     }
 
-    console.log("Parsed Data:", result.data);
+    //console.log("Parsed Data:", result.data);
 
-    await createExpense(result.data);
+    await createExpense({ ...result.data, userId: Number(session.user.id) });
     revalidatePath("/expenses");
     return {
       success: true,
@@ -84,7 +94,17 @@ export async function updateExpenseAction(id: number, formData: FormData) {
       };
     }
 
-    await updateExpense(id, result.data);
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        errors: {},
+        message: "Unauthorized.",
+      };
+    }
+
+    await updateExpense(id, Number(session.user.id), result.data);
 
     revalidatePath("/expenses");
 
@@ -105,6 +125,11 @@ export async function updateExpenseAction(id: number, formData: FormData) {
 }
 
 export async function deleteExpenseAction(id: number) {
-  await deleteExpense(id);
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+  await deleteExpense(id, Number(session.user.id));
   revalidatePath("/expenses");
 }
