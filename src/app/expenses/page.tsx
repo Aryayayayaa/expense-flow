@@ -1,7 +1,7 @@
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
 import ExpenseList from "@/features/expenses/components/ExpenseList";
 import ExpensesPageClient from "@/features/expenses/components/ExpensesPageClient";
-import SummaryCard from "@/features/expenses/components/SummaryCard";
+//import SummaryCard from "@/features/expenses/components/SummaryCard";
 
 import { getExpenses } from "@/features/expenses/lib/expenses";
 

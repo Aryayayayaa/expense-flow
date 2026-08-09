@@ -10,13 +10,13 @@ import CategoryFilter from "./CategoryFilter";
 import SortFilter from "./SortFilter";
 import YearFilter from "./YearFilter";
 import DateFilter from "./DateFilter";
+import MonthFilter from "./MonthFilter";
 
 import { Expense } from "@prisma/client";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-import { Wallet, Calendar, Folder } from "lucide-react";
-import { match } from "assert";
+import { Wallet, Calendar, Folder, Banknote } from "lucide-react";
 
 type ExpensesPageClientProps = {
   expenses: Expense[];
@@ -41,11 +41,15 @@ export default function ExpensesPageClient({
   const [dateFilter, setDateFilter] = useState("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + Number(expense.amount),
-    0,
-  );
+  const today = new Date();
+
+  const todayString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
 
   const categories = [...new Set(expenses.map((expense) => expense.category))];
 
@@ -58,6 +62,11 @@ export default function ExpensesPageClient({
 
     const matchesCategory =
       selectedCategory === "" || expense.category === selectedCategory;
+
+    const matchesMonth =
+      selectedMonth === "" ||
+      (expense.expenseDate ?? expense.createdAt).getMonth() + 1 ===
+        Number(selectedMonth);
 
     const expenseDate = expense.expenseDate ?? expense.createdAt;
     const now = new Date();
@@ -87,6 +96,14 @@ export default function ExpensesPageClient({
     const startOfThisYear = new Date(now.getFullYear(), 0, 1);
 
     const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const isFutureDate =
+      (customStartDate && customStartDate > todayString) ||
+      (customEndDate && customEndDate > todayString);
+
+    const isInvalidDateRange =
+      customStartDate && customEndDate && customStartDate > customEndDate;
+    const hasInvalidCustomDateFilter = isFutureDate || isInvalidDateRange;
 
     let matchesDate = true;
 
@@ -127,19 +144,16 @@ export default function ExpensesPageClient({
           expenseDate < new Date(now.getFullYear() + 1, 0, 1);
         break;
 
-      case "custom": {
-        if (!customStartDate || !customEndDate) {
-          matchesDate = true;
-          break;
+      case "custom":
+        if (hasInvalidCustomDateFilter) {
+          matchesDate = false;
+        } else {
+          const start = new Date(`${customStartDate}T00:00:00`);
+          const end = new Date(`${customEndDate}T23:59:59`);
+
+          matchesDate = expenseDate >= start && expenseDate <= end;
         }
-
-        const startDate = new Date(`${customStartDate}T00:00:00`);
-        const endDate = new Date(`${customEndDate}T23:59:59.999`);
-
-        matchesDate = expenseDate >= startDate && expenseDate <= endDate;
-
         break;
-      }
 
       case "all":
       default:
@@ -151,8 +165,35 @@ export default function ExpensesPageClient({
       (expense.expenseDate ?? expense.createdAt).getFullYear() ===
         Number(selectedYear);
 
-    return matchesSearch && matchesCategory && matchesYear && matchesDate;
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesYear &&
+      matchesDate &&
+      matchesMonth
+    );
   });
+
+  const categoryTotals = filteredExpenses.reduce<Record<string, number>>(
+    (totals, expense) => {
+      totals[expense.category] =
+        (totals[expense.category] ?? 0) + Number(expense.amount);
+
+      return totals;
+    },
+    {},
+  );
+  const categorySummary = Object.entries(categoryTotals);
+
+  const totalExpenses = expenses.reduce(
+    (sum, expense) => sum + Number(expense.amount),
+    0,
+  );
+
+  const totalFilteredExpenses = filteredExpenses.reduce(
+    (sum, expense) => sum + Number(expense.amount),
+    0,
+  );
 
   const sortedExpenses = [...filteredExpenses].sort((a, b) => {
     switch (sortBy) {
@@ -213,12 +254,16 @@ export default function ExpensesPageClient({
   );
 
   const minDate = earliestExpenseDate
-    ? earliestExpenseDate.toISOString().slice(0, 10)
+    ? [
+        earliestExpenseDate.getFullYear(),
+        String(earliestExpenseDate.getMonth() + 1).padStart(2, "0"),
+        String(earliestExpenseDate.getDate()).padStart(2, "0"),
+      ].join("-")
     : "";
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3 flex items-center">
         <SummaryCard
           title="Total Expenses"
           value={formatCurrency(totalExpenses)}
@@ -238,6 +283,25 @@ export default function ExpensesPageClient({
         />
       </div>
 
+      <SummaryCard
+        title="Filtered Expenses"
+        value={formatCurrency(totalFilteredExpenses)}
+        icon={<Wallet size={22} />}
+      />
+
+      <br />
+
+      <div className="flex items-center">
+        {categorySummary.map(([category, amount]) => (
+          <SummaryCard
+            key={category}
+            title={category}
+            value={formatCurrency(amount)}
+            icon={<Banknote size={22} />}
+          />
+        ))}
+      </div>
+
       <hr className="my-6" />
 
       <div className="mb-6 flex flex-col gap-4 lg:flex-row">
@@ -254,17 +318,40 @@ export default function ExpensesPageClient({
         <YearFilter
           value={selectedYear}
           years={years}
-          onChange={setSelectedYear}
+          onChange={(value) => {
+            setSelectedYear(value);
+
+            if (value === "" || Number(value) < new Date().getFullYear()) {
+              return;
+            }
+
+            const currentMonth = new Date().getMonth() + 1;
+
+            if (Number(selectedMonth) > currentMonth) {
+              setSelectedMonth("");
+            }
+          }}
+        />
+
+        <MonthFilter
+          value={selectedMonth}
+          selectedYear={selectedYear}
+          onChange={setSelectedMonth}
         />
 
         <DateFilter
           value={dateFilter}
-          onChange={setDateFilter}
+          onChange={(value) => {
+            setDateFilter(value);
+            setSelectedYear("");
+            setSelectedMonth("");
+          }}
           startDate={customStartDate}
           endDate={customEndDate}
           onStartDateChange={setCustomStartDate}
           onEndDateChange={setCustomEndDate}
           minDate={minDate}
+          maxDate={todayString}
         />
 
         <SortFilter value={sortBy} onChange={setSortBy} />

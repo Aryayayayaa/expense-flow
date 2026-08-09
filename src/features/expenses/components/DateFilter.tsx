@@ -8,6 +8,7 @@ type DateFilterProps = {
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
   minDate: string;
+  maxDate: string;
 };
 
 export default function DateFilter({
@@ -18,6 +19,7 @@ export default function DateFilter({
   onStartDateChange,
   onEndDateChange,
   minDate,
+  maxDate,
 }: DateFilterProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -36,9 +38,10 @@ export default function DateFilter({
         <option value="this-year">This Year</option>
         <option value="custom">Custom Range</option>
       </select>
+      <br className="h-10" />
 
       {value === "custom" && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-800 shadow-sm">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-800 shadow-sm h-40">
           <p className="mb-3 text-sm font-medium text-gray-700">
             Custom Date Range
           </p>
@@ -52,11 +55,12 @@ export default function DateFilter({
                 type="date"
                 value={startDate}
                 min={minDate}
-                max={endDate || undefined}
+                max={maxDate}
                 onChange={(e) => onStartDateChange(e.target.value)}
                 className="h-12 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
             </div>
+
             <div>
               <label className="mb-1 block text-sm text-gray-600">
                 End Date
@@ -65,6 +69,7 @@ export default function DateFilter({
                 type="date"
                 value={endDate}
                 min={startDate || minDate}
+                max={maxDate}
                 onChange={(e) => onEndDateChange(e.target.value)}
                 className="h-12 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
