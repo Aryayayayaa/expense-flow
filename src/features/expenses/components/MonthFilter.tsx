@@ -2,8 +2,8 @@
 
 type MonthFilterProps = {
   value: string;
-  onChange: (value: string) => void;
   selectedYear: string;
+  onChange: (value: string) => void;
 };
 
 const months = [
@@ -23,16 +23,15 @@ const months = [
 
 export default function MonthFilter({
   value,
-  onChange,
   selectedYear,
+  onChange,
 }: MonthFilterProps) {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
 
-  const availableMonths =
-    selectedYear === "" || Number(selectedYear) < currentYear
-      ? months
-      : months.filter((month) => Number(month.value) <= currentMonth);
+  const isCurrentYearSelected =
+    selectedYear !== "" && Number(selectedYear) === currentYear;
 
   return (
     <select
@@ -42,11 +41,17 @@ export default function MonthFilter({
     >
       <option value="">All Months</option>
 
-      {availableMonths.map((month) => (
-        <option key={month.value} value={month.value}>
-          {month.label}
-        </option>
-      ))}
+      {months.map((month) => {
+        const monthNumber = Number(month.value);
+
+        const isDisabled = isCurrentYearSelected && monthNumber > currentMonth;
+
+        return (
+          <option key={month.value} value={month.value} disabled={isDisabled}>
+            {month.label}
+          </option>
+        );
+      })}
     </select>
   );
 }
