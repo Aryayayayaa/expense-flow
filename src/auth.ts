@@ -5,8 +5,11 @@ import bcrypt from "bcrypt";
 
 import { prisma } from "@/lib/prisma";
 import { getUserByEmail } from "@/features/auth/lib/users";
+import { authConfig } from "@/auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
+
   adapter: PrismaAdapter(prisma),
 
   session: {
@@ -49,10 +52,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-
-  pages: {
-    signIn: "/login",
-  },
 
   callbacks: {
     async session({ session, token }) {

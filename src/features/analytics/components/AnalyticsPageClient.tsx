@@ -1,0 +1,428 @@
+"use client";
+
+import { useState } from "react";
+
+import AnalyticsTabs from "./AnalyticsTabs";
+
+import CategoryFilter from "@/features/expenses/components/CategoryFilter";
+import YearFilter from "@/features/expenses/components/YearFilter";
+import MonthFilter from "@/features/expenses/components/MonthFilter";
+import DateFilter from "@/features/expenses/components/DateFilter";
+
+import CategoryPieChart from "./charts/CategoryPieChart";
+import MonthlyTrendChart from "./charts/MonthlyTrendChart";
+import YearlyTrendChart from "./charts/YearlyTrendChart";
+import MonthlyCategoryTrendChart from "./charts/MonthlyCategoryTrendChart";
+import YearlyCategoryChart from "./charts/YearlyCategoryChart";
+import CategoryComparisonChart from "./charts/CategoryComparisonChart";
+
+import OverviewSummaryCards from "./OverviewSummaryCards";
+import ReportSummary from "./reports/ReportSummary";
+import TopCategories from "./reports/TopCategories";
+import LargestExpenses from "./reports/LargestExpenses";
+import SpendingSummary from "./reports/SpendingSummary";
+
+import { Expense } from "@prisma/client";
+
+type AnalyticsPageClientProps = {
+  expenses: Expense[];
+};
+
+type AnalyticsTab =
+  | "overview"
+  | "categories"
+  | "monthly"
+  | "yearly"
+  | "reports";
+
+export default function AnalyticsPageClient({
+  expenses,
+}: AnalyticsPageClientProps) {
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("overview");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+
+  const currentDate = new Date();
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
+  const todayString = [
+    currentYear,
+    String(currentMonth).padStart(2, "0"),
+    String(currentDate.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const categories = [...new Set(expenses.map((expense) => expense.category))];
+
+  const years = [
+    ...new Set(
+      expenses.map((expense) =>
+        (expense.expenseDate ?? expense.createdAt).getFullYear(),
+      ),
+    ),
+  ].sort((a, b) => b - a);
+
+  const isYearSelected = selectedYear !== "";
+  const selectedYearNumber = Number(selectedYear);
+
+  const isCurrentYearSelected =
+    isYearSelected && selectedYearNumber === currentYear;
+
+  const isMonthSelected = selectedMonth !== "";
+  const selectedMonthNumber = Number(selectedMonth);
+
+  const earliestExpenseDate = expenses.reduce<Date | null>(
+    (earliest, expense) => {
+      const date = expense.expenseDate ?? expense.createdAt;
+
+      if (!earliest || date < earliest) {
+        return date;
+      }
+
+      return earliest;
+    },
+    null,
+  );
+
+  const minDate = earliestExpenseDate
+    ? earliestExpenseDate.toISOString().slice(0, 10)
+    : "";
+
+  let customMinDate = minDate;
+  let customMaxDate = todayString;
+
+  if (isYearSelected && isMonthSelected) {
+    const lastDayOfSelectedMonth = new Date(
+      selectedYearNumber,
+      selectedMonthNumber,
+      0,
+    ).getDate();
+
+    customMinDate = `${selectedYearNumber}-${String(
+      selectedMonthNumber,
+    ).padStart(2, "0")}-01`;
+
+    customMaxDate = `${selectedYearNumber}-${String(
+      selectedMonthNumber,
+    ).padStart(2, "0")}-${String(lastDayOfSelectedMonth).padStart(2, "0")}`;
+
+    if (
+      selectedYearNumber === currentYear &&
+      selectedMonthNumber === currentMonth
+    ) {
+      customMaxDate = todayString;
+    }
+  } else if (isYearSelected) {
+    customMinDate = `${selectedYearNumber}-01-01`;
+
+    if (isCurrentYearSelected) {
+      customMaxDate = todayString;
+    } else {
+      customMaxDate = `${selectedYearNumber}-12-31`;
+    }
+  } else if (isMonthSelected) {
+    const currentYearForMonthRange = currentYear;
+
+    const lastDayOfSelectedMonth = new Date(
+      currentYearForMonthRange,
+      selectedMonthNumber,
+      0,
+    ).getDate();
+
+    customMinDate = `${currentYearForMonthRange}-${String(
+      selectedMonthNumber,
+    ).padStart(2, "0")}-01`;
+
+    customMaxDate = `${currentYearForMonthRange}-${String(
+      selectedMonthNumber,
+    ).padStart(2, "0")}-${String(lastDayOfSelectedMonth).padStart(2, "0")}`;
+
+    if (selectedMonthNumber === currentMonth) {
+      customMaxDate = todayString;
+    }
+  }
+
+  const filteredExpenses = expenses.filter((expense) => {
+    const expenseDate = expense.expenseDate ?? expense.createdAt;
+
+    // Category filter
+    const matchesCategory =
+      selectedCategory === "" || expense.category === selectedCategory;
+
+    // Year filter
+    const matchesYear =
+      selectedYear === "" || expenseDate.getFullYear() === Number(selectedYear);
+
+    // Month filter
+    const matchesMonth =
+      selectedMonth === "" ||
+      expenseDate.getMonth() + 1 === Number(selectedMonth);
+
+    // Date filter
+    let matchesDate = true;
+
+    const now = new Date();
+
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfToday.getDate() + 1);
+
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfToday.getDate() - 1);
+
+    const startOfLast7Days = new Date(startOfToday);
+    startOfLast7Days.setDate(startOfToday.getDate() - 6);
+
+    const startOfLast30Days = new Date(startOfToday);
+    startOfLast30Days.setDate(startOfToday.getDate() - 29);
+
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+
+    const startOfNextYear = new Date(now.getFullYear() + 1, 0, 1);
+
+    switch (dateFilter) {
+      case "today":
+        matchesDate =
+          expenseDate >= startOfToday && expenseDate < startOfTomorrow;
+        break;
+
+      case "yesterday":
+        matchesDate =
+          expenseDate >= startOfYesterday && expenseDate < startOfToday;
+        break;
+
+      case "last-7-days":
+        matchesDate =
+          expenseDate >= startOfLast7Days && expenseDate < startOfTomorrow;
+        break;
+
+      case "last-30-days":
+        matchesDate =
+          expenseDate >= startOfLast30Days && expenseDate < startOfTomorrow;
+        break;
+
+      case "this-month":
+        matchesDate =
+          expenseDate >= startOfThisMonth && expenseDate < startOfNextMonth;
+        break;
+
+      case "last-month":
+        matchesDate =
+          expenseDate >= startOfLastMonth && expenseDate < startOfThisMonth;
+        break;
+
+      case "this-year":
+        matchesDate =
+          expenseDate >= startOfThisYear && expenseDate < startOfNextYear;
+        break;
+
+      case "custom":
+        if (customStartDate && customEndDate) {
+          const start = new Date(`${customStartDate}T00:00:00`);
+          const end = new Date(`${customEndDate}T23:59:59`);
+
+          matchesDate = expenseDate >= start && expenseDate <= end;
+        }
+        break;
+
+      case "all":
+      default:
+        matchesDate = true;
+    }
+
+    return matchesCategory && matchesYear && matchesMonth && matchesDate;
+  });
+
+  const disableDatePresets =
+    isMonthSelected || (isYearSelected && !isCurrentYearSelected);
+
+  return (
+    <div>
+      <div className="mb-6 rounded-lg border bg-gray-50 p-4">
+        <h2 className="mb-4 text-sm font-semibold text-gray-700">
+          Filter Analytics
+        </h2>
+
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <CategoryFilter
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            categories={categories}
+          />
+
+          <YearFilter
+            value={selectedYear}
+            years={years}
+            onChange={setSelectedYear}
+          />
+
+          <MonthFilter
+            value={selectedMonth}
+            selectedYear={selectedYear}
+            onChange={setSelectedMonth}
+          />
+
+          <DateFilter
+            value={dateFilter}
+            onChange={setDateFilter}
+            startDate={customStartDate}
+            endDate={customEndDate}
+            onStartDateChange={setCustomStartDate}
+            onEndDateChange={setCustomEndDate}
+            minDate={customMinDate}
+            maxDate={customMaxDate}
+            disablePresets={disableDatePresets}
+          />
+        </div>
+      </div>
+
+      <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
+
+      <div className="rounded-lg border bg-white p-8 shadow">
+        {activeTab === "overview" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
+
+            <p className="mt-2 text-gray-500">
+              A summary of your spending based on the selected filters.
+            </p>
+
+            <div className="mt-6">
+              <OverviewSummaryCards expenses={filteredExpenses} />
+            </div>
+
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Spending Trend
+              </h3>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Track how your total expenses change over time.
+              </p>
+
+              <div className="mt-6">
+                <CategoryComparisonChart expenses={filteredExpenses} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "categories" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Category Breakdown
+            </h2>
+
+            <p className="mt-2 text-gray-500">
+              See how your total expenses are distributed across categories.
+            </p>
+
+            <div className="mt-6">
+              <CategoryPieChart expenses={filteredExpenses} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "monthly" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Monthly Trends
+            </h2>
+
+            <p className="mt-2 text-gray-500">
+              Track your total spending and category-wise spending over time.
+            </p>
+
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Total Monthly Expenses
+              </h3>
+
+              <MonthlyTrendChart expenses={filteredExpenses} />
+            </div>
+
+            <div className="mt-10 border-t pt-8">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Monthly Expenses by Category
+              </h3>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Compare how each expense category changes month by month.
+              </p>
+
+              <MonthlyCategoryTrendChart expenses={filteredExpenses} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "yearly" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Yearly Trends
+            </h2>
+
+            <p className="mt-2 text-gray-500">
+              Track your total spending and category-wise spending across years.
+            </p>
+
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Total Yearly Expenses
+              </h3>
+
+              <YearlyTrendChart expenses={filteredExpenses} />
+            </div>
+
+            <div className="mt-10 border-t pt-8">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Yearly Expenses by Category
+              </h3>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Compare category-wise spending across different years.
+              </p>
+
+              <YearlyCategoryChart expenses={filteredExpenses} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "reports" && (
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Expense Reports
+            </h2>
+
+            <p className="mt-2 text-gray-500">
+              A summary of your expenses based on the selected filters.
+            </p>
+
+            <div className="mt-6">
+              <ReportSummary expenses={filteredExpenses} />
+              <TopCategories expenses={filteredExpenses} />
+              <LargestExpenses expenses={filteredExpenses} />
+              <SpendingSummary expenses={filteredExpenses} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
