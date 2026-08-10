@@ -25,11 +25,11 @@ export default function YearlyTrendChart({ expenses }: YearlyTrendChartProps) {
       const existingYear = acc.find((item) => item.year === year);
 
       if (existingYear) {
-        existingYear.total += expense.amount;
+        existingYear.total += Number(expense.amount);
       } else {
         acc.push({
           year,
-          total: expense.amount,
+          total: Number(expense.amount),
         });
       }
 
