@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { del } from "@vercel/blob";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -187,6 +188,128 @@ export async function saveBillProofAction(
     return {
       success: false,
       message: "Unable to save bill proof.",
+    };
+  }
+}
+
+export async function replaceBillProofAction(
+  expenseId: number,
+  newBillProofUrl: string,
+  newBillProofPath: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    const expense = await prisma.expense.findFirst({
+      where: {
+        id: expenseId,
+        userId: Number(session.user.id),
+      },
+      select: {
+        billProofPath: true,
+      },
+    });
+
+    if (!expense) {
+      return {
+        success: false,
+        message: "Expense not found.",
+      };
+    }
+
+    const oldBillProofPath = expense.billProofPath;
+
+    await prisma.expense.update({
+      where: {
+        id: expenseId,
+      },
+      data: {
+        billProofUrl: newBillProofUrl,
+        billProofPath: newBillProofPath,
+      },
+    });
+
+    if (oldBillProofPath) {
+      await del(oldBillProofPath);
+    }
+
+    revalidatePath("/expenses");
+
+    return {
+      success: true,
+      message: "Bill proof replaced successfully.",
+    };
+  } catch (error) {
+    console.error("Replace Bill Proof Error:", error);
+
+    return {
+      success: false,
+      message: "Unable to replace bill proof.",
+    };
+  }
+}
+
+export async function removeBillProofAction(expenseId: number) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    const expense = await prisma.expense.findFirst({
+      where: {
+        id: expenseId,
+        userId: Number(session.user.id),
+      },
+      select: {
+        billProofPath: true,
+      },
+    });
+
+    if (!expense) {
+      return {
+        success: false,
+        message: "Expense not found.",
+      };
+    }
+
+    if (expense.billProofPath) {
+      await del(expense.billProofPath);
+    }
+
+    await prisma.expense.update({
+      where: {
+        id: expenseId,
+      },
+      data: {
+        billProofUrl: null,
+        billProofPath: null,
+      },
+    });
+
+    revalidatePath("/expenses");
+
+    return {
+      success: true,
+      message: "Bill proof removed successfully.",
+    };
+  } catch (error) {
+    console.error("Remove Bill Proof Error:", error);
+
+    return {
+      success: false,
+      message: "Unable to remove bill proof.",
     };
   }
 }

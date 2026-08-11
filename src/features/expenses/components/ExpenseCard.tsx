@@ -9,13 +9,17 @@ import {
   Trash2,
   ReceiptText,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 import { formatDate, formatTime } from "@/utils/formatDate";
 import { getCategoryColor } from "@/utils/categoryColor";
 
-import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
+import {
+  deleteExpenseAction,
+  removeBillProofAction,
+} from "@/features/expenses/actions/expense-actions";
 import { SerializedExpense } from "../types";
 
 import Card from "@/components/common/Card";
@@ -31,6 +35,7 @@ type ExpenseCardProps = {
 export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
   //const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const removeBillProof = removeBillProofAction.bind(null, expense.id);
 
   return (
     <Card className="flex min-h-60 flex-col text-black">
@@ -74,10 +79,12 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
               </span>
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
+              {/* View */}
               <Button
                 type="button"
                 variant="secondary"
+                className="flex items-center gap-2"
                 onClick={async () => {
                   const response = await fetch(
                     `/api/expenses/${expense.id}/bill-proof`,
@@ -92,11 +99,55 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
 
                   window.open(data.url, "_blank");
                 }}
-                className="flex items-center gap-2"
               >
                 <Eye size={16} />
                 View
               </Button>
+
+              {/* Replace */}
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50">
+                <RefreshCw size={16} />
+                Replace
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={(event) => {
+                    // We'll connect this to ReceiptUpload next.
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+
+              {/* Remove */}
+              <form
+                onSubmit={async (event) => {
+                  event.preventDefault();
+
+                  const confirmed = confirm(
+                    "Are you sure you want to remove this bill proof?",
+                  );
+
+                  if (!confirmed) {
+                    return;
+                  }
+
+                  const result = await removeBillProof();
+
+                  if (!result.success) {
+                    alert(result.message);
+                  }
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="danger"
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Remove
+                </Button>
+              </form>
             </div>
           </div>
         ) : (
