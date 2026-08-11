@@ -1,21 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Clock, Tag, Pencil, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Tag,
+  Pencil,
+  Trash2,
+  ReceiptText,
+  Eye,
+} from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 import { formatDate, formatTime } from "@/utils/formatDate";
 import { getCategoryColor } from "@/utils/categoryColor";
 
 import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
-import { Expense } from "@prisma/client";
+import { SerializedExpense } from "../types";
 
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
 
+import ReceiptUpload from "./ReceiptUpload";
+
 type ExpenseCardProps = {
-  expense: Expense;
-  onEdit: (expense: Expense) => void;
+  expense: SerializedExpense;
+  onEdit: (expense: SerializedExpense) => void;
 };
 
 export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
@@ -51,6 +61,47 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
           <Clock size={16} />
           <span>{formatTime(expense.expenseDate ?? expense.createdAt)}</span>
         </div>
+      </div>
+
+      <div className="mt-4">
+        {expense.billProofUrl ? (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+            <div className="flex items-center gap-2">
+              <ReceiptText size={18} className="text-green-600" />
+
+              <span className="font-medium text-green-800">
+                Bill Proof Uploaded
+              </span>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={async () => {
+                  const response = await fetch(
+                    `/api/expenses/${expense.id}/bill-proof`,
+                  );
+
+                  const data = await response.json();
+
+                  if (!response.ok) {
+                    alert(data.error ?? "Unable to open bill proof.");
+                    return;
+                  }
+
+                  window.open(data.url, "_blank");
+                }}
+                className="flex items-center gap-2"
+              >
+                <Eye size={16} />
+                View
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <ReceiptUpload expenseId={expense.id} />
+        )}
       </div>
 
       <hr className="my-5 border-gray-200" />

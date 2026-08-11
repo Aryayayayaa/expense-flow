@@ -1,10 +1,10 @@
 import ExpenseCard from "./ExpenseCard";
-import { Expense } from "@prisma/client";
+import { SerializedExpense } from "../types";
 import EmptyState from "@/components/feedback/EmptyState";
 
 type ExpenseListProps = {
-  expenses: Expense[];
-  onEdit: (expense: Expense) => void;
+  expenses: SerializedExpense[];
+  onEdit: (expense: SerializedExpense) => void;
 };
 
 export default function ExpenseList({ expenses, onEdit }: ExpenseListProps) {

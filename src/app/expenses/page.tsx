@@ -21,6 +21,11 @@ export default async function ExpensesPage() {
   }
   const expenses = await getExpenses(Number(session.user.id));
 
+  const serializedExpenses = expenses.map((expense) => ({
+    ...expense,
+    amount: Number(expense.amount),
+  }));
+
   const totalExpenses = expenses.reduce(
     (sum, expense) => sum + Number(expense.amount),
     0,
@@ -55,7 +60,7 @@ export default async function ExpensesPage() {
         </p>
       </div>
 
-      <ExpensesPageClient expenses={expenses} />
+      <ExpensesPageClient expenses={serializedExpenses} />
     </main>
   );
 }

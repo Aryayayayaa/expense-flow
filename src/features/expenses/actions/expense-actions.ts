@@ -1,6 +1,8 @@
 "use server";
+
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 import {
   createExpense,
@@ -132,4 +134,59 @@ export async function deleteExpenseAction(id: number) {
   }
   await deleteExpense(id, Number(session.user.id));
   revalidatePath("/expenses");
+}
+
+export async function saveBillProofAction(
+  expenseId: number,
+  billProofUrl: string,
+  billProofPath: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    const expense = await prisma.expense.findFirst({
+      where: {
+        id: expenseId,
+        userId: Number(session.user.id),
+      },
+    });
+
+    if (!expense) {
+      return {
+        success: false,
+        message: "Expense not found.",
+      };
+    }
+
+    await prisma.expense.update({
+      where: {
+        id: expenseId,
+      },
+      data: {
+        billProofUrl,
+        billProofPath,
+      },
+    });
+
+    revalidatePath("/expenses");
+
+    return {
+      success: true,
+      message: "Bill proof saved successfully.",
+    };
+  } catch (error) {
+    console.error("Save Bill Proof Error:", error);
+
+    return {
+      success: false,
+      message: "Unable to save bill proof.",
+    };
+  }
 }

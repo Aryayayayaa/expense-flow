@@ -6,20 +6,21 @@ import AddExpenseForm from "./AddExpenseForm";
 import ExpenseList from "./ExpenseList";
 import SummaryCard from "./SummaryCard";
 
-import { Expense } from "@prisma/client";
+import { SerializedExpense } from "../types";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
 import { Wallet, Calendar, Folder } from "lucide-react";
 
 type ExpensesPageClientProps = {
-  expenses: Expense[];
+  expenses: SerializedExpense[];
 };
 
 export default function ExpensesPageClient({
   expenses,
 }: ExpensesPageClientProps) {
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editingExpense, setEditingExpense] =
+    useState<SerializedExpense | null>(null);
 
   const totalExpenses = expenses.reduce(
     (sum, expense) => sum + Number(expense.amount),

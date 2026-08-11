@@ -11,11 +11,13 @@ import Card from "@/components/common/Card";
 
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
 
-import { Expense } from "@prisma/client";
+import { SerializedExpense } from "../types";
 
 type AddExpenseFormProps = {
-  editingExpense: Expense | null;
-  setEditingExpense: React.Dispatch<React.SetStateAction<Expense | null>>;
+  editingExpense: SerializedExpense | null;
+  setEditingExpense: React.Dispatch<
+    React.SetStateAction<SerializedExpense | null>
+  >;
 };
 
 const initialState = {

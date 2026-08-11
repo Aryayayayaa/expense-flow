@@ -5,7 +5,9 @@ export default function Sidebar() {
     <nav>
       <Link href="/dashboard">Dashboard</Link>
       <Link href="/expenses">Expenses</Link>
-      <Link href="/approvals">Approvals</Link>
+      <Link href="/analytics">Analysis</Link>
+      <Link href="/profile">Profile</Link>
+      {/* <Link href="/logout">Logout</Link> */}
     </nav>
   );
 }
