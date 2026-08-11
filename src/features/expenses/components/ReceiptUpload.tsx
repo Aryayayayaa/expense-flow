@@ -27,13 +27,24 @@ export default function ReceiptUpload({
     setMessage("");
 
     try {
-      const blob = await upload(`expenses/${expenseId}/${file.name}`, file, {
-        access: "private",
-        handleUploadUrl: "/api/upload",
-        clientPayload: JSON.stringify({
-          expenseId,
-        }),
-      });
+      const extensionMap: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "application/pdf": "pdf",
+};
+
+const extension = extensionMap[file.type] ?? "bin";
+
+const safePath = `expenses/${expenseId}/receipt-${Date.now()}.${extension}`;
+
+const blob = await upload(safePath, file, {
+  access: "private",
+  handleUploadUrl: "/api/upload",
+  clientPayload: JSON.stringify({
+    expenseId,
+  }),
+});
 
       console.log("Uploaded:", blob);
 
