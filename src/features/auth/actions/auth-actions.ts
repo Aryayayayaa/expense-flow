@@ -1,4 +1,5 @@
 "use server";
+
 import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
 import { signIn } from "@/auth";
@@ -114,9 +115,9 @@ export async function loginUserAction(
   await signIn("credentials", {
     email: result.data.email,
     password: result.data.password,
-    
+    redirectTo: "/dashboard",
   });
-  redirect("/dashboard")
+
   return {
     success: true,
     errors: {},
