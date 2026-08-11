@@ -1,4 +1,4 @@
-"use client";      
+"use client";
 
 import { useActionState } from "react";
 import { registerUserAction } from "../actions/auth-actions";
@@ -18,10 +18,6 @@ export default function RegisterForm() {
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
-      <Link href="/" className="text-sm text-blue-600 hover:underline">
-        ← Back to Home
-      </Link>
-      <h1 className="text-3xl font-bold">Register Page</h1>
       <div>
         <label>Name</label>
 
