@@ -36,6 +36,7 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
   //const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const removeBillProof = removeBillProofAction.bind(null, expense.id);
+  const [showReplaceUpload, setShowReplaceUpload] = useState(false);
 
   return (
     <Card className="flex min-h-60 flex-col text-black">
@@ -105,19 +106,15 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
               </Button>
 
               {/* Replace */}
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50">
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex items-center gap-2"
+                onClick={() => setShowReplaceUpload((value) => !value)}
+              >
                 <RefreshCw size={16} />
-                Replace
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
-                  className="hidden"
-                  onChange={(event) => {
-                    // We'll connect this to ReceiptUpload next.
-                    event.target.value = "";
-                  }}
-                />
-              </label>
+                {showReplaceUpload ? "Cancel Replace" : "Replace"}
+              </Button>
 
               {/* Remove */}
               <form
@@ -149,6 +146,15 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
                 </Button>
               </form>
             </div>
+            {showReplaceUpload && (
+              <ReceiptUpload
+                expenseId={expense.id}
+                mode="replace"
+                onUploadComplete={() => {
+                  setShowReplaceUpload(false);
+                }}
+              />
+            )}
           </div>
         ) : (
           <ReceiptUpload expenseId={expense.id} />

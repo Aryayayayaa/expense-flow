@@ -2,17 +2,21 @@
 
 import { upload } from "@vercel/blob/client";
 import { useState } from "react";
-import { Eye, Upload } from "lucide-react";
 
-import { saveBillProofAction } from "../actions/expense-actions";
+import {
+  saveBillProofAction,
+  replaceBillProofAction,
+} from "../actions/expense-actions";
 
 type ReceiptUploadProps = {
   expenseId: number;
+  mode?: "upload" | "replace";
   onUploadComplete?: (url: string) => void;
 };
 
 export default function ReceiptUpload({
   expenseId,
+  mode = "upload",
   onUploadComplete,
 }: ReceiptUploadProps) {
   const [uploading, setUploading] = useState(false);
@@ -33,11 +37,17 @@ export default function ReceiptUpload({
 
       console.log("Uploaded:", blob);
 
-      const result = await saveBillProofAction(
-        expenseId,
-        blob.url,
-        blob.pathname,
-      );
+      let result;
+
+      if (mode === "replace") {
+        result = await replaceBillProofAction(
+          expenseId,
+          blob.url,
+          blob.pathname,
+        );
+      } else {
+        result = await saveBillProofAction(expenseId, blob.url, blob.pathname);
+      }
 
       if (!result.success) {
         setMessage(result.message);
@@ -52,27 +62,6 @@ export default function ReceiptUpload({
       setMessage("Unable to upload bill proof.");
     } finally {
       setUploading(false);
-    }
-  }
-
-  async function handleView() {
-    try {
-      setMessage("");
-
-      const response = await fetch(`/api/expenses/${expenseId}/bill-proof`);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.error ?? "Unable to open bill proof.");
-        return;
-      }
-
-      window.open(data.url, "_blank");
-    } catch (error) {
-      console.error("View bill proof error:", error);
-
-      setMessage("Unable to open bill proof.");
     }
   }
 
