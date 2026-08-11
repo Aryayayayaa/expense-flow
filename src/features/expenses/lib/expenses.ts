@@ -5,9 +5,7 @@ export async function getExpenses(userId: number) {
     where: {
       userId,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
 }
 
