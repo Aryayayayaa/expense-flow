@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from 'next/link';
+import { Wallet, Calendar, Folder, X, Plus } from "lucide-react";
 
-import AddExpenseForm from "./AddExpenseForm";
 import ExpenseList from "./ExpenseList";
+import AddExpenseForm from "./AddExpenseForm";
 import SummaryCard from "./SummaryCard";
+
+import CategoryFilter from "./CategoryFilter";
+import YearFilter from "./YearFilter";
+import MonthFilter from "./MonthFilter";
+import DateFilter from "./DateFilter";
 
 import { SerializedExpense } from "../types";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-import { Wallet, Calendar, Folder } from "lucide-react";
+
 
 type ExpensesPageClientProps = {
   expenses: SerializedExpense[];
@@ -22,59 +29,477 @@ export default function ExpensesPageClient({
   const [editingExpense, setEditingExpense] =
     useState<SerializedExpense | null>(null);
 
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + Number(expense.amount),
-    0,
+  /* ---------------------------------------------------------------------- */
+  /* Filters                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+
+  /* ---------------------------------------------------------------------- */
+  /* Filter data                                                             */
+  /* ---------------------------------------------------------------------- */
+
+  const categories = useMemo(
+    () => [...new Set(expenses.map((expense) => expense.category))],
+    [expenses],
+  );
+
+  const years = useMemo(
+    () =>
+      [
+        ...new Set(
+          expenses.map((expense) =>
+            (expense.expenseDate ?? expense.createdAt).getFullYear(),
+          ),
+        ),
+      ].sort((a, b) => b - a),
+    [expenses],
   );
 
   const currentDate = new Date();
 
-  const thisMonthExpenses = expenses
-    .filter((expense) => {
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+
+  const todayString = [
+    currentYear,
+    String(currentMonth).padStart(2, "0"),
+    String(currentDate.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const earliestExpenseDate = expenses.reduce<Date | null>(
+    (earliest, expense) => {
+      const date = expense.expenseDate ?? expense.createdAt;
+
+      if (!earliest || date < earliest) {
+        return date;
+      }
+
+      return earliest;
+    },
+    null,
+  );
+
+  const minDate = earliestExpenseDate
+    ? earliestExpenseDate.toISOString().slice(0, 10)
+    : "";
+
+  const isYearSelected = selectedYear !== "";
+  const isMonthSelected = selectedMonth !== "";
+
+  const selectedYearNumber = Number(selectedYear);
+  const selectedMonthNumber = Number(selectedMonth);
+
+  const isCurrentYearSelected =
+    isYearSelected && selectedYearNumber === currentYear;
+
+  /* ---------------------------------------------------------------------- */
+  /* Custom date range                                                       */
+  /* ---------------------------------------------------------------------- */
+
+  let customMinDate = minDate;
+  let customMaxDate = todayString;
+
+  if (isYearSelected && isMonthSelected) {
+    const lastDayOfSelectedMonth = new Date(
+      selectedYearNumber,
+      selectedMonthNumber,
+      0,
+    ).getDate();
+
+    customMinDate = `${selectedYearNumber}-${String(
+      selectedMonthNumber,
+    ).padStart(2, "0")}-01`;
+
+    customMaxDate = `${selectedYearNumber}-${String(
+      selectedMonthNumber,
+    ).padStart(2, "0")}-${String(lastDayOfSelectedMonth).padStart(2, "0")}`;
+
+    if (
+      selectedYearNumber === currentYear &&
+      selectedMonthNumber === currentMonth
+    ) {
+      customMaxDate = todayString;
+    }
+  } else if (isYearSelected) {
+    customMinDate = `${selectedYearNumber}-01-01`;
+
+    customMaxDate = isCurrentYearSelected
+      ? todayString
+      : `${selectedYearNumber}-12-31`;
+  } else if (isMonthSelected) {
+    const lastDayOfSelectedMonth = new Date(
+      currentYear,
+      selectedMonthNumber,
+      0,
+    ).getDate();
+
+    customMinDate = `${currentYear}-${String(selectedMonthNumber).padStart(
+      2,
+      "0",
+    )}-01`;
+
+    customMaxDate = `${currentYear}-${String(selectedMonthNumber).padStart(
+      2,
+      "0",
+    )}-${String(lastDayOfSelectedMonth).padStart(2, "0")}`;
+
+    if (selectedMonthNumber === currentMonth) {
+      customMaxDate = todayString;
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Filter expenses                                                         */
+  /* ---------------------------------------------------------------------- */
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((expense) => {
       const expenseDate = expense.expenseDate ?? expense.createdAt;
+
+      /* Category */
+
+      const matchesCategory =
+        selectedCategory === "" ||
+        expense.category === selectedCategory;
+
+      /* Year */
+
+      const matchesYear =
+        selectedYear === "" ||
+        expenseDate.getFullYear() === Number(selectedYear);
+
+      /* Month */
+
+      const matchesMonth =
+        selectedMonth === "" ||
+        expenseDate.getMonth() + 1 === Number(selectedMonth);
+
+      /* Date */
+
+      let matchesDate = true;
+
+      const now = new Date();
+
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      );
+
+      const startOfTomorrow = new Date(startOfToday);
+      startOfTomorrow.setDate(startOfToday.getDate() + 1);
+
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfToday.getDate() - 1);
+
+      const startOfLast7Days = new Date(startOfToday);
+      startOfLast7Days.setDate(startOfToday.getDate() - 6);
+
+      const startOfLast30Days = new Date(startOfToday);
+      startOfLast30Days.setDate(startOfToday.getDate() - 29);
+
+      const startOfThisMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1,
+      );
+
+      const startOfLastMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        1,
+      );
+
+      const startOfNextMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        1,
+      );
+
+      const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+
+      const startOfNextYear = new Date(now.getFullYear() + 1, 0, 1);
+
+      switch (dateFilter) {
+        case "today":
+          matchesDate =
+            expenseDate >= startOfToday &&
+            expenseDate < startOfTomorrow;
+          break;
+
+        case "yesterday":
+          matchesDate =
+            expenseDate >= startOfYesterday &&
+            expenseDate < startOfToday;
+          break;
+
+        case "last-7-days":
+          matchesDate =
+            expenseDate >= startOfLast7Days &&
+            expenseDate < startOfTomorrow;
+          break;
+
+        case "last-30-days":
+          matchesDate =
+            expenseDate >= startOfLast30Days &&
+            expenseDate < startOfTomorrow;
+          break;
+
+        case "this-month":
+          matchesDate =
+            expenseDate >= startOfThisMonth &&
+            expenseDate < startOfNextMonth;
+          break;
+
+        case "last-month":
+          matchesDate =
+            expenseDate >= startOfLastMonth &&
+            expenseDate < startOfThisMonth;
+          break;
+
+        case "this-year":
+          matchesDate =
+            expenseDate >= startOfThisYear &&
+            expenseDate < startOfNextYear;
+          break;
+
+        case "custom":
+          if (customStartDate && customEndDate) {
+            const start = new Date(`${customStartDate}T00:00:00`);
+            const end = new Date(`${customEndDate}T23:59:59`);
+
+            matchesDate =
+              expenseDate >= start &&
+              expenseDate <= end;
+          }
+          break;
+
+        case "all":
+        default:
+          matchesDate = true;
+      }
+
+      return (
+        matchesCategory &&
+        matchesYear &&
+        matchesMonth &&
+        matchesDate
+      );
+    });
+  }, [
+    expenses,
+    selectedCategory,
+    selectedYear,
+    selectedMonth,
+    dateFilter,
+    customStartDate,
+    customEndDate,
+  ]);
+
+  /* ---------------------------------------------------------------------- */
+  /* Summary                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const totalExpenses = filteredExpenses.reduce(
+    (sum, expense) => sum + Number(expense.amount),
+    0,
+  );
+
+  const thisMonthExpenses = filteredExpenses
+    .filter((expense) => {
+      const expenseDate =
+        expense.expenseDate ?? expense.createdAt;
 
       return (
         expenseDate.getMonth() === currentDate.getMonth() &&
         expenseDate.getFullYear() === currentDate.getFullYear()
       );
     })
-    .reduce((sum, expense) => sum + Number(expense.amount), 0);
+    .reduce(
+      (sum, expense) => sum + Number(expense.amount),
+      0,
+    );
 
-  const totalCategories = new Set(expenses.map((expense) => expense.category))
-    .size;
+  const totalCategories = new Set(
+    filteredExpenses.map((expense) => expense.category),
+  ).size;
+
+  const disableDatePresets =
+    isMonthSelected ||
+    (isYearSelected && !isCurrentYearSelected);
+
+  /* ---------------------------------------------------------------------- */
+  /* Clear filters                                                           */
+  /* ---------------------------------------------------------------------- */
+
+  function clearFilters() {
+    setSelectedCategory("");
+    setSelectedYear("");
+    setSelectedMonth("");
+    setDateFilter("all");
+    setCustomStartDate("");
+    setCustomEndDate("");
+  }
+
+  const hasActiveFilters =
+    selectedCategory !== "" ||
+    selectedYear !== "" ||
+    selectedMonth !== "" ||
+    dateFilter !== "all";
+
+  /* ---------------------------------------------------------------------- */
+  /* UI                                                                      */
+  /* ---------------------------------------------------------------------- */
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Summary cards */}
+
+      <div className="grid gap-4 md:grid-cols-3">
         <SummaryCard
           title="Total Expenses"
           value={formatCurrency(totalExpenses)}
-          icon={<Wallet size={22} />}
+          icon={<Wallet size={20} />}
         />
 
         <SummaryCard
           title="This Month"
           value={formatCurrency(thisMonthExpenses)}
-          icon={<Calendar size={22} />}
+          icon={<Calendar size={20} />}
         />
 
         <SummaryCard
           title="Categories"
           value={totalCategories}
-          icon={<Folder size={22} />}
+          icon={<Folder size={20} />}
         />
       </div>
 
-      <hr className="my-6" />
+      {/* Filters */}
 
-      <AddExpenseForm
-        editingExpense={editingExpense}
-        setEditingExpense={setEditingExpense}
-      />
+      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Filter Expenses
+              </h2>
 
-      <div className="mt-10">
-        <ExpenseList expenses={expenses} onEdit={setEditingExpense} />
+              <p className="mt-1 text-xs text-slate-500">
+                Filter your expenses by category and date.
+              </p>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                <X size={15} />
+                Clear filters
+              </button>
+            )}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-4">
+            <CategoryFilter
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              categories={categories}
+            />
+
+            <YearFilter
+              value={selectedYear}
+              years={years}
+              onChange={setSelectedYear}
+            />
+
+            <MonthFilter
+              value={selectedMonth}
+              selectedYear={selectedYear}
+              onChange={setSelectedMonth}
+            />
+
+            <DateFilter
+              value={dateFilter}
+              onChange={setDateFilter}
+              startDate={customStartDate}
+              endDate={customEndDate}
+              onStartDateChange={setCustomStartDate}
+              onEndDateChange={setCustomEndDate}
+              minDate={customMinDate}
+              maxDate={customMaxDate}
+              disablePresets={disableDatePresets}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Expense count */}
+
+      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <h2 className="text-lg font-semibold text-slate-900">
+      My Expenses
+    </h2>
+
+    <p className="mt-1 text-sm text-slate-500">
+      {filteredExpenses.length}{" "}
+      {filteredExpenses.length === 1
+        ? "expense"
+        : "expenses"}{" "}
+      found
+    </p>
+  </div>
+
+  <Link
+    href="/expenses/new"
+    className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+  >
+    <Plus size={18} />
+    Add New Expense
+  </Link>
+</div>
+
+      {/* Expense cards */}
+
+      <div className="mt-4">
+        <ExpenseList
+          expenses={filteredExpenses}
+          onEdit={setEditingExpense}
+        />
+      </div>
+
+      {/* Edit Expense */}
+
+      {editingExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setEditingExpense(null)}
+                className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+              >
+                Close
+              </button>
+            </div>
+
+            <AddExpenseForm
+              editingExpense={editingExpense}
+              setEditingExpense={setEditingExpense}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
