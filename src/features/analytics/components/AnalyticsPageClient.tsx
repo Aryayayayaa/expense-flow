@@ -16,12 +16,6 @@ import MonthlyCategoryTrendChart from "./charts/MonthlyCategoryTrendChart";
 import YearlyCategoryChart from "./charts/YearlyCategoryChart";
 import CategoryComparisonChart from "./charts/CategoryComparisonChart";
 
-import OverviewSummaryCards from "./OverviewSummaryCards";
-import ReportSummary from "./reports/ReportSummary";
-import TopCategories from "./reports/TopCategories";
-import LargestExpenses from "./reports/LargestExpenses";
-import SpendingSummary from "./reports/SpendingSummary";
-
 import { Expense } from "@prisma/client";
 
 type AnalyticsPageClientProps = {
@@ -29,16 +23,14 @@ type AnalyticsPageClientProps = {
 };
 
 type AnalyticsTab =
-  | "overview"
   | "categories"
   | "monthly"
-  | "yearly"
-  | "reports";
+  | "yearly";
 
 export default function AnalyticsPageClient({
   expenses,
 }: AnalyticsPageClientProps) {
-  const [activeTab, setActiveTab] = useState<AnalyticsTab>("overview");
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("categories");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -296,33 +288,6 @@ export default function AnalyticsPageClient({
       <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="rounded-lg border bg-white p-8 shadow">
-        {activeTab === "overview" && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
-
-            <p className="mt-2 text-gray-500">
-              A summary of your spending based on the selected filters.
-            </p>
-
-            <div className="mt-6">
-              <OverviewSummaryCards expenses={filteredExpenses} />
-            </div>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Spending Trend
-              </h3>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Track how your total expenses change over time.
-              </p>
-
-              <div className="mt-6">
-                <CategoryComparisonChart expenses={filteredExpenses} />
-              </div>
-            </div>
-          </div>
-        )}
 
         {activeTab === "categories" && (
           <div>
@@ -400,25 +365,6 @@ export default function AnalyticsPageClient({
               </p>
 
               <YearlyCategoryChart expenses={filteredExpenses} />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "reports" && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Expense Reports
-            </h2>
-
-            <p className="mt-2 text-gray-500">
-              A summary of your expenses based on the selected filters.
-            </p>
-
-            <div className="mt-6">
-              <ReportSummary expenses={filteredExpenses} />
-              <TopCategories expenses={filteredExpenses} />
-              <LargestExpenses expenses={filteredExpenses} />
-              <SpendingSummary expenses={filteredExpenses} />
             </div>
           </div>
         )}
