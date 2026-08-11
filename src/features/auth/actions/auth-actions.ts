@@ -114,8 +114,9 @@ export async function loginUserAction(
   await signIn("credentials", {
     email: result.data.email,
     password: result.data.password,
-    redirectTo: "/expenses",
+    
   });
+  redirect("/dashboard")
   return {
     success: true,
     errors: {},
