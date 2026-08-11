@@ -23,6 +23,7 @@ type AnalyticsPageClientProps = {
 };
 
 type AnalyticsTab =
+    "overview"
   | "categories"
   | "monthly"
   | "yearly";
