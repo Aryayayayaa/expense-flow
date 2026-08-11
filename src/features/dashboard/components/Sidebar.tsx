@@ -1,6 +1,10 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col">
       {/* Logo */}
@@ -27,44 +31,50 @@ export default function Sidebar() {
           <SidebarLink
             href="/dashboard"
             label="Dashboard"
-            active
             icon={<DashboardIcon />}
+            active={pathname === "/dashboard"}
           />
 
           <SidebarLink
             href="/expenses"
             label="My Expenses"
             icon={<ExpenseIcon />}
+            active={pathname === "/expenses"}
           />
 
           <SidebarLink
             href="/expenses/new"
             label="New Expense"
             icon={<PlusIcon />}
+            active={pathname === "/expenses/new"}
           />
 
           <SidebarLink
             href="/approvals"
             label="Approvals"
             icon={<CheckIcon />}
+            active={pathname.startsWith("/approvals")}
           />
 
           <SidebarLink
             href="/analytics"
             label="Analysis"
             icon={<AnalysisIcon />}
+            active={pathname.startsWith("/analytics")}
           />
 
           <SidebarLink
             href="/reports"
             label="Reports"
             icon={<ReportIcon />}
+            active={pathname.startsWith("/reports")}
           />
 
           <SidebarLink
             href="/admin"
             label="Admin"
             icon={<SettingsIcon />}
+            active={pathname.startsWith("/admin")}
           />
         </div>
       </nav>
@@ -83,7 +93,8 @@ export default function Sidebar() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
+
+//* -------------------------------------------------------------------------- */
 /* Sidebar Link                                                               */
 /* -------------------------------------------------------------------------- */
 
