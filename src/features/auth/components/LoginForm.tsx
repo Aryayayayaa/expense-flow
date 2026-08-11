@@ -19,10 +19,6 @@ export default function LoginForm() {
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
-      <Link href="/" className="text-sm text-blue-600 hover:underline">
-        ← Back to Home
-      </Link>
-      <h1 className="text-3xl font-bold">Login Page</h1>
       <div>
         <label>Email</label>
 
