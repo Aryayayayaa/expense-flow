@@ -4,8 +4,7 @@ type AnalyticsTab =
   | "overview"
   | "categories"
   | "monthly"
-  | "yearly"
-  | "reports";
+  | "yearly";
 
 type AnalyticsTabsProps = {
   activeTab: AnalyticsTab;
@@ -29,10 +28,6 @@ const tabs: { value: AnalyticsTab; label: string }[] = [
     value: "yearly",
     label: "Yearly",
   },
-  {
-    value: "reports",
-    label: "Reports",
-  },
 ];
 
 export default function AnalyticsTabs({
@@ -49,7 +44,7 @@ export default function AnalyticsTabs({
           className={`rounded-t-lg px-4 py-3 text-sm font-medium transition ${
             activeTab === tab.value
               ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-300 hover:text-gray-800"
+              : "text-gray-500 hover:text-gray-800"
           }`}
         >
           {tab.label}
