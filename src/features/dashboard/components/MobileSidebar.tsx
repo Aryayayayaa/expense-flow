@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import LogoutButton from "@/features/auth/components/LogoutButton";
+
 export default function MobileSidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -121,7 +123,7 @@ export default function MobileSidebar() {
 
             <MobileNavLink
               href="/reports"
-              label="Report"
+              label="Reports"
               onClick={closeMenu}
               icon={<ReportIcon />}
             />
@@ -132,18 +134,19 @@ export default function MobileSidebar() {
               onClick={closeMenu}
               icon={<SettingsIcon />}
             />
+
+            <MobileNavLink
+              href="/profile"
+              label="Profile"
+              onClick={closeMenu}
+              icon={<ProfileIcon />}
+            />
           </div>
         </nav>
 
         {/* Logout */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 p-4">
-          <button
-            type="button"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-          >
-            <LogoutIcon />
-            Logout
-          </button>
+          <LogoutButton />
         </div>
       </aside>
     </>
@@ -161,12 +164,7 @@ type MobileNavLinkProps = {
   onClick: () => void;
 };
 
-function MobileNavLink({
-  href,
-  label,
-  icon,
-  onClick,
-}: MobileNavLinkProps) {
+function MobileNavLink({ href, label, icon, onClick }: MobileNavLinkProps) {
   return (
     <Link
       href={href}
@@ -331,6 +329,24 @@ function ReportIcon() {
       <path d="M14 3v4h4" />
       <path d="M9 12h6" />
       <path d="M9 16h6" />
+    </svg>
+  );
+}
+
+function ProfileIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
     </svg>
   );
 }

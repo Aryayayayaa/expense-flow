@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import LogoutButton from "@/features/auth/components/LogoutButton";
+
 export default function Sidebar() {
   const pathname = usePathname();
 
@@ -76,23 +78,23 @@ export default function Sidebar() {
             icon={<SettingsIcon />}
             active={pathname.startsWith("/admin")}
           />
+
+          <SidebarLink
+            href="/profile"
+            label="Profile"
+            icon={<ProfileIcon />}
+            active={pathname.startsWith("/profile")}
+          />
         </div>
       </nav>
 
       {/* Logout */}
       <div className="border-t border-slate-200 p-4">
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-        >
-          <LogoutIcon />
-          Logout
-        </button>
+        <LogoutButton />
       </div>
     </aside>
   );
 }
-
 
 //* -------------------------------------------------------------------------- */
 /* Sidebar Link                                                               */
@@ -105,12 +107,7 @@ type SidebarLinkProps = {
   active?: boolean;
 };
 
-function SidebarLink({
-  href,
-  label,
-  icon,
-  active = false,
-}: SidebarLinkProps) {
+function SidebarLink({ href, label, icon, active = false }: SidebarLinkProps) {
   return (
     <Link
       href={href}
@@ -243,6 +240,24 @@ function ReportIcon() {
       <path d="M14 3v4h4" />
       <path d="M9 12h6" />
       <path d="M9 16h6" />
+    </svg>
+  );
+}
+
+function ProfileIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
     </svg>
   );
 }

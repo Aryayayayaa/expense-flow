@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { getExpenses } from "@/features/expenses/lib/expenses";
+import { redirect } from "next/dist/server/api-utils";
 
 export async function getDashboardData() {
   const session = await auth();
