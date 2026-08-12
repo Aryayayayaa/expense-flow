@@ -10,10 +10,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { Expense } from "@prisma/client";
+import { AnalyticsExpense } from "../../types";
 
 type YearlyTrendChartProps = {
-  expenses: Expense[];
+  expenses: AnalyticsExpense[];
 };
 
 export default function YearlyTrendChart({ expenses }: YearlyTrendChartProps) {

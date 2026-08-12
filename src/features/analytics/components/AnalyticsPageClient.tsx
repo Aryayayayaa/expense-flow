@@ -16,17 +16,13 @@ import MonthlyCategoryTrendChart from "./charts/MonthlyCategoryTrendChart";
 import YearlyCategoryChart from "./charts/YearlyCategoryChart";
 import CategoryComparisonChart from "./charts/CategoryComparisonChart";
 
-import { Expense } from "@prisma/client";
+import { AnalyticsExpense } from "../types";
 
 type AnalyticsPageClientProps = {
-  expenses: Expense[];
+  expenses: AnalyticsExpense[];
 };
 
-type AnalyticsTab =
-    "overview"
-  | "categories"
-  | "monthly"
-  | "yearly";
+type AnalyticsTab = "categories" | "monthly" | "yearly";
 
 export default function AnalyticsPageClient({
   expenses,
@@ -289,7 +285,6 @@ export default function AnalyticsPageClient({
       <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="rounded-lg border bg-white p-8 shadow">
-
         {activeTab === "categories" && (
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -302,6 +297,20 @@ export default function AnalyticsPageClient({
 
             <div className="mt-6">
               <CategoryPieChart expenses={filteredExpenses} />
+            </div>
+
+            <div className="mt-10 border-t pt-8">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Category Comparison
+              </h3>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Compare total spending across expense categories.
+              </p>
+
+              <div className="mt-6">
+                <CategoryComparisonChart expenses={filteredExpenses} />
+              </div>
             </div>
           </div>
         )}
