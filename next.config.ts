@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+
+  serverExternalPackages: ["mindee"],
 };
 
 export default nextConfig;
