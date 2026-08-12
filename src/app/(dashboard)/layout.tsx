@@ -1,15 +1,18 @@
 import MobileSidebar from "@/features/dashboard/components/MobileSidebar";
 import Sidebar from "@/features/dashboard/components/Sidebar";
 import DashboardHeaderActions from "@/features/dashboard/components/DashboardHeaderActions";
+import { auth } from "@/auth";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <MobileSidebar />
+      <MobileSidebar userName={session?.user?.name} />
 
       <div className="flex min-h-screen">
         <Sidebar />

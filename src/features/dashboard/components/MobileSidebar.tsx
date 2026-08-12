@@ -5,8 +5,15 @@ import { useState } from "react";
 
 import LogoutButton from "@/features/auth/components/LogoutButton";
 
-export default function MobileSidebar() {
+type MobileSidebarProps = {
+  userName?: string | null;
+};
+
+export default function MobileSidebar({ userName }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const firstName = userName?.trim().split(" ")[0];
+  const userInitial = firstName?.charAt(0).toUpperCase() ?? "U";
 
   const closeMenu = () => {
     setIsOpen(false);
@@ -33,7 +40,7 @@ export default function MobileSidebar() {
         </Link>
 
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-          A
+          {userInitial}
         </div>
       </header>
 
