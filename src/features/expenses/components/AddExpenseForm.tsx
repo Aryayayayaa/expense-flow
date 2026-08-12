@@ -54,6 +54,9 @@ export default function AddExpenseForm({
     setSelectedCategory("");
     setCustomCategory("");
 
+    setOcrResult(null);
+    setReceiptFile(null);
+
     setExpenseDate(
       new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
         .toISOString()
@@ -112,6 +115,10 @@ export default function AddExpenseForm({
     if (ocrResult.amount !== null) {
       setAmount(String(ocrResult.amount));
     }
+
+    if (ocrResult.expenseDate) {
+      setExpenseDate(ocrResult.expenseDate);
+    }
   }, [ocrResult]);
 
   return (
@@ -121,23 +128,74 @@ export default function AddExpenseForm({
         action={async (formData) => {
           setPending(true);
 
-          let result;
+          try {
+            let result;
 
-          if (editingExpense) {
-            result = await updateExpenseAction(editingExpense.id, formData);
-          } else {
-            result = await createExpenseAction(null, formData);
+            if (editingExpense) {
+              result = await updateExpenseAction(editingExpense.id, formData);
+            } else {
+              result = await createExpenseAction(null, formData);
+
+              if (result.success && result.expenseId && receiptFile) {
+                const extensionMap: Record<string, string> = {
+                  "image/jpeg": "jpg",
+                  "image/png": "png",
+                  "image/webp": "webp",
+                  "application/pdf": "pdf",
+                };
+
+                const extension = extensionMap[receiptFile.type] ?? "bin";
+
+                const safePath = `expenses/${result.expenseId}/receipt-${Date.now()}.${extension}`;
+
+                const blob = await upload(safePath, receiptFile, {
+                  access: "private",
+                  handleUploadUrl: "/api/upload",
+                  clientPayload: JSON.stringify({
+                    expenseId: result.expenseId,
+                  }),
+                });
+
+                const proofResult = await saveBillProofAction(
+                  result.expenseId,
+                  blob.url,
+                  blob.pathname,
+                );
+
+                if (!proofResult.success) {
+                  result = {
+                    ...result,
+                    success: false,
+                    message: proofResult.message,
+                  };
+                }
+              }
+            }
+
+            setState({
+              success: result.success,
+              errors: result.errors ?? {},
+              message: result.message,
+              expenseId: result.expenseId,
+            });
+
+            if (result.success) {
+              setTimeout(() => {
+                resetForm();
+              }, 1000);
+            }
+          } catch (error) {
+            console.error("Expense submission error:", error);
+
+            setState({
+              success: false,
+              errors: {},
+              message: "Unable to save expense.",
+              expenseId: undefined,
+            });
+          } finally {
+            setPending(false);
           }
-
-          setState(result);
-
-          if (result.success) {
-            setTimeout(() => {
-              resetForm();
-            }, 1000);
-          }
-
-          setPending(false);
         }}
         className="space-y-5 text-black"
       >

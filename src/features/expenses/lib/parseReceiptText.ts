@@ -48,6 +48,7 @@ export function parseReceiptText(text: string): OcrResult {
   return {
     vendor: parseVendor(text),
     amount: parseAmount(text),
+    expenseDate: null,
     rawText: text,
   };
 }
