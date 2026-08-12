@@ -8,43 +8,102 @@ import {
   replaceBillProofAction,
 } from "../actions/expense-actions";
 
+type OcrResult = {
+  vendor: string | null;
+  amount: number | null;
+  rawText: string;
+};
+
 type ReceiptUploadProps = {
   expenseId: number;
   mode?: "upload" | "replace";
   onUploadComplete?: (url: string) => void;
+  onOcrComplete?: (result: OcrResult) => void;
 };
 
 export default function ReceiptUpload({
   expenseId,
   mode = "upload",
   onUploadComplete,
+  onOcrComplete,
 }: ReceiptUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        if (typeof reader.result !== "string") {
+          reject(new Error("Unable to read file."));
+          return;
+        }
+
+        resolve(reader.result);
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Unable to read file."));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
 
   async function handleUpload(file: File) {
     setUploading(true);
     setMessage("");
 
     try {
+      let ocrMessage = "";
+
+      try {
+        const fileData = await fileToBase64(file);
+
+        const ocrResponse = await fetch("/api/ocr", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileData,
+          }),
+        });
+
+        const ocrResult = await ocrResponse.json();
+
+        if (ocrResponse.ok && ocrResult.success) {
+          onOcrComplete?.(ocrResult.data);
+        } else {
+          ocrMessage =
+            "Receipt uploaded, but its details could not be extracted.";
+        }
+      } catch (error) {
+        console.error("OCR error:", error);
+        ocrMessage =
+          "Receipt uploaded, but its details could not be extracted.";
+      }
+
       const extensionMap: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "application/pdf": "pdf",
-};
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "application/pdf": "pdf",
+      };
 
-const extension = extensionMap[file.type] ?? "bin";
+      const extension = extensionMap[file.type] ?? "bin";
 
-const safePath = `expenses/${expenseId}/receipt-${Date.now()}.${extension}`;
+      const safePath = `expenses/${expenseId}/receipt-${Date.now()}.${extension}`;
 
-const blob = await upload(safePath, file, {
-  access: "private",
-  handleUploadUrl: "/api/upload",
-  clientPayload: JSON.stringify({
-    expenseId,
-  }),
-});
+      const blob = await upload(safePath, file, {
+        access: "private",
+        handleUploadUrl: "/api/upload",
+        clientPayload: JSON.stringify({
+          expenseId,
+        }),
+      });
 
       console.log("Uploaded:", blob);
 
@@ -65,7 +124,7 @@ const blob = await upload(safePath, file, {
         return;
       }
 
-      setMessage("Bill proof uploaded successfully.");
+      setMessage(ocrMessage || "Bill proof uploaded successfully.");
 
       onUploadComplete?.(blob.url);
     } catch (error) {

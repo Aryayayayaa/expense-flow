@@ -1,9 +1,11 @@
 "use client";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 
 import {
   createExpenseAction,
   updateExpenseAction,
+  saveBillProofAction,
 } from "../actions/expense-actions";
 
 import Button from "@/components/common/Button";
@@ -12,6 +14,8 @@ import Card from "@/components/common/Card";
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
 
 import { SerializedExpense } from "../types";
+import type { OcrResult } from "../types/ocr";
+import ReceiptOcrUpload from "./ReceiptOcrUpload";
 
 type AddExpenseFormProps = {
   editingExpense: SerializedExpense | null;
@@ -24,6 +28,7 @@ const initialState = {
   success: false,
   errors: {} as Record<string, string[]>,
   message: "",
+  expenseId: undefined as number | undefined,
 };
 
 export default function AddExpenseForm({
@@ -38,6 +43,9 @@ export default function AddExpenseForm({
   const [amount, setAmount] = useState("");
   const [customCategory, setCustomCategory] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
+  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
   const formRef = useRef<HTMLFormElement>(null);
 
   function resetForm() {
@@ -92,6 +100,20 @@ export default function AddExpenseForm({
     });
   }, [editingExpense]);
 
+  useEffect(() => {
+    if (!ocrResult) {
+      return;
+    }
+
+    if (ocrResult.vendor) {
+      setTitle(ocrResult.vendor);
+    }
+
+    if (ocrResult.amount !== null) {
+      setAmount(String(ocrResult.amount));
+    }
+  }, [ocrResult]);
+
   return (
     <Card>
       <form
@@ -129,6 +151,15 @@ export default function AddExpenseForm({
               : "Record a new expense to keep track of your spending."}
           </p>
         </div>
+
+        <ReceiptOcrUpload
+          onOcrComplete={(result, file) => {
+            setReceiptFile(file);
+            if (result) {
+              setOcrResult(result);
+            }
+          }}
+        />
 
         <div className="space-y-1">
           <label className="block mb-1">Title</label>

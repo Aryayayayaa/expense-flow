@@ -13,26 +13,38 @@ import {
 import { expenseSchema } from "../schemas/expense-schema";
 import { capitalize } from "@/utils/capitalize";
 
+type ExpenseActionState = {
+  success: boolean;
+  errors: Record<string, string[]>;
+  message: string;
+  expenseId: number | undefined;
+};
+
 export async function createExpenseAction(
   prevState: unknown,
   formData: FormData,
-) {
+): Promise<ExpenseActionState> {
   try {
     const session = await auth();
+
     if (!session?.user?.id) {
       return {
         success: false,
         errors: {},
         message: "Please login to create expenses.",
+        expenseId: undefined,
       };
     }
 
     const selectedCategory = String(formData.get("category"));
+
     const customCategory = String(formData.get("customCategory") ?? "").trim();
+
     const category =
       selectedCategory === "Other"
         ? capitalize(customCategory)
         : capitalize(selectedCategory);
+
     const expenseDate = formData.get("expenseDate");
     const values = {
       title: capitalize(String(formData.get("title"))),
@@ -46,17 +58,24 @@ export async function createExpenseAction(
         success: false,
         errors: result.error.flatten().fieldErrors,
         message: "",
+        expenseId: undefined,
       };
     }
 
     //console.log("Parsed Data:", result.data);
 
-    await createExpense({ ...result.data, userId: Number(session.user.id) });
+    const expense = await createExpense({
+      ...result.data,
+      userId: Number(session.user.id),
+    });
+
     revalidatePath("/expenses");
+
     return {
       success: true,
       errors: {},
       message: "Expense created successfully.",
+      expenseId: expense.id,
     };
   } catch (error) {
     console.error("Create Expense Error:");
@@ -65,11 +84,15 @@ export async function createExpenseAction(
       success: false,
       errors: {},
       message: "Unable to create expense.",
+      expenseId: undefined,
     };
   }
 }
 
-export async function updateExpenseAction(id: number, formData: FormData) {
+export async function updateExpenseAction(
+  id: number,
+  formData: FormData,
+): Promise<ExpenseActionState> {
   try {
     const selectedCategory = String(formData.get("category"));
 
@@ -94,6 +117,7 @@ export async function updateExpenseAction(id: number, formData: FormData) {
         success: false,
         errors: result.error.flatten().fieldErrors,
         message: "",
+        expenseId: undefined,
       };
     }
 
@@ -104,6 +128,7 @@ export async function updateExpenseAction(id: number, formData: FormData) {
         success: false,
         errors: {},
         message: "Unauthorized.",
+        expenseId: undefined,
       };
     }
 
@@ -115,6 +140,7 @@ export async function updateExpenseAction(id: number, formData: FormData) {
       success: true,
       errors: {},
       message: "Expense updated successfully.",
+      expenseId: undefined,
     };
   } catch (error) {
     console.error(error);
@@ -123,6 +149,7 @@ export async function updateExpenseAction(id: number, formData: FormData) {
       success: false,
       errors: {},
       message: "Unable to update expense.",
+      expenseId: undefined,
     };
   }
 }
