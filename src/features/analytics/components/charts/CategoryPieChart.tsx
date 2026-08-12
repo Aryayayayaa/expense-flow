@@ -9,10 +9,10 @@ import {
   Legend,
 } from "recharts";
 
-import { Expense } from "@prisma/client";
+import { AnalyticsExpense } from "../../types";
 
 type CategoryPieChartProps = {
-  expenses: Expense[];
+  expenses: AnalyticsExpense[];
 };
 
 const CATEGORY_COLORS = [

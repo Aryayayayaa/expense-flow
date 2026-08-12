@@ -1,9 +1,9 @@
 "use client";
 
-import { Expense } from "@prisma/client";
+import { AnalyticsExpense } from "../../types";
 
 type TopCategoriesProps = {
-  expenses: Expense[];
+  expenses: AnalyticsExpense[];
 };
 
 export default function TopCategories({ expenses }: TopCategoriesProps) {

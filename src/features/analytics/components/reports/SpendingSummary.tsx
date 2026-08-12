@@ -1,9 +1,9 @@
 "use client";
 
-import { Expense } from "@prisma/client";
+import { AnalyticsExpense } from "../../types";
 
 type SpendingSummaryProps = {
-  expenses: Expense[];
+  expenses: AnalyticsExpense[];
 };
 
 export default function SpendingSummary({ expenses }: SpendingSummaryProps) {

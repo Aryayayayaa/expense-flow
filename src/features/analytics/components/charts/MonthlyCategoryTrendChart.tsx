@@ -11,10 +11,10 @@ import {
   YAxis,
 } from "recharts";
 
-import { Expense } from "@prisma/client";
+import { AnalyticsExpense } from "../../types";
 
 type MonthlyCategoryTrendChartProps = {
-  expenses: Expense[];
+  expenses: AnalyticsExpense[];
 };
 
 const monthNames = [
