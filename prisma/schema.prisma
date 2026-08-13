@@ -20,6 +20,15 @@ enum ExpenseStatus {
   REIMBURSED
 }
 
+enum ExpenseAuditAction {
+  CREATED
+  UPDATED
+  DELETED
+  APPROVED
+  REJECTED
+  OCR_RECEIPT_ATTACHED
+  BILL_PROOF_ATTACHED
+}
 
 enum RoleRequestStatus {
   PENDING
@@ -53,6 +62,8 @@ model User {
 
   employeeVerificationRequests EmployeeVerificationRequest[]
   reviewedEmployeeVerifications EmployeeVerificationRequest[] @relation("EmployeeVerificationReviewer")
+
+  auditLogs ExpenseAuditLog[]
 }
 
 model Expense {
@@ -80,6 +91,7 @@ model Expense {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  auditLogs ExpenseAuditLog[]
 
   userId    Int?
   user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -131,4 +143,20 @@ model EmployeeVerificationRequest {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("EmployeeVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+}
+
+model ExpenseAuditLog {
+  id Int @id @default(autoincrement())
+
+  action ExpenseAuditAction
+
+  expenseId Int?
+  expense   Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+
+  actorId Int?
+  actor   User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  details String?
+
+  createdAt DateTime @default(now())
 }

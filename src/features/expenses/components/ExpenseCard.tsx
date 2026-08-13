@@ -30,6 +30,7 @@ type ExpenseCardProps = {
 };
 
 export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
+  const canModify = expense.status === "PENDING";
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
 
   const hasOcrReceipt = Boolean(expense.ocrReceiptUrl);
@@ -189,33 +190,37 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
 
       {/* Expense actions */}
       <div className="grid grid-cols-2 gap-3">
-        <Button
-          type="button"
-          className="flex w-full items-center justify-center gap-2"
-          onClick={() => onEdit(expense)}
-        >
-          <Pencil size={18} />
-          Edit
-        </Button>
-
-        <form
-          action={deleteAction}
-          className="w-full"
-          onSubmit={(event) => {
-            if (!confirm("Are you sure you want to delete this expense?")) {
-              event.preventDefault();
-            }
-          }}
-        >
+        {canModify && (
           <Button
-            type="submit"
-            variant="danger"
+            type="button"
             className="flex w-full items-center justify-center gap-2"
+            onClick={() => onEdit(expense)}
           >
-            <Trash2 size={18} />
-            Delete
+            <Pencil size={18} />
+            Edit
           </Button>
-        </form>
+        )}
+
+        {canModify && (
+          <form
+            action={deleteAction}
+            className="w-full"
+            onSubmit={(event) => {
+              if (!confirm("Are you sure you want to delete this expense?")) {
+                event.preventDefault();
+              }
+            }}
+          >
+            <Button
+              type="submit"
+              variant="danger"
+              className="flex w-full items-center justify-center gap-2"
+            >
+              <Trash2 size={18} />
+              Delete
+            </Button>
+          </form>
+        )}
       </div>
     </Card>
   );

@@ -53,6 +53,10 @@ export async function updateExpense(
     throw new Error("Expense not found.");
   }
 
+  if (expense.status !== "PENDING") {
+    throw new Error("Only pending expenses can be edited.");
+  }
+
   return prisma.expense.update({
     where: {
       id,
@@ -71,6 +75,10 @@ export async function deleteExpense(id: number, userId: number) {
 
   if (!expense) {
     throw new Error("Expense not found.");
+  }
+
+  if (expense.status !== "PENDING") {
+    throw new Error("Only pending expenses can be deleted.");
   }
 
   return prisma.expense.delete({
