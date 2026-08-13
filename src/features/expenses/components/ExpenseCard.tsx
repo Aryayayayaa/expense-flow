@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Calendar,
   Clock,
@@ -9,17 +8,15 @@ import {
   Trash2,
   ReceiptText,
   Eye,
-  RefreshCw,
+  FileText,
+  AlertCircle,
 } from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 import { formatDate, formatTime } from "@/utils/formatDate";
 import { getCategoryColor } from "@/utils/categoryColor";
 
-import {
-  deleteExpenseAction,
-  removeBillProofAction,
-} from "@/features/expenses/actions/expense-actions";
+import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
 import { SerializedExpense } from "../types";
 
 import Card from "@/components/common/Card";
@@ -34,29 +31,35 @@ type ExpenseCardProps = {
 
 export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
-  //const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const removeBillProof = removeBillProofAction.bind(null, expense.id);
-  const [showReplaceUpload, setShowReplaceUpload] = useState(false);
+
+  const hasOcrReceipt = Boolean(expense.ocrReceiptUrl);
+  const hasBillProof = Boolean(expense.billProofUrl);
+  const hasProof = hasOcrReceipt || hasBillProof;
 
   return (
     <Card className="flex min-h-60 flex-col text-black">
+      {/* Expense information */}
       <div className="space-y-2">
-        <h2 className="mb-3 text-3xl font-semibold break-words">
+        <h2 className="mb-3 break-words text-3xl font-semibold">
           {expense.title}
         </h2>
 
-        <p className="text-2xl font-bold text-green-600 tracking-tight">
+        <p className="text-2xl font-bold tracking-tight text-green-600">
           {formatCurrency(expense.amount)}
         </p>
       </div>
 
+      {/* Category */}
       <div
-        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${getCategoryColor(expense.category)}`}
+        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${getCategoryColor(
+          expense.category,
+        )}`}
       >
         <Tag size={16} />
         <span>{expense.category}</span>
       </div>
 
+      {/* Date and time */}
       <div className="space-y-2 text-sm text-gray-500">
         <div className="flex items-center gap-2">
           <Calendar size={16} />
@@ -69,8 +72,49 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         </div>
       </div>
 
+      {/* Original OCR receipt */}
+      {hasOcrReceipt && (
+        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center gap-2">
+            <FileText size={18} className="text-blue-600" />
+
+            <span className="font-medium text-blue-800">Original Receipt</span>
+          </div>
+
+          <p className="mt-1 text-sm text-blue-700">
+            Original receipt used for OCR extraction.
+          </p>
+
+          <div className="mt-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex items-center gap-2"
+              onClick={async () => {
+                const response = await fetch(
+                  `/api/expenses/${expense.id}/ocr-receipt`,
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                  alert(data.error ?? "Unable to open original receipt.");
+                  return;
+                }
+
+                window.open(data.url, "_blank");
+              }}
+            >
+              <Eye size={16} />
+              View Original Receipt
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Proof section */}
       <div className="mt-4">
-        {expense.billProofUrl ? (
+        {hasBillProof ? (
           <div className="rounded-lg border border-green-200 bg-green-50 p-4">
             <div className="flex items-center gap-2">
               <ReceiptText size={18} className="text-green-600" />
@@ -80,8 +124,11 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
               </span>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              {/* View */}
+            <p className="mt-1 text-sm text-green-700">
+              This proof is permanently attached to this expense.
+            </p>
+
+            <div className="mt-3">
               <Button
                 type="button"
                 variant="secondary"
@@ -102,71 +149,49 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
                 }}
               >
                 <Eye size={16} />
-                View
+                View Bill Proof
               </Button>
-
-              {/* Replace */}
-              <Button
-                type="button"
-                variant="secondary"
-                className="flex items-center gap-2"
-                onClick={() => setShowReplaceUpload((value) => !value)}
-              >
-                <RefreshCw size={16} />
-                {showReplaceUpload ? "Cancel Replace" : "Replace"}
-              </Button>
-
-              {/* Remove */}
-              <form
-                onSubmit={async (event) => {
-                  event.preventDefault();
-
-                  const confirmed = confirm(
-                    "Are you sure you want to remove this bill proof?",
-                  );
-
-                  if (!confirmed) {
-                    return;
-                  }
-
-                  const result = await removeBillProof();
-
-                  if (!result.success) {
-                    alert(result.message);
-                  }
-                }}
-              >
-                <Button
-                  type="submit"
-                  variant="danger"
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 size={16} />
-                  Remove
-                </Button>
-              </form>
             </div>
-            {showReplaceUpload && (
-              <ReceiptUpload
-                expenseId={expense.id}
-                mode="replace"
-                onUploadComplete={() => {
-                  setShowReplaceUpload(false);
-                }}
-              />
-            )}
+          </div>
+        ) : hasOcrReceipt ? (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center gap-2">
+              <FileText size={18} className="text-blue-600" />
+
+              <span className="font-medium text-blue-800">
+                Expense Proof Attached
+              </span>
+            </div>
+
+            <p className="mt-1 text-sm text-blue-700">
+              The original receipt is being used as the expense proof.
+            </p>
           </div>
         ) : (
-          <ReceiptUpload expenseId={expense.id} />
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={18} className="text-amber-600" />
+
+              <span className="font-medium text-amber-800">Proof Required</span>
+            </div>
+
+            <p className="mt-1 text-sm text-amber-700">
+              Upload a receipt, invoice, or bill proof before submitting this
+              expense for approval.
+            </p>
+
+            <ReceiptUpload expenseId={expense.id} />
+          </div>
         )}
       </div>
 
       <hr className="my-5 border-gray-200" />
 
+      {/* Expense actions */}
       <div className="grid grid-cols-2 gap-3">
         <Button
           type="button"
-          className="w-full flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2"
           onClick={() => onEdit(expense)}
         >
           <Pencil size={18} />
@@ -176,16 +201,16 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         <form
           action={deleteAction}
           className="w-full"
-          onSubmit={(e) => {
+          onSubmit={(event) => {
             if (!confirm("Are you sure you want to delete this expense?")) {
-              e.preventDefault();
+              event.preventDefault();
             }
           }}
         >
           <Button
             type="submit"
             variant="danger"
-            className="w-full flex items-center justify-center gap-2"
+            className="flex w-full items-center justify-center gap-2"
           >
             <Trash2 size={18} />
             Delete
