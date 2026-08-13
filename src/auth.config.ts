@@ -9,6 +9,7 @@ const protectedRoutes = [
   "/reports",
   "/approvals",
   "/admin",
+  "/hr",
 ];
 
 export const authConfig = {

@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getAdminOverview } from "@/features/admin/lib/admin";
-import RoleRequestManagement from "@/features/admin/components/RoleRequestManagement";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -31,13 +30,8 @@ export default async function AdminPage() {
         </div>
 
         {/* Overview */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <OverviewCard label="Total Users" value={overview.totalUsers} />
-
-          <OverviewCard
-            label="Pending Role Requests"
-            value={overview.pendingRoleRequests}
-          />
 
           <OverviewCard
             label="Pending Expenses"
@@ -115,21 +109,6 @@ export default async function AdminPage() {
               </table>
             </div>
           </div>
-        </section>
-
-        {/* Role requests */}
-        <section className="mt-8">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Role Verification
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Review pending requests for ADMIN and HR privileges.
-            </p>
-          </div>
-
-          <RoleRequestManagement requests={overview.roleRequests} />
         </section>
       </div>
     </main>

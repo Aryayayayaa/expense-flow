@@ -25,5 +25,7 @@ export const config = {
     "/reports/:path*",
     "/approvals/:path*",
     "/admin/:path*",
+    "/hr/:path*",
+    "/role-verification/:path*",
   ],
 };
