@@ -1,0 +1,469 @@
+"use client";
+
+import { useState } from "react";
+
+import {
+  approveExpenseAction,
+  rejectExpenseAction,
+} from "@/features/expenses/actions/approval-actions";
+
+import type { SerializedExpense } from "@/features/expenses/types";
+
+type ApprovalExpense = SerializedExpense & {
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+
+  decidedBy: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+};
+
+type ApprovalListProps = {
+  expenses: ApprovalExpense[];
+};
+
+export default function ApprovalList({ expenses }: ApprovalListProps) {
+  const [selectedExpense, setSelectedExpense] =
+    useState<ApprovalExpense | null>(null);
+
+  if (expenses.length === 0) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <h2 className="text-lg font-semibold text-slate-800">
+          No pending expenses
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          All expenses have been reviewed.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left">
+            <thead className="border-b border-slate-200 bg-slate-50">
+              <tr>
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Employee
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Expense
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Amount
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Category
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Date
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Evidence
+                </th>
+
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Status
+                </th>
+
+                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Action
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100">
+              {expenses.map((expense) => (
+                <tr key={expense.id} className="transition hover:bg-slate-50">
+                  <td className="px-5 py-4">
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {expense.user?.name ?? "Unknown"}
+                      </p>
+
+                      <p className="text-xs text-slate-500">
+                        {expense.user?.email ?? "No email"}
+                      </p>
+                    </div>
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <p className="font-medium text-slate-900">
+                      {expense.title}
+                    </p>
+
+                    <p className="text-xs text-slate-400">#{expense.id}</p>
+                  </td>
+
+                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-green-600">
+                    ₹{expense.amount.toFixed(2)}
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                      {expense.category}
+                    </span>
+                  </td>
+
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
+                    {expense.expenseDate
+                      ? new Date(expense.expenseDate).toLocaleDateString()
+                      : "—"}
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <EvidenceIndicator expense={expense} />
+                  </td>
+
+                  <td className="px-5 py-4">
+                    <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                      PENDING
+                    </span>
+                  </td>
+
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedExpense(expense)}
+                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Review
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {selectedExpense && (
+        <ReviewExpenseModal
+          expense={selectedExpense}
+          onClose={() => setSelectedExpense(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function EvidenceIndicator({ expense }: { expense: ApprovalExpense }) {
+  const hasReceipt = Boolean(expense.ocrReceiptPath);
+  const hasBillProof = Boolean(expense.billProofPath);
+
+  if (!hasReceipt && !hasBillProof) {
+    return <span className="text-xs font-medium text-red-600">No proof</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {hasReceipt && (
+        <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+          Receipt
+        </span>
+      )}
+
+      {hasBillProof && (
+        <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
+          Bill
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ReviewExpenseModal({
+  expense,
+  onClose,
+}: {
+  expense: ApprovalExpense;
+  onClose: () => void;
+}) {
+  const [processing, setProcessing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showReject, setShowReject] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  async function handleApprove() {
+    const confirmed = window.confirm(
+      "Are you sure you want to approve this expense?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setProcessing(true);
+    setMessage("");
+
+    try {
+      const result = await approveExpenseAction(expense.id);
+
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Approve expense error:", error);
+      setMessage("Unable to approve expense.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function handleReject() {
+    const reason = rejectionReason.trim();
+
+    if (!reason) {
+      setMessage("Please provide a rejection reason.");
+      return;
+    }
+
+    setProcessing(true);
+    setMessage("");
+
+    try {
+      const result = await rejectExpenseAction(expense.id, reason);
+
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Reject expense error:", error);
+      setMessage("Unable to reject expense.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function openProof(endpoint: string, errorMessage: string) {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error ?? errorMessage);
+        return;
+      }
+
+      window.open(data.url, "_blank");
+    } catch (error) {
+      console.error("Proof view error:", error);
+      setMessage(errorMessage);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+          <div>
+            <p className="text-sm font-medium text-slate-500">
+              Expense #{expense.id}
+            </p>
+
+            <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+              {expense.title}
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={processing}
+            className="rounded-lg px-3 py-2 text-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close review"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-6 p-6">
+          <section>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Expense Details
+            </h3>
+
+            <div className="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+              <Detail
+                label="Employee"
+                value={expense.user?.name ?? "Unknown"}
+              />
+
+              <Detail label="Email" value={expense.user?.email ?? "—"} />
+
+              <Detail label="Amount" value={`₹${expense.amount.toFixed(2)}`} />
+
+              <Detail label="Category" value={expense.category} />
+
+              <Detail
+                label="Expense Date"
+                value={
+                  expense.expenseDate
+                    ? new Date(expense.expenseDate).toLocaleDateString()
+                    : "—"
+                }
+              />
+
+              <Detail label="Status" value={expense.status} />
+            </div>
+          </section>
+
+          <section>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Supporting Documents
+            </h3>
+
+            <div className="flex flex-wrap gap-3">
+              {expense.ocrReceiptPath && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openProof(
+                      `/api/expenses/${expense.id}/ocr-receipt`,
+                      "Unable to open original receipt.",
+                    )
+                  }
+                  className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                >
+                  View Original Receipt
+                </button>
+              )}
+
+              {expense.billProofPath && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    openProof(
+                      `/api/expenses/${expense.id}/bill-proof`,
+                      "Unable to open bill proof.",
+                    )
+                  }
+                  className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+                >
+                  View Bill Proof
+                </button>
+              )}
+
+              {!expense.ocrReceiptPath && !expense.billProofPath && (
+                <p className="text-sm text-red-600">
+                  No supporting documents have been uploaded.
+                </p>
+              )}
+            </div>
+          </section>
+
+          {expense.ocrRawText && (
+            <section>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                OCR Extracted Information
+              </h3>
+
+              <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                {expense.ocrRawText}
+              </div>
+            </section>
+          )}
+
+          {showReject && (
+            <section className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <label
+                htmlFor={`rejection-${expense.id}`}
+                className="block text-sm font-semibold text-red-900"
+              >
+                Rejection Reason
+              </label>
+
+              <textarea
+                id={`rejection-${expense.id}`}
+                value={rejectionReason}
+                onChange={(event) => setRejectionReason(event.target.value)}
+                disabled={processing}
+                rows={4}
+                placeholder="Explain why this expense is being rejected..."
+                className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400"
+              />
+
+              <button
+                type="button"
+                disabled={processing}
+                onClick={handleReject}
+                className="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {processing ? "Rejecting..." : "Confirm Rejection"}
+              </button>
+            </section>
+          )}
+
+          {message && (
+            <p className="rounded-lg bg-slate-100 p-3 text-sm text-slate-700">
+              {message}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={processing}
+            className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+          >
+            Close
+          </button>
+
+          {!showReject && (
+            <button
+              type="button"
+              onClick={() => setShowReject(true)}
+              disabled={processing}
+              className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Reject
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleApprove}
+            disabled={processing}
+            className="rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {processing ? "Processing..." : "Approve"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-1 text-sm font-medium text-slate-800">{value}</p>
+    </div>
+  );
+}

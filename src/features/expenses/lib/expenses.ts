@@ -129,6 +129,13 @@ export async function getPendingExpensesForAdmin() {
           email: true,
         },
       },
+      decidedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
     orderBy: [{ expenseDate: "asc" }, { createdAt: "asc" }],
   });
