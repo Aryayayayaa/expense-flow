@@ -1,3 +1,6 @@
+import type { OcrResult } from "../types/ocr";
+import { parseReceiptText } from "./parseReceiptText";
+
 const apiKey = process.env.MINDEE_API_KEY;
 const configuredModelId = process.env.MINDEE_OCR_MODEL_ID;
 
@@ -10,7 +13,7 @@ if (!configuredModelId) {
 }
 
 const mindeeApiKey: string = apiKey;
-const modelId: string = configuredModelId;
+const mindeeModelId: string = configuredModelId;
 
 const MINDEE_BASE_URL = "https://api-v2.mindee.net";
 
@@ -22,7 +25,13 @@ export async function extractReceiptData(
   fileData: string,
   fileName: string,
   mimeType?: string,
-) {
+): Promise<OcrResult> {
+  /*
+   * ---------------------------------------------------------
+   * STEP 1: Decode Base64 file
+   * ---------------------------------------------------------
+   */
+
   const base64Data = fileData.includes(",") ? fileData.split(",")[1] : fileData;
 
   if (!base64Data) {
@@ -42,9 +51,9 @@ export async function extractReceiptData(
   });
 
   /*
-   * -------------------------------------------------------
-   * STEP 1: Enqueue OCR job
-   * -------------------------------------------------------
+   * ---------------------------------------------------------
+   * STEP 2: Create Mindee upload request
+   * ---------------------------------------------------------
    */
 
   const formData = new FormData();
@@ -54,7 +63,13 @@ export async function extractReceiptData(
   });
 
   formData.append("file", fileBlob, fileName);
-  formData.append("model_id", modelId);
+  formData.append("model_id", mindeeModelId);
+
+  /*
+   * ---------------------------------------------------------
+   * STEP 3: Enqueue OCR job
+   * ---------------------------------------------------------
+   */
 
   const enqueueResponse = await fetch(
     `${MINDEE_BASE_URL}/v2/products/ocr/enqueue`,
@@ -90,7 +105,6 @@ export async function extractReceiptData(
   }
 
   const jobId = job.id;
-
   const pollingUrl = job.pollingUrl ?? job.polling_url;
 
   if (!pollingUrl) {
@@ -105,9 +119,9 @@ export async function extractReceiptData(
   });
 
   /*
-   * -------------------------------------------------------
-   * STEP 2: Poll OCR job
-   * -------------------------------------------------------
+   * ---------------------------------------------------------
+   * STEP 4: Poll for OCR result
+   * ---------------------------------------------------------
    */
 
   const maxAttempts = 30;
@@ -128,52 +142,46 @@ export async function extractReceiptData(
       const pollingData = await pollingResponse.json();
 
       /*
-       * -----------------------------------------------------
-       * IMPORTANT:
-       *
-       * Mindee can return the completed OCR inference
-       * directly from the polling endpoint.
-       *
-       * The successful diagnostic request showed:
-       *
-       * {
-       *   inference: {
-       *     ...
-       *     result: {
-       *       pages: [...]
-       *     }
-       *   }
-       * }
-       *
-       * Therefore, check for `inference` BEFORE looking
-       * for `job.status`.
-       * -----------------------------------------------------
+       * -------------------------------------------------------
+       * Direct inference response
+       * -------------------------------------------------------
        */
 
-      if (pollingData?.inference) {
+      const inference = pollingData?.inference;
+
+      if (inference?.result?.pages) {
         console.log("Mindee OCR processing completed.");
 
-        console.log("Mindee OCR result received.");
+        const rawText = inference.result.pages
+          .map((page: { content?: string }) => page?.content ?? "")
+          .filter(Boolean)
+          .join("\n");
 
-        return pollingData.inference;
+        console.log("Mindee OCR raw text received.");
+
+        return parseReceiptText(rawText);
       }
 
       /*
-       * -----------------------------------------------------
-       * A temporary 404 can occur while the job is
-       * transitioning.
-       * Retry instead of immediately failing.
-       * -----------------------------------------------------
+       * -------------------------------------------------------
+       * Temporary 404
+       * -------------------------------------------------------
        */
 
       if (pollingResponse.status === 404) {
         console.warn(
           `Mindee OCR polling attempt ${attempt}/${maxAttempts}: ` +
-            `job temporarily unavailable (404). Retrying...`,
+            "job temporarily unavailable (404). Retrying...",
         );
 
         continue;
       }
+
+      /*
+       * -------------------------------------------------------
+       * Other HTTP errors
+       * -------------------------------------------------------
+       */
 
       if (!pollingResponse.ok) {
         console.error("Mindee Polling Error:", pollingData);
@@ -185,16 +193,21 @@ export async function extractReceiptData(
         );
       }
 
-      const pollingJob = pollingData?.job;
+      /*
+       * -------------------------------------------------------
+       * Normal job response
+       * -------------------------------------------------------
+       */
 
+      const pollingJob = pollingData?.job;
       const status = pollingJob?.status;
 
       console.log(`Mindee OCR attempt ${attempt}/${maxAttempts}:`, status);
 
       /*
-       * -----------------------------------------------------
+       * -------------------------------------------------------
        * Job failed
-       * -----------------------------------------------------
+       * -------------------------------------------------------
        */
 
       if (status === "Failed") {
@@ -210,13 +223,9 @@ export async function extractReceiptData(
       }
 
       /*
-       * -----------------------------------------------------
-       * Job completed with the traditional Processed status
-       *
-       * Keep this fallback in case Mindee returns a job object
-       * with a result URL instead of returning the inference
-       * directly.
-       * -----------------------------------------------------
+       * -------------------------------------------------------
+       * Job processed
+       * -------------------------------------------------------
        */
 
       if (status === "Processed") {
@@ -229,14 +238,6 @@ export async function extractReceiptData(
             "Mindee completed OCR but did not return a result URL.",
           );
         }
-
-        console.log("Mindee OCR processing completed.");
-
-        /*
-         * ---------------------------------------------------
-         * STEP 3: Retrieve OCR result
-         * ---------------------------------------------------
-         */
 
         const resultResponse = await fetch(resultUrl, {
           method: "GET",
@@ -261,14 +262,26 @@ export async function extractReceiptData(
 
         console.log("Mindee OCR result received.");
 
-        return resultData?.inference ?? resultData;
+        const resultInference = resultData?.inference;
+
+        if (resultInference?.result?.pages) {
+          const rawText = resultInference.result.pages
+            .map((page: { content?: string }) => page?.content ?? "")
+            .filter(Boolean)
+            .join("\n");
+
+          console.log("Mindee OCR raw text received.");
+
+          return parseReceiptText(rawText);
+        }
+
+        return resultInference ?? resultData;
       }
 
       /*
-       * -----------------------------------------------------
-       * Job is still processing.
-       * Continue polling.
-       * -----------------------------------------------------
+       * -------------------------------------------------------
+       * Job is still processing
+       * -------------------------------------------------------
        */
 
       if (!status) {
@@ -278,13 +291,9 @@ export async function extractReceiptData(
         );
       }
     } catch (error) {
-      /*
-       * If this is the final polling attempt, surface the error.
-       * Otherwise retry transient polling failures.
-       */
-
       if (attempt === maxAttempts) {
         console.error("Mindee Polling Error:", error);
+
         throw error;
       }
 
@@ -295,12 +304,6 @@ export async function extractReceiptData(
       );
     }
   }
-
-  /*
-   * -------------------------------------------------------
-   * STEP 4: Polling timeout
-   * -------------------------------------------------------
-   */
 
   throw new Error(
     "Mindee OCR processing timed out before a result was available.",

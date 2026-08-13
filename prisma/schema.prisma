@@ -9,6 +9,7 @@ datasource db {
 
 enum Role {
   ADMIN
+  HR
   EMPLOYEE
 }
 
@@ -17,6 +18,13 @@ enum ExpenseStatus {
   APPROVED
   REJECTED
   REIMBURSED
+}
+
+
+enum RoleRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model User {
@@ -32,6 +40,11 @@ model User {
 
   expenses        Expense[]
   decidedExpenses Expense[] @relation("ExpenseDecisionMaker")
+
+
+  roleRequests         RoleVerificationRequest[]
+  reviewedRoleRequests RoleVerificationRequest[] @relation("RoleRequestReviewer")
+
 }
 
 model Expense {
@@ -59,8 +72,33 @@ model Expense {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId Int?
-  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  userId    Int?
+  user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   decidedBy User? @relation("ExpenseDecisionMaker", fields: [decidedById], references: [id], onDelete: SetNull)
+}
+
+model RoleVerificationRequest {
+  id Int @id @default(autoincrement())
+
+  requestedRole Role
+
+  proofUrl  String?
+  proofPath String?
+
+  status RoleRequestStatus @default(PENDING)
+
+  rejectionReason String?
+
+  reviewedAt   DateTime?
+  reviewedById Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  reviewedBy User? @relation("RoleRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
 }

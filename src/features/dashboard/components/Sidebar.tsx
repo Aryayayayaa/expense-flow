@@ -3,8 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import LogoutButton from "@/features/auth/components/LogoutButton";
+import type { Role } from "@prisma/client";
 
-export default function Sidebar() {
+type SidebarProps = {
+  userRole?: Role;
+};
+
+export default function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -72,12 +77,23 @@ export default function Sidebar() {
             active={pathname.startsWith("/reports")}
           />
 
-          <SidebarLink
-            href="/admin"
-            label="Admin"
-            icon={<SettingsIcon />}
-            active={pathname.startsWith("/admin")}
-          />
+          {userRole === "ADMIN" && (
+            <SidebarLink
+              href="/admin"
+              label="Admin"
+              icon={<SettingsIcon />}
+              active={pathname.startsWith("/admin")}
+            />
+          )}
+
+          {(userRole === "ADMIN" || userRole === "HR") && (
+            <SidebarLink
+              href="/role-verification"
+              label="Role Verification"
+              icon={<VerificationIcon />}
+              active={pathname.startsWith("/role-verification")}
+            />
+          )}
 
           <SidebarLink
             href="/profile"
@@ -295,6 +311,24 @@ function LogoutIcon() {
       <path d="M10 17l5-5-5-5" />
       <path d="M15 12H3" />
       <path d="M21 19V5a2 2 0 0 0-2-2h-6" />
+    </svg>
+  );
+}
+
+function VerificationIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
+      <path d="m9 12 2 2 4-4" />
     </svg>
   );
 }

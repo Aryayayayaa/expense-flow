@@ -8,17 +8,17 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role: "ADMIN" | "EMPLOYEE";
+      role: "ADMIN" | "HR" | "EMPLOYEE";
     };
   }
 
   interface User {
-    role: "ADMIN" | "EMPLOYEE";
+    role: "ADMIN" | "HR" | "EMPLOYEE";
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: "ADMIN" | "EMPLOYEE";
+    role?: "ADMIN" | "HR" | "EMPLOYEE";
   }
 }

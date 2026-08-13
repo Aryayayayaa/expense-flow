@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import RoleVerificationRequest from "@/features/auth/components/RoleVerificationRequest";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -74,6 +75,8 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <RoleVerificationRequest currentRole={user.role} />
       </div>
     </main>
   );
