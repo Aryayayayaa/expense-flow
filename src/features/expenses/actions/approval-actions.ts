@@ -50,6 +50,7 @@ export async function approveExpenseAction(
       select: {
         id: true,
         status: true,
+        userId: true,
       },
     });
 
@@ -57,6 +58,13 @@ export async function approveExpenseAction(
       return {
         success: false,
         message: "Expense not found.",
+      };
+    }
+
+    if (expense.userId === admin.userId) {
+      return {
+        success: false,
+        message: "You cannot approve your own expense.",
       };
     }
 
@@ -124,6 +132,7 @@ export async function rejectExpenseAction(
       select: {
         id: true,
         status: true,
+        userId: true,
       },
     });
 
@@ -131,6 +140,13 @@ export async function rejectExpenseAction(
       return {
         success: false,
         message: "Expense not found.",
+      };
+    }
+
+    if (expense.userId === admin.userId) {
+      return {
+        success: false,
+        message: "You cannot reject your own expense.",
       };
     }
 
