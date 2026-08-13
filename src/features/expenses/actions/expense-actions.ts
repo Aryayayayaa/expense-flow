@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { del } from "@vercel/blob";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -85,6 +84,72 @@ export async function createExpenseAction(
       errors: {},
       message: "Unable to create expense.",
       expenseId: undefined,
+    };
+  }
+}
+
+export async function saveOcrReceiptAction(
+  expenseId: number,
+  ocrReceiptUrl: string,
+  ocrReceiptPath: string,
+  ocrRawText: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    const expense = await prisma.expense.findFirst({
+      where: {
+        id: expenseId,
+        userId: Number(session.user.id),
+      },
+    });
+
+    if (!expense) {
+      return {
+        success: false,
+        message: "Expense not found.",
+      };
+    }
+
+    // OCR receipt is immutable.
+    // Never overwrite an existing OCR receipt.
+    if (expense.ocrReceiptUrl || expense.ocrReceiptPath) {
+      return {
+        success: false,
+        message: "An original OCR receipt already exists for this expense.",
+      };
+    }
+
+    await prisma.expense.update({
+      where: {
+        id: expenseId,
+      },
+      data: {
+        ocrReceiptUrl,
+        ocrReceiptPath,
+        ocrRawText,
+      },
+    });
+
+    revalidatePath("/expenses");
+
+    return {
+      success: true,
+      message: "Original receipt saved successfully.",
+    };
+  } catch (error) {
+    console.error("Save OCR Receipt Error:", error);
+
+    return {
+      success: false,
+      message: "Unable to save original receipt.",
     };
   }
 }
@@ -193,6 +258,27 @@ export async function saveBillProofAction(
       };
     }
 
+    /*
+     * An OCR receipt already satisfies the proof requirement.
+     * Do not allow a second proof to be attached by the employee.
+     */
+    if (expense.ocrReceiptUrl || expense.ocrReceiptPath) {
+      return {
+        success: false,
+        message: "This expense already has an original receipt attached.",
+      };
+    }
+
+    /*
+     * Bill proof is immutable once uploaded.
+     */
+    if (expense.billProofUrl || expense.billProofPath) {
+      return {
+        success: false,
+        message: "Bill proof has already been uploaded and cannot be replaced.",
+      };
+    }
+
     await prisma.expense.update({
       where: {
         id: expenseId,
@@ -215,128 +301,6 @@ export async function saveBillProofAction(
     return {
       success: false,
       message: "Unable to save bill proof.",
-    };
-  }
-}
-
-export async function replaceBillProofAction(
-  expenseId: number,
-  newBillProofUrl: string,
-  newBillProofPath: string,
-) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        message: "Unauthorized.",
-      };
-    }
-
-    const expense = await prisma.expense.findFirst({
-      where: {
-        id: expenseId,
-        userId: Number(session.user.id),
-      },
-      select: {
-        billProofPath: true,
-      },
-    });
-
-    if (!expense) {
-      return {
-        success: false,
-        message: "Expense not found.",
-      };
-    }
-
-    const oldBillProofPath = expense.billProofPath;
-
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        billProofUrl: newBillProofUrl,
-        billProofPath: newBillProofPath,
-      },
-    });
-
-    if (oldBillProofPath) {
-      await del(oldBillProofPath);
-    }
-
-    revalidatePath("/expenses");
-
-    return {
-      success: true,
-      message: "Bill proof replaced successfully.",
-    };
-  } catch (error) {
-    console.error("Replace Bill Proof Error:", error);
-
-    return {
-      success: false,
-      message: "Unable to replace bill proof.",
-    };
-  }
-}
-
-export async function removeBillProofAction(expenseId: number) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        message: "Unauthorized.",
-      };
-    }
-
-    const expense = await prisma.expense.findFirst({
-      where: {
-        id: expenseId,
-        userId: Number(session.user.id),
-      },
-      select: {
-        billProofPath: true,
-      },
-    });
-
-    if (!expense) {
-      return {
-        success: false,
-        message: "Expense not found.",
-      };
-    }
-
-    if (expense.billProofPath) {
-      await del(expense.billProofPath);
-    }
-
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        billProofUrl: null,
-        billProofPath: null,
-      },
-    });
-
-    revalidatePath("/expenses");
-
-    return {
-      success: true,
-      message: "Bill proof removed successfully.",
-    };
-  } catch (error) {
-    console.error("Remove Bill Proof Error:", error);
-
-    return {
-      success: false,
-      message: "Unable to remove bill proof.",
     };
   }
 }

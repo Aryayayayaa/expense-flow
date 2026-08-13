@@ -63,18 +63,24 @@ export default function ReceiptOcrUpload({
 
       if (!response.ok || !result.success) {
         onOcrComplete(null, file);
+
         setMessage(
           "Unable to extract receipt details. You can enter them manually.",
         );
+
         return;
       }
 
       onOcrComplete(result.data, file);
 
-      setMessage("Receipt details extracted successfully.");
+      setMessage(
+        "Receipt details extracted successfully. The original receipt will be saved with this expense.",
+      );
     } catch (error) {
       onOcrComplete(null, file);
+
       console.error("OCR upload error:", error);
+
       setMessage(
         "Unable to extract receipt details. You can enter them manually.",
       );
@@ -86,10 +92,11 @@ export default function ReceiptOcrUpload({
   return (
     <div className="rounded-lg border border-dashed border-gray-300 p-4">
       <div className="mb-2">
-        <p className="font-medium text-gray-800">📄 Receipt / Bill</p>
+        <p className="font-medium text-gray-800">📄 Original Receipt</p>
 
         <p className="text-sm text-gray-500">
-          Upload a receipt to automatically extract expense details.
+          Upload the original receipt to automatically extract expense details.
+          The receipt will be saved as proof for this expense.
         </p>
       </div>
 
