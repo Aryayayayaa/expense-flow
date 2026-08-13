@@ -43,16 +43,14 @@ export default async function ApprovalsPage({
       Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
     const [pendingExpenses, history] = await Promise.all([
-      getPendingExpensesForAdmin(),
+      getPendingExpensesForAdmin(userId),
       getExpenseApprovalHistory(historyPage, 10),
     ]);
 
-    const serializedPendingExpenses = pendingExpenses
-      .filter((expense) => expense.userId !== userId)
-      .map((expense) => ({
-        ...expense,
-        amount: Number(expense.amount),
-      }));
+    const serializedPendingExpenses = pendingExpenses.map((expense) => ({
+      ...expense,
+      amount: Number(expense.amount),
+    }));
 
     return (
       <main className="p-6 sm:p-8 lg:p-10">

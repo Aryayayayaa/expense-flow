@@ -116,10 +116,13 @@ export async function getAllExpensesForAdmin() {
 /**
  * Get expenses that are currently waiting for admin approval.
  */
-export async function getPendingExpensesForAdmin() {
+export async function getPendingExpensesForAdmin(adminId: number) {
   return prisma.expense.findMany({
     where: {
       status: "PENDING",
+      userId: {
+        not: adminId,
+      },
     },
     include: {
       user: {
