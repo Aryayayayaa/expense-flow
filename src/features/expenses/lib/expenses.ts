@@ -141,3 +141,57 @@ export async function getPendingExpensesForAdmin() {
     orderBy: [{ expenseDate: "asc" }, { createdAt: "asc" }],
   });
 }
+
+export async function getExpenseApprovalHistory(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+
+  const where = {
+    decidedAt: {
+      not: null,
+    },
+  };
+
+  const [expenses, total] = await prisma.$transaction([
+    prisma.expense.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        decidedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        decidedAt: "desc",
+      },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
+
+    prisma.expense.count({
+      where,
+    }),
+  ]);
+
+  return {
+    expenses,
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.ceil(total / safePageSize),
+  };
+}

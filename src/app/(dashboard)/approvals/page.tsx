@@ -1,14 +1,24 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import {
+  getExpenseApprovalHistory,
   getExpenses,
   getPendingExpensesForAdmin,
 } from "@/features/expenses/lib/expenses";
 
 import ApprovalList from "@/features/approvals/components/ApprovalList";
 
-export default async function ApprovalsPage() {
+type ApprovalsPageProps = {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+};
+
+export default async function ApprovalsPage({
+  searchParams,
+}: ApprovalsPageProps) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -21,12 +31,23 @@ export default async function ApprovalsPage() {
   /*
    * ADMIN
    *
-   * Admins review other users' pending expenses.
+   * Admins review other users' pending expenses
+   * and can view the complete approval history.
    */
   if (role === "ADMIN") {
-    const expenses = await getPendingExpensesForAdmin();
+    const params = await searchParams;
 
-    const serializedExpenses = expenses
+    const requestedPage = Number(params.page ?? "1");
+
+    const historyPage =
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+    const [pendingExpenses, history] = await Promise.all([
+      getPendingExpensesForAdmin(),
+      getExpenseApprovalHistory(historyPage, 10),
+    ]);
+
+    const serializedPendingExpenses = pendingExpenses
       .filter((expense) => expense.userId !== userId)
       .map((expense) => ({
         ...expense,
@@ -34,18 +55,196 @@ export default async function ApprovalsPage() {
       }));
 
     return (
-      <main className="p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-semibold text-slate-900">
-            Expense Approvals
-          </h1>
+      <main className="p-6 sm:p-8 lg:p-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-semibold text-slate-900">
+              Expense Approvals
+            </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Review and approve or reject employee expenses.
-          </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Review employee expenses and track previous approval decisions.
+            </p>
+          </div>
+
+          {/* Pending approvals */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-slate-900">
+                Pending Approvals
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Expenses waiting for your approval.
+              </p>
+            </div>
+
+            <ApprovalList expenses={serializedPendingExpenses} />
+          </section>
+
+          {/* Approval history */}
+          <section className="mt-10">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-slate-900">
+                Approval History
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Previously approved and rejected expenses.
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {history.expenses.length === 0 ? (
+                <div className="p-8 text-center text-sm text-slate-500">
+                  No approval history available.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[950px] text-left text-sm">
+                    <thead className="border-b border-slate-200 bg-slate-50">
+                      <tr>
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Expense
+                        </th>
+
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Employee
+                        </th>
+
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Amount
+                        </th>
+
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Decision
+                        </th>
+
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Decided By
+                        </th>
+
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Decision Date
+                        </th>
+
+                        <th className="px-5 py-4 font-semibold text-slate-700">
+                          Reason
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-slate-100">
+                      {history.expenses.map((expense) => (
+                        <tr
+                          key={expense.id}
+                          className="transition hover:bg-slate-50"
+                        >
+                          <td className="px-5 py-4 font-medium text-slate-900">
+                            {expense.title}
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <div className="font-medium text-slate-800">
+                              {expense.user?.name ?? "Unknown"}
+                            </div>
+
+                            <div className="text-xs text-slate-500">
+                              {expense.user?.email ?? "—"}
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 text-slate-700">
+                            ₹{Number(expense.amount).toFixed(2)}
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                expense.status === "APPROVED"
+                                  ? "bg-green-100 text-green-700"
+                                  : expense.status === "REJECTED"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-blue-100 text-blue-700"
+                              }`}
+                            >
+                              {expense.status}
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <div className="font-medium text-slate-800">
+                              {expense.decidedBy?.name ?? "Unknown"}
+                            </div>
+
+                            <div className="text-xs text-slate-500">
+                              {expense.decidedBy?.email ?? "—"}
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4 text-slate-600">
+                            {expense.decidedAt
+                              ? expense.decidedAt.toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </td>
+
+                          <td className="max-w-xs px-5 py-4 text-slate-600">
+                            {expense.rejectionReason ?? "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {history.totalPages > 1 && (
+              <div className="mt-5 flex items-center justify-between">
+                <p className="text-sm text-slate-500">
+                  Page {history.page} of {history.totalPages}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  {history.page > 1 ? (
+                    <Link
+                      href={`/approvals?page=${history.page - 1}`}
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Previous
+                    </Link>
+                  ) : (
+                    <span className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400">
+                      Previous
+                    </span>
+                  )}
+
+                  <span className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+                    {history.page}
+                  </span>
+
+                  {history.page < history.totalPages ? (
+                    <Link
+                      href={`/approvals?page=${history.page + 1}`}
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Next
+                    </Link>
+                  ) : (
+                    <span className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400">
+                      Next
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
         </div>
-
-        <ApprovalList expenses={serializedExpenses} />
       </main>
     );
   }
