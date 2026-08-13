@@ -86,6 +86,15 @@ export default function Sidebar({ userRole }: SidebarProps) {
             />
           )}
 
+          {userRole === "HR" && (
+            <SidebarLink
+              href="/hr"
+              label="HR"
+              icon={<SettingsIcon />}
+              active={pathname.startsWith("/hr")}
+            />
+          )}
+
           {(userRole === "ADMIN" || userRole === "HR") && (
             <SidebarLink
               href="/role-verification"

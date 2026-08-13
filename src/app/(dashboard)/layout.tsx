@@ -16,7 +16,6 @@ export default async function DashboardLayout({
         userName={session?.user?.name}
         userRole={session?.user?.role}
       />
-      <MobileSidebar userName={session?.user?.name} />
 
       <div className="flex min-h-screen">
         <Sidebar userRole={session?.user?.role} />

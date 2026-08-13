@@ -1,0 +1,64 @@
+import { prisma } from "@/lib/prisma";
+
+export async function createEmployeeVerificationRequest(data: {
+  userId: number;
+  proofUrl?: string;
+  proofPath?: string;
+}) {
+  return prisma.employeeVerificationRequest.create({
+    data,
+  });
+}
+
+export async function getPendingEmployeeVerificationRequests() {
+  return prisma.employeeVerificationRequest.findMany({
+    where: {
+      status: "PENDING",
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+}
+
+export async function getEmployeeVerificationRequestsForUser(userId: number) {
+  return prisma.employeeVerificationRequest.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function getLatestEmployeeVerificationRequest(userId: number) {
+  return prisma.employeeVerificationRequest.findFirst({
+    where: {
+      userId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}

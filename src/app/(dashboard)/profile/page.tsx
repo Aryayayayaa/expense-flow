@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
 import RoleVerificationRequest from "@/features/auth/components/RoleVerificationRequest";
+import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
+import { getLatestEmployeeVerificationRequest } from "@/features/auth/lib/employee-verification";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -26,6 +29,11 @@ export default async function ProfilePage() {
   if (!user) {
     redirect("/login");
   }
+
+  const verificationRequest =
+    user.role === "EMPLOYEE"
+      ? await getLatestEmployeeVerificationRequest(Number(session.user.id))
+      : null;
 
   return (
     <main className="p-6 sm:p-8 lg:p-10">
@@ -77,6 +85,14 @@ export default async function ProfilePage() {
         </div>
 
         <RoleVerificationRequest currentRole={user.role} />
+
+        {user.role === "EMPLOYEE" && (
+          <EmployeeVerificationRequest
+            requestId={verificationRequest?.id}
+            status={verificationRequest?.status ?? "NOT_SUBMITTED"}
+            rejectionReason={verificationRequest?.rejectionReason}
+          />
+        )}
       </div>
     </main>
   );

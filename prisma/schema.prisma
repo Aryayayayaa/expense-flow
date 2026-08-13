@@ -27,6 +27,12 @@ enum RoleRequestStatus {
   REJECTED
 }
 
+enum EmployeeVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id            Int       @id @default(autoincrement())
   name          String
@@ -45,6 +51,8 @@ model User {
   roleRequests         RoleVerificationRequest[]
   reviewedRoleRequests RoleVerificationRequest[] @relation("RoleRequestReviewer")
 
+  employeeVerificationRequests EmployeeVerificationRequest[]
+  reviewedEmployeeVerifications EmployeeVerificationRequest[] @relation("EmployeeVerificationReviewer")
 }
 
 model Expense {
@@ -101,4 +109,26 @@ model RoleVerificationRequest {
 
   reviewedBy User? @relation("RoleRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
+}
+
+model EmployeeVerificationRequest {
+  id Int @id @default(autoincrement())
+
+  proofUrl  String?
+  proofPath String?
+
+  status EmployeeVerificationStatus @default(PENDING)
+
+  rejectionReason String?
+
+  reviewedAt   DateTime?
+  reviewedById Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  reviewedBy User? @relation("EmployeeVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 }

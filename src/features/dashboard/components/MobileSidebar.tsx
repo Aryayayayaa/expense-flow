@@ -149,6 +149,15 @@ export default function MobileSidebar({
               />
             )}
 
+            {userRole === "HR" && (
+              <MobileNavLink
+                href="/hr"
+                label="HR"
+                onClick={closeMenu}
+                icon={<SettingsIcon />}
+              />
+            )}
+
             {(userRole === "ADMIN" || userRole === "HR") && (
               <MobileNavLink
                 href="/role-verification"
