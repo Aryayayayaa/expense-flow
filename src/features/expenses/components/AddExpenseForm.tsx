@@ -5,7 +5,7 @@ import { upload } from "@vercel/blob/client";
 import {
   createExpenseAction,
   updateExpenseAction,
-  saveBillProofAction,
+  saveOcrReceiptAction,
 } from "../actions/expense-actions";
 
 import Button from "@/components/common/Button";
@@ -115,10 +115,6 @@ export default function AddExpenseForm({
     if (ocrResult.amount !== null) {
       setAmount(String(ocrResult.amount));
     }
-
-    if (ocrResult.expenseDate) {
-      setExpenseDate(ocrResult.expenseDate);
-    }
   }, [ocrResult]);
 
   return (
@@ -136,61 +132,131 @@ export default function AddExpenseForm({
             } else {
               result = await createExpenseAction(null, formData);
 
+              /*
+               * If the user uploaded an original receipt during creation,
+               * permanently store that receipt against the newly created
+               * expense.
+               */
               if (result.success && result.expenseId && receiptFile) {
-                const extensionMap: Record<string, string> = {
-                  "image/jpeg": "jpg",
-                  "image/png": "png",
-                  "image/webp": "webp",
-                  "application/pdf": "pdf",
-                };
-
-                const extension = extensionMap[receiptFile.type] ?? "bin";
-
-                const safePath = `expenses/${result.expenseId}/receipt-${Date.now()}.${extension}`;
-
-                const blob = await upload(safePath, receiptFile, {
-                  access: "private",
-                  handleUploadUrl: "/api/upload",
-                  clientPayload: JSON.stringify({
-                    expenseId: result.expenseId,
-                  }),
-                });
-
-                const proofResult = await saveBillProofAction(
-                  result.expenseId,
-                  blob.url,
-                  blob.pathname,
-                );
-
-                if (!proofResult.success) {
-                  result = {
-                    ...result,
-                    success: false,
-                    message: proofResult.message,
+                try {
+                  const extensionMap: Record<string, string> = {
+                    "image/jpeg": "jpg",
+                    "image/png": "png",
+                    "image/webp": "webp",
+                    "application/pdf": "pdf",
                   };
+
+                  const extension = extensionMap[receiptFile.type] ?? "bin";
+
+                  const safePath = `expenses/${result.expenseId}/original-receipt-${Date.now()}.${extension}`;
+
+                  const blob = await upload(safePath, receiptFile, {
+                    access: "private",
+                    handleUploadUrl: "/api/upload",
+                    clientPayload: JSON.stringify({
+                      expenseId: result.expenseId,
+                    }),
+                  });
+
+                  // Save the original receipt metadata.
+                  //This action also makes sure the receipt is immutable.
+                  const receiptResult = await saveOcrReceiptAction(
+                    result.expenseId,
+                    blob.url,
+                    blob.pathname,
+                    ocrResult?.rawText ?? "",
+                  );
+
+                  if (!receiptResult.success) {
+                    console.error(
+                      "Unable to save original receipt:",
+                      receiptResult.message,
+                    );
+                  }
+                } catch (error) {
+                  console.error("Original receipt storage error:", error);
                 }
               }
             }
 
-            setState({
-              success: result.success,
-              errors: result.errors ?? {},
-              message: result.message,
-              expenseId: result.expenseId,
-            });
+            setState(result);
 
-            if (result.success) {
-              setTimeout(() => {
-                resetForm();
-              }, 1000);
+            setState(result);
+
+            if (!result.success) {
+              return;
             }
+
+            /*
+             * ---------------------------------------------------------
+             * Save original OCR receipt
+             *
+             * Only new expenses can have an OCR receipt.
+             * Editing an existing expense never touches it.
+             * ---------------------------------------------------------
+             */
+
+            if (
+              !editingExpense &&
+              receiptFile &&
+              ocrResult &&
+              result.expenseId
+            ) {
+              const extensionMap: Record<string, string> = {
+                "image/jpeg": "jpg",
+                "image/png": "png",
+                "image/webp": "webp",
+                "application/pdf": "pdf",
+              };
+
+              const extension = extensionMap[receiptFile.type] ?? "bin";
+
+              const safePath = `expenses/${result.expenseId}/original-receipt-${Date.now()}.${extension}`;
+
+              const blob = await upload(safePath, receiptFile, {
+                access: "private",
+                handleUploadUrl: "/api/upload",
+                clientPayload: JSON.stringify({
+                  expenseId: result.expenseId,
+                  type: "ocr-receipt",
+                }),
+              });
+
+              const saveResult = await saveOcrReceiptAction(
+                result.expenseId,
+                blob.url,
+                blob.pathname,
+                ocrResult.rawText,
+              );
+
+              if (!saveResult.success) {
+                console.error(
+                  "OCR receipt database save failed:",
+                  saveResult.message,
+                );
+
+                setState({
+                  ...result,
+                  success: false,
+                  message:
+                    "Expense was created, but the original receipt could not be saved.",
+                });
+
+                return;
+              }
+            }
+
+            setTimeout(() => {
+              resetForm();
+            }, 1000);
           } catch (error) {
             console.error("Expense submission error:", error);
 
             setState({
               success: false,
               errors: {},
-              message: "Unable to save expense.",
+              message:
+                "Expense was created, but the original receipt could not be saved.",
               expenseId: undefined,
             });
           } finally {
@@ -210,14 +276,17 @@ export default function AddExpenseForm({
           </p>
         </div>
 
-        <ReceiptOcrUpload
-          onOcrComplete={(result, file) => {
-            setReceiptFile(file);
-            if (result) {
-              setOcrResult(result);
-            }
-          }}
-        />
+        {!editingExpense && (
+          <ReceiptOcrUpload
+            onOcrComplete={(result, file) => {
+              setReceiptFile(file);
+
+              if (result) {
+                setOcrResult(result);
+              }
+            }}
+          />
+        )}
 
         <div className="space-y-1">
           <label className="block mb-1">Title</label>
