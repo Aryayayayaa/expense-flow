@@ -26,6 +26,7 @@ enum ExpenseAuditAction {
   DELETED
   APPROVED
   REJECTED
+  REIMBURSED
 }
 
 enum RoleRequestStatus {

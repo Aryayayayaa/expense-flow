@@ -57,6 +57,10 @@ export async function updateExpense(
     throw new Error("Only pending expenses can be edited.");
   }
 
+  if (expense.status !== "PENDING") {
+    throw new Error("Only pending expenses can be edited.");
+  }
+
   return prisma.expense.update({
     where: {
       id,

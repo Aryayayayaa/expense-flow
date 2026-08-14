@@ -220,6 +220,15 @@ export async function updateExpenseAction(
       };
     }
 
+    if (existingExpense.status !== "PENDING") {
+      return {
+        success: false,
+        errors: {},
+        message: "Only pending expenses can be edited.",
+        expenseId: undefined,
+      };
+    }
+
     const updatedExpense = await updateExpense(id, userId, result.data);
 
     const changes: Record<
@@ -298,7 +307,21 @@ export async function deleteExpenseAction(id: number) {
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
-  await deleteExpense(id, Number(session.user.id));
+
+  const userId = Number(session.user.id);
+
+  const expense = await getExpense(id, userId);
+
+  if (!expense) {
+    throw new Error("Expense not found.");
+  }
+
+  if (expense.status !== "PENDING") {
+    throw new Error("Only pending expenses can be deleted.");
+  }
+
+  await deleteExpense(id, userId);
+
   revalidatePath("/expenses");
 }
 
