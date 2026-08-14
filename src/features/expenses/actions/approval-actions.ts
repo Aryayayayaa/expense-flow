@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+
 type ApprovalActionResult = {
   success: boolean;
   message: string;
@@ -75,16 +77,28 @@ export async function approveExpenseAction(
       };
     }
 
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        status: "APPROVED",
-        decidedAt: new Date(),
-        decidedById: admin.userId,
-        rejectionReason: null,
-      },
+    const decidedAt = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.expense.update({
+        where: {
+          id: expenseId,
+        },
+        data: {
+          status: "APPROVED",
+          decidedAt,
+          decidedById: admin.userId,
+          rejectionReason: null,
+        },
+      });
+
+      await tx.expenseAuditLog.create({
+        data: {
+          expenseId,
+          actorId: admin.userId,
+          action: "APPROVED",
+        },
+      });
     });
 
     revalidatePath("/approvals");
@@ -157,16 +171,29 @@ export async function rejectExpenseAction(
       };
     }
 
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        status: "REJECTED",
-        decidedAt: new Date(),
-        decidedById: admin.userId,
-        rejectionReason: reason,
-      },
+    const decidedAt = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.expense.update({
+        where: {
+          id: expenseId,
+        },
+        data: {
+          status: "REJECTED",
+          decidedAt,
+          decidedById: admin.userId,
+          rejectionReason: reason,
+        },
+      });
+
+      await tx.expenseAuditLog.create({
+        data: {
+          expenseId,
+          actorId: admin.userId,
+          action: "REJECTED",
+          reason,
+        },
+      });
     });
 
     revalidatePath("/approvals");

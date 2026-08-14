@@ -7,9 +7,13 @@ import { prisma } from "@/lib/prisma";
 import {
   createExpense,
   deleteExpense,
+  getExpense,
   updateExpense,
 } from "@/features/expenses/lib/expenses";
 import { expenseSchema } from "../schemas/expense-schema";
+
+import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+
 import { capitalize } from "@/utils/capitalize";
 
 type ExpenseActionState = {
@@ -66,6 +70,12 @@ export async function createExpenseAction(
     const expense = await createExpense({
       ...result.data,
       userId: Number(session.user.id),
+    });
+
+    await createExpenseAuditLog({
+      expenseId: expense.id,
+      actorId: Number(session.user.id),
+      action: "CREATED",
     });
 
     revalidatePath("/expenses");
@@ -197,7 +207,70 @@ export async function updateExpenseAction(
       };
     }
 
-    await updateExpense(id, Number(session.user.id), result.data);
+    const userId = Number(session.user.id);
+
+    const existingExpense = await getExpense(id, userId);
+
+    if (!existingExpense) {
+      return {
+        success: false,
+        errors: {},
+        message: "Expense not found.",
+        expenseId: undefined,
+      };
+    }
+
+    const updatedExpense = await updateExpense(id, userId, result.data);
+
+    const changes: Record<
+      string,
+      {
+        from: string | number | null;
+        to: string | number | null;
+      }
+    > = {};
+
+    if (existingExpense.title !== updatedExpense.title) {
+      changes.title = {
+        from: existingExpense.title,
+        to: updatedExpense.title,
+      };
+    }
+
+    if (Number(existingExpense.amount) !== Number(updatedExpense.amount)) {
+      changes.amount = {
+        from: Number(existingExpense.amount),
+        to: Number(updatedExpense.amount),
+      };
+    }
+
+    if (existingExpense.category !== updatedExpense.category) {
+      changes.category = {
+        from: existingExpense.category,
+        to: updatedExpense.category,
+      };
+    }
+
+    const oldDate = existingExpense.expenseDate?.toISOString() ?? null;
+    const newDate = updatedExpense.expenseDate?.toISOString() ?? null;
+
+    if (oldDate !== newDate) {
+      changes.expenseDate = {
+        from: oldDate,
+        to: newDate,
+      };
+    }
+
+    if (Object.keys(changes).length > 0) {
+      await createExpenseAuditLog({
+        expenseId: updatedExpense.id,
+        actorId: userId,
+        action: "UPDATED",
+        metadata: {
+          changes,
+        },
+      });
+    }
 
     revalidatePath("/expenses");
 

@@ -81,10 +81,26 @@ export async function deleteExpense(id: number, userId: number) {
     throw new Error("Only pending expenses can be deleted.");
   }
 
-  return prisma.expense.delete({
-    where: {
-      id,
-    },
+  return prisma.$transaction(async (tx) => {
+    await tx.expenseAuditLog.create({
+      data: {
+        expenseId: expense.id,
+        actorId: userId,
+        action: "DELETED",
+        metadata: {
+          title: expense.title,
+          amount: Number(expense.amount),
+          category: expense.category,
+          expenseDate: expense.expenseDate?.toISOString() ?? null,
+        },
+      },
+    });
+
+    return tx.expense.delete({
+      where: {
+        id: expense.id,
+      },
+    });
   });
 }
 
