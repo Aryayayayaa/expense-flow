@@ -10,6 +10,9 @@ import {
   Eye,
   FileText,
   AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Banknote,
 } from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -31,11 +34,17 @@ type ExpenseCardProps = {
 
 export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const canModify = expense.status === "PENDING";
+
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
 
   const hasOcrReceipt = Boolean(expense.ocrReceiptUrl);
   const hasBillProof = Boolean(expense.billProofUrl);
   const hasProof = hasOcrReceipt || hasBillProof;
+
+  const isApproved = expense.status === "APPROVED";
+  const isRejected = expense.status === "REJECTED";
+  const isReimbursed = expense.status === "REIMBURSED";
+  const isPending = expense.status === "PENDING";
 
   return (
     <Card className="flex min-h-60 flex-col text-black">
@@ -71,6 +80,79 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
           <Clock size={16} />
           <span>{formatTime(expense.expenseDate ?? expense.createdAt)}</span>
         </div>
+      </div>
+
+      {/* Approval status */}
+      <div className="mt-4">
+        {isPending && (
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <Clock size={18} className="text-amber-600" />
+
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                Approval Status
+              </p>
+
+              <p className="text-sm text-amber-700">Pending</p>
+            </div>
+          </div>
+        )}
+
+        {isApproved && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3">
+            <CheckCircle2 size={18} className="text-green-600" />
+
+            <div>
+              <p className="text-sm font-semibold text-green-800">
+                Approval Status
+              </p>
+
+              <p className="text-sm text-green-700">Approved</p>
+            </div>
+          </div>
+        )}
+
+        {isRejected && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+            <div className="flex items-center gap-2">
+              <XCircle size={18} className="text-red-600" />
+
+              <div>
+                <p className="text-sm font-semibold text-red-800">
+                  Approval Status
+                </p>
+
+                <p className="text-sm text-red-700">Rejected</p>
+              </div>
+            </div>
+
+            {expense.rejectionReason && (
+              <div className="mt-3 border-t border-red-200 pt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-red-800">
+                  Rejection Reason
+                </p>
+
+                <p className="mt-1 text-sm text-red-700">
+                  {expense.rejectionReason}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isReimbursed && (
+          <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <Banknote size={18} className="text-blue-600" />
+
+            <div>
+              <p className="text-sm font-semibold text-blue-800">
+                Expense Status
+              </p>
+
+              <p className="text-sm text-blue-700">Reimbursed</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Original OCR receipt */}
@@ -114,77 +196,75 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
       )}
 
       {/* Proof section */}
-      <div className="mt-4">
-        {hasBillProof ? (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-            <div className="flex items-center gap-2">
-              <ReceiptText size={18} className="text-green-600" />
+      {hasProof && !hasOcrReceipt ? (
+        <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+          <div className="flex items-center gap-2">
+            <ReceiptText size={18} className="text-green-600" />
 
-              <span className="font-medium text-green-800">
-                Bill Proof Uploaded
-              </span>
-            </div>
-
-            <p className="mt-1 text-sm text-green-700">
-              This proof is permanently attached to this expense.
-            </p>
-
-            <div className="mt-3">
-              <Button
-                type="button"
-                variant="secondary"
-                className="flex items-center gap-2"
-                onClick={async () => {
-                  const response = await fetch(
-                    `/api/expenses/${expense.id}/bill-proof`,
-                  );
-
-                  const data = await response.json();
-
-                  if (!response.ok) {
-                    alert(data.error ?? "Unable to open bill proof.");
-                    return;
-                  }
-
-                  window.open(data.url, "_blank");
-                }}
-              >
-                <Eye size={16} />
-                View Bill Proof
-              </Button>
-            </div>
+            <span className="font-medium text-green-800">
+              Bill Proof Uploaded
+            </span>
           </div>
-        ) : hasOcrReceipt ? (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-center gap-2">
-              <FileText size={18} className="text-blue-600" />
 
-              <span className="font-medium text-blue-800">
-                Expense Proof Attached
-              </span>
-            </div>
+          <p className="mt-1 text-sm text-green-700">
+            This proof is permanently attached to this expense.
+          </p>
 
-            <p className="mt-1 text-sm text-blue-700">
-              The original receipt is being used as the expense proof.
-            </p>
+          <div className="mt-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex items-center gap-2"
+              onClick={async () => {
+                const response = await fetch(
+                  `/api/expenses/${expense.id}/bill-proof`,
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                  alert(data.error ?? "Unable to open bill proof.");
+                  return;
+                }
+
+                window.open(data.url, "_blank");
+              }}
+            >
+              <Eye size={16} />
+              View Bill Proof
+            </Button>
           </div>
-        ) : (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-center gap-2">
-              <AlertCircle size={18} className="text-amber-600" />
+        </div>
+      ) : hasOcrReceipt ? (
+        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center gap-2">
+            <FileText size={18} className="text-blue-600" />
 
-              <span className="font-medium text-amber-800">Proof Required</span>
-            </div>
-
-            <p className="mt-1 text-sm text-amber-700">
-              Upload a receipt, invoice, or bill proof before submitting this
-              expense for approval.
-            </p>
-
-            <ReceiptUpload expenseId={expense.id} />
+            <span className="font-medium text-blue-800">
+              Expense Proof Attached
+            </span>
           </div>
-        )}
-      </div>
+
+          <p className="mt-1 text-sm text-blue-700">
+            The original receipt is being used as the expense proof.
+          </p>
+        </div>
+      ) : isPending ? (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={18} className="text-amber-600" />
+
+            <span className="font-medium text-amber-800">Proof Required</span>
+          </div>
+
+          <p className="mt-1 text-sm text-amber-700">
+            Upload a receipt, invoice, or bill proof before submitting this
+            expense for approval.
+          </p>
+
+          <ReceiptUpload expenseId={expense.id} />
+        </div>
+      ) : null}
 
       <hr className="my-5 border-gray-200" />
 
