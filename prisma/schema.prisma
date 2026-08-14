@@ -54,6 +54,7 @@ model User {
 
   expenses        Expense[]
   decidedExpenses Expense[] @relation("ExpenseDecisionMaker")
+  reimbursedExpenses Expense[] @relation("ExpenseReimbursement")
   expenseAuditLogs ExpenseAuditLog[] @relation("ExpenseAuditActor")
 
 
@@ -87,12 +88,17 @@ model Expense {
   decidedById     Int?
   rejectionReason String?
 
+  reimbursedAt     DateTime?
+  reimbursedById   Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   userId    Int?
   user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   decidedBy User? @relation("ExpenseDecisionMaker", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  reimbursedBy User? @relation("ExpenseReimbursement", fields: [reimbursedById], references: [id], onDelete: SetNull)
 
   auditLogs ExpenseAuditLog[]
 }

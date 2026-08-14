@@ -226,3 +226,103 @@ export async function getExpenseApprovalHistory(
     totalPages: Math.ceil(total / safePageSize),
   };
 }
+
+//Get approved expenses that are waiting for HR reimbursement.
+
+export async function getApprovedExpensesForHR(hrId: number) {
+  const expenses = await prisma.expense.findMany({
+    where: {
+      status: "APPROVED",
+      userId: { not: hrId },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      decidedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: [{ decidedAt: "asc" }, { createdAt: "asc" }],
+  });
+
+  return expenses.map((expense) => ({
+    ...expense,
+    amount: Number(expense.amount),
+  }));
+}
+
+//Get expenses that have already been reimbursed: read-only history
+
+export async function getReimbursementHistory(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+
+  const where = {
+    status: "REIMBURSED" as const,
+    reimbursedAt: {
+      not: null,
+    },
+  };
+
+  const [expenses, total] = await prisma.$transaction([
+    prisma.expense.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+
+        decidedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+
+        reimbursedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+
+      orderBy: {
+        reimbursedAt: "desc",
+      },
+
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
+
+    prisma.expense.count({
+      where,
+    }),
+  ]);
+
+  return {
+    expenses,
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.ceil(total / safePageSize),
+  };
+}
