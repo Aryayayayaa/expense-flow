@@ -82,7 +82,7 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         </div>
       </div>
 
-      {/* Approval status */}
+      {/* Approval Status */}
       <div className="mt-4">
         {isPending && (
           <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
@@ -99,16 +99,34 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         )}
 
         {isApproved && (
-          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3">
-            <CheckCircle2 size={18} className="text-green-600" />
+          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-green-600" />
 
-            <div>
-              <p className="text-sm font-semibold text-green-800">
-                Approval Status
-              </p>
+              <div>
+                <p className="text-sm font-semibold text-green-800">
+                  Approval Status
+                </p>
 
-              <p className="text-sm text-green-700">Approved</p>
+                <p className="text-sm text-green-700">Approved</p>
+              </div>
             </div>
+
+            {expense.decidedBy && (
+              <div className="mt-3 border-t border-green-200 pt-3 text-sm text-green-700">
+                <p>
+                  <span className="font-medium">Approved by:</span>{" "}
+                  {expense.decidedBy.name}
+                </p>
+
+                {expense.decidedAt && (
+                  <p className="mt-1">
+                    <span className="font-medium">Approved on:</span>{" "}
+                    {formatDate(expense.decidedAt)}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -126,6 +144,22 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
               </div>
             </div>
 
+            {expense.decidedBy && (
+              <div className="mt-3 border-t border-red-200 pt-3 text-sm text-red-700">
+                <p>
+                  <span className="font-medium">Rejected by:</span>{" "}
+                  {expense.decidedBy.name}
+                </p>
+
+                {expense.decidedAt && (
+                  <p className="mt-1">
+                    <span className="font-medium">Rejected on:</span>{" "}
+                    {formatDate(expense.decidedAt)}
+                  </p>
+                )}
+              </div>
+            )}
+
             {expense.rejectionReason && (
               <div className="mt-3 border-t border-red-200 pt-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-red-800">
@@ -141,19 +175,72 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         )}
 
         {isReimbursed && (
-          <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-green-600" />
+
+              <div>
+                <p className="text-sm font-semibold text-green-800">
+                  Approval Status
+                </p>
+
+                <p className="text-sm text-green-700">Approved</p>
+              </div>
+            </div>
+
+            {expense.decidedBy && (
+              <div className="mt-3 border-t border-green-200 pt-3 text-sm text-green-700">
+                <p>
+                  <span className="font-medium">Approved by:</span>{" "}
+                  {expense.decidedBy.name}
+                </p>
+
+                {expense.decidedAt && (
+                  <p className="mt-1">
+                    <span className="font-medium">Approved on:</span>{" "}
+                    {formatDate(expense.decidedAt)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Reimbursement Status */}
+      {isApproved || isReimbursed ? (
+        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+          <div className="flex items-center gap-2">
             <Banknote size={18} className="text-blue-600" />
 
             <div>
               <p className="text-sm font-semibold text-blue-800">
-                Expense Status
+                Reimbursement Status
               </p>
 
-              <p className="text-sm text-blue-700">Reimbursed</p>
+              <p className="text-sm text-blue-700">
+                {isReimbursed ? "Reimbursed" : "Pending Reimbursement"}
+              </p>
             </div>
           </div>
-        )}
-      </div>
+
+          {isReimbursed && expense.reimbursedBy && (
+            <div className="mt-3 border-t border-blue-200 pt-3 text-sm text-blue-700">
+              <p>
+                <span className="font-medium">Reimbursed by:</span>{" "}
+                {expense.reimbursedBy.name}
+              </p>
+
+              {expense.reimbursedAt && (
+                <p className="mt-1">
+                  <span className="font-medium">Reimbursed on:</span>{" "}
+                  {formatDate(expense.reimbursedAt)}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Original OCR receipt */}
       {hasOcrReceipt && (

@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 
-import { getPendingEmployeeVerificationRequests } from "@/features/auth/lib/employee-verification";
+import {
+  getEmployeeVerificationHistory,
+  getPendingEmployeeVerificationRequests,
+} from "@/features/auth/lib/employee-verification";
 
 import EmployeeVerificationTable from "@/features/auth/components/EmployeeVerificationTable";
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
@@ -13,6 +16,7 @@ import {
 } from "@/features/expenses/lib/expenses";
 
 import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
+import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
 
 export default async function HrPage() {
   const session = await auth();
@@ -25,9 +29,17 @@ export default async function HrPage() {
     redirect("/dashboard");
   }
 
-  const [requests, approvedExpenses, reimbursementHistory] = await Promise.all([
+  const hrId = Number(session.user.id);
+
+  const [
+    requests,
+    employeeVerificationHistory,
+    approvedExpenses,
+    reimbursementHistory,
+  ] = await Promise.all([
     getPendingEmployeeVerificationRequests(),
-    getApprovedExpensesForHR(Number(session.user.id)),
+    getEmployeeVerificationHistory(),
+    getApprovedExpensesForHR(hrId),
     getReimbursementHistory(),
   ]);
 
@@ -61,6 +73,23 @@ export default async function HrPage() {
           </div>
 
           <EmployeeVerificationTable requests={requests} />
+        </section>
+
+        <section className="mt-10">
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Employee Verification History
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Review previously approved and rejected employee verification
+              requests.
+            </p>
+          </div>
+
+          <EmployeeVerificationHistoryTable
+            requests={employeeVerificationHistory}
+          />
         </section>
 
         {/* ---------------------------------------------------------------- */}

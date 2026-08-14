@@ -1,12 +1,35 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getExpenses(userId: number) {
-  return prisma.expense.findMany({
+  const expenses = await prisma.expense.findMany({
     where: {
       userId,
     },
+    include: {
+      decidedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      reimbursedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
     orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
+
+  return expenses.map((expense) => ({
+    ...expense,
+    amount: Number(expense.amount),
+  }));
 }
 
 export async function getExpense(id: number, userId: number) {
