@@ -1,4 +1,45 @@
+import { Prisma, ReimbursementStatus } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
+
+export type ReimbursementHistoryExpense = {
+  id: number;
+  title: string;
+  amount: number;
+  category: string;
+  status: string;
+  reimbursementStatus: ReimbursementStatus;
+  reimbursementReason: string | null;
+  expenseDate: Date | null;
+  decidedAt: Date | null;
+  reimbursementAt: Date | null;
+
+  ocrReceiptUrl: string | null;
+  ocrReceiptPath: string | null;
+
+  billProofUrl: string | null;
+  billProofPath: string | null;
+
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+
+  decidedBy: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
+
+  reimbursementBy: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
+};
 
 export async function getExpenses(userId: number) {
   const expenses = await prisma.expense.findMany({
@@ -151,6 +192,7 @@ export async function getAllExpensesForAdmin() {
           role: true,
         },
       },
+
       decidedBy: {
         select: {
           id: true,
@@ -159,11 +201,14 @@ export async function getAllExpensesForAdmin() {
         },
       },
     },
+
     orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
 }
 
-//Get expenses that are currently waiting for admin approval.
+/**
+ * Get expenses that are currently waiting for admin approval.
+ */
 export async function getPendingExpensesForAdmin(adminId: number) {
   return prisma.expense.findMany({
     where: {
@@ -212,7 +257,7 @@ export async function getExpenseApprovalHistory(
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
 
-  const where = {
+  const where: Prisma.ExpenseWhereInput = {
     decidedAt: {
       not: null,
     },
@@ -221,6 +266,7 @@ export async function getExpenseApprovalHistory(
   const [expenses, total] = await prisma.$transaction([
     prisma.expense.findMany({
       where,
+
       include: {
         user: {
           select: {
@@ -229,6 +275,7 @@ export async function getExpenseApprovalHistory(
             email: true,
           },
         },
+
         decidedBy: {
           select: {
             id: true,
@@ -238,9 +285,11 @@ export async function getExpenseApprovalHistory(
           },
         },
       },
+
       orderBy: {
         decidedAt: "desc",
       },
+
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     }),
@@ -259,14 +308,34 @@ export async function getExpenseApprovalHistory(
   };
 }
 
-//Get approved expenses that are waiting for HR reimbursement.
+/* -------------------------------------------------------------------------- */
+/* HR Reimbursement Functions                                                 */
+/* -------------------------------------------------------------------------- */
 
+/**
+ * Get approved expenses that are still waiting for HR reimbursement
+ * processing.
+ *
+ * Expense approval and reimbursement are separate workflows:
+ *
+ * ExpenseStatus:
+ *   PENDING -> APPROVED / REJECTED
+ *
+ * ReimbursementStatus:
+ *   PENDING -> REIMBURSED / REJECTED
+ */
 export async function getApprovedExpensesForHR(hrId: number) {
   const expenses = await prisma.expense.findMany({
     where: {
       status: "APPROVED",
-      userId: { not: hrId },
+
+      reimbursementStatus: "PENDING",
+
+      userId: {
+        not: hrId,
+      },
     },
+
     include: {
       user: {
         select: {
@@ -275,14 +344,17 @@ export async function getApprovedExpensesForHR(hrId: number) {
           email: true,
         },
       },
+
       decidedBy: {
         select: {
           id: true,
           name: true,
           email: true,
+          role: true,
         },
       },
     },
+
     orderBy: [{ decidedAt: "asc" }, { createdAt: "asc" }],
   });
 
@@ -292,7 +364,9 @@ export async function getApprovedExpensesForHR(hrId: number) {
   }));
 }
 
-//Get expenses that have already been reimbursed: read-only history
+/* -------------------------------------------------------------------------- */
+/* Reimbursement History                                                      */
+/* -------------------------------------------------------------------------- */
 
 export async function getReimbursementHistory(
   page: number = 1,
@@ -302,7 +376,10 @@ export async function getReimbursementHistory(
   const safePageSize = Math.max(1, pageSize);
 
   const where = {
-    reimbursementStatus: "REIMBURSED" as const,
+    reimbursementStatus: {
+      in: ["REIMBURSED", "REJECTED"] satisfies ReimbursementStatus[],
+    },
+
     reimbursementAt: {
       not: null,
     },
@@ -311,6 +388,7 @@ export async function getReimbursementHistory(
   const [expenses, total] = await prisma.$transaction([
     prisma.expense.findMany({
       where,
+
       include: {
         user: {
           select: {
@@ -353,10 +431,31 @@ export async function getReimbursementHistory(
   ]);
 
   return {
-    expenses: expenses.map((expense) => ({
-      ...expense,
-      amount: Number(expense.amount),
-    })),
+    expenses: expenses.map(
+      (expense): ReimbursementHistoryExpense => ({
+        id: expense.id,
+        title: expense.title,
+        amount: Number(expense.amount),
+        category: expense.category,
+        status: expense.status,
+        reimbursementStatus: expense.reimbursementStatus,
+        reimbursementReason: expense.reimbursementReason,
+        expenseDate: expense.expenseDate,
+        decidedAt: expense.decidedAt,
+        reimbursementAt: expense.reimbursementAt,
+
+        ocrReceiptUrl: expense.ocrReceiptUrl,
+        ocrReceiptPath: expense.ocrReceiptPath,
+
+        billProofUrl: expense.billProofUrl,
+        billProofPath: expense.billProofPath,
+
+        user: expense.user,
+        decidedBy: expense.decidedBy,
+        reimbursementBy: expense.reimbursementBy,
+      }),
+    ),
+
     total,
     page: safePage,
     pageSize: safePageSize,

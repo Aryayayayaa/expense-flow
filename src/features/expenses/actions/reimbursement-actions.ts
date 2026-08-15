@@ -33,6 +33,53 @@ async function requireHR() {
   };
 }
 
+async function getReimbursementExpense(expenseId: number, hrId: number) {
+  const expense = await prisma.expense.findUnique({
+    where: {
+      id: expenseId,
+    },
+    select: {
+      id: true,
+      status: true,
+      reimbursementStatus: true,
+      userId: true,
+    },
+  });
+
+  if (!expense) {
+    return {
+      success: false as const,
+      message: "Expense not found.",
+    };
+  }
+
+  if (expense.userId === hrId) {
+    return {
+      success: false as const,
+      message: "You cannot process reimbursement for your own expense.",
+    };
+  }
+
+  if (expense.status !== "APPROVED") {
+    return {
+      success: false as const,
+      message: "Only approved expenses can be processed for reimbursement.",
+    };
+  }
+
+  if (expense.reimbursementStatus !== "PENDING") {
+    return {
+      success: false as const,
+      message: "This expense has already been processed for reimbursement.",
+    };
+  }
+
+  return {
+    success: true as const,
+    expense,
+  };
+}
+
 export async function reimburseExpenseAction(
   expenseId: number,
 ): Promise<ReimbursementActionResult> {
@@ -43,36 +90,10 @@ export async function reimburseExpenseAction(
       return hr;
     }
 
-    const expense = await prisma.expense.findUnique({
-      where: {
-        id: expenseId,
-      },
-      select: {
-        id: true,
-        status: true,
-        userId: true,
-      },
-    });
+    const expenseResult = await getReimbursementExpense(expenseId, hr.userId);
 
-    if (!expense) {
-      return {
-        success: false,
-        message: "Expense not found.",
-      };
-    }
-
-    if (expense.userId === hr.userId) {
-      return {
-        success: false,
-        message: "You cannot reimburse your own expense.",
-      };
-    }
-
-    if (expense.status !== "APPROVED") {
-      return {
-        success: false,
-        message: "Only approved expenses can be reimbursed.",
-      };
+    if (!expenseResult.success) {
+      return expenseResult;
     }
 
     await prisma.$transaction(async (tx) => {
@@ -101,12 +122,7 @@ export async function reimburseExpenseAction(
       });
     });
 
-    revalidatePath("/hr");
-    revalidatePath("/expenses");
-    revalidatePath("/approvals");
-    revalidatePath("/dashboard");
-    revalidatePath("/reports");
-    revalidatePath("/analytics");
+    revalidateReimbursementPaths();
 
     return {
       success: true,
@@ -120,4 +136,83 @@ export async function reimburseExpenseAction(
       message: "Unable to mark expense as reimbursed.",
     };
   }
+}
+
+export async function rejectReimbursementAction(
+  expenseId: number,
+  rejectionReason: string,
+): Promise<ReimbursementActionResult> {
+  try {
+    const hr = await requireHR();
+
+    if (!hr.success) {
+      return hr;
+    }
+
+    const reason = rejectionReason.trim();
+
+    if (!reason) {
+      return {
+        success: false,
+        message: "A reimbursement rejection reason is required.",
+      };
+    }
+
+    const expenseResult = await getReimbursementExpense(expenseId, hr.userId);
+
+    if (!expenseResult.success) {
+      return expenseResult;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.expense.update({
+        where: {
+          id: expenseId,
+        },
+        data: {
+          reimbursementStatus: "REJECTED",
+          reimbursementAt: new Date(),
+          reimbursementById: hr.userId,
+          reimbursementReason: reason,
+        },
+      });
+
+      await tx.expenseAuditLog.create({
+        data: {
+          expenseId,
+          actorId: hr.userId,
+          action: "REJECTED",
+          reason,
+          metadata: {
+            previousReimbursementStatus: "PENDING",
+            newReimbursementStatus: "REJECTED",
+            reimbursementReason: reason,
+          },
+        },
+      });
+    });
+
+    revalidateReimbursementPaths();
+
+    return {
+      success: true,
+      message: "Reimbursement rejected successfully.",
+    };
+  } catch (error) {
+    console.error("Reject Reimbursement Error:", error);
+
+    return {
+      success: false,
+      message: "Unable to reject reimbursement.",
+    };
+  }
+}
+
+function revalidateReimbursementPaths() {
+  revalidatePath("/hr");
+  revalidatePath("/expenses");
+  revalidatePath("/approvals");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
+  revalidatePath("/analytics");
 }

@@ -28,10 +28,22 @@ export async function GET(request: Request, { params }: RouteContext) {
       );
     }
 
+    const userId = Number(session.user.id);
+    const role = session.user.role;
+
+    /*
+     * Employees can only view their own expenses.
+     *
+     * Admin and HR can review expenses belonging to other users.
+     */
     const expense = await prisma.expense.findFirst({
       where: {
         id: expenseId,
-        userId: Number(session.user.id),
+        ...(role === "ADMIN" || role === "HR"
+          ? {}
+          : {
+              userId,
+            }),
       },
       select: {
         ocrReceiptPath: true,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import type { OcrResult } from "../types/ocr";
 
 type ReceiptOcrUploadProps = {
@@ -56,11 +55,18 @@ export default function ReceiptOcrUpload({
         body: JSON.stringify({
           fileName: file.name,
           fileData,
+          mimeType: file.type,
         }),
       });
 
       const result = await response.json();
 
+      /*
+       * Always give the selected file back to the parent.
+       *
+       * Even if OCR fails, the original receipt can still be
+       * uploaded and stored as proof for the expense.
+       */
       if (!response.ok || !result.success) {
         onOcrComplete(null, file);
 
@@ -77,9 +83,13 @@ export default function ReceiptOcrUpload({
         "Receipt details extracted successfully. The original receipt will be saved with this expense.",
       );
     } catch (error) {
-      onOcrComplete(null, file);
-
       console.error("OCR upload error:", error);
+
+      /*
+       * OCR may fail, but the original receipt should still
+       * be available to AddExpenseForm for storage.
+       */
+      onOcrComplete(null, file);
 
       setMessage(
         "Unable to extract receipt details. You can enter them manually.",
