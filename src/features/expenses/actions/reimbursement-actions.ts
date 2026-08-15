@@ -81,9 +81,10 @@ export async function reimburseExpenseAction(
           id: expenseId,
         },
         data: {
-          status: "REIMBURSED",
-          reimbursedAt: new Date(),
-          reimbursedById: hr.userId,
+          reimbursementStatus: "REIMBURSED",
+          reimbursementAt: new Date(),
+          reimbursementById: hr.userId,
+          reimbursementReason: null,
         },
       });
 
@@ -93,8 +94,8 @@ export async function reimburseExpenseAction(
           actorId: hr.userId,
           action: "REIMBURSED",
           metadata: {
-            previousStatus: "APPROVED",
-            newStatus: "REIMBURSED",
+            previousReimbursementStatus: "PENDING",
+            newReimbursementStatus: "REIMBURSED",
           },
         },
       });

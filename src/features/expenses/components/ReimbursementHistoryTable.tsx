@@ -4,7 +4,7 @@ type ReimbursementHistoryExpense = {
   amount: unknown;
   category: string;
   decidedAt: Date | null;
-  reimbursedAt: Date | null;
+  reimbursementAt: Date | null;
 
   user: {
     id: number;
@@ -18,7 +18,7 @@ type ReimbursementHistoryExpense = {
     email: string;
   } | null;
 
-  reimbursedBy: {
+  reimbursementBy: {
     id: number;
     name: string;
     email: string;
@@ -108,12 +108,12 @@ export default function ReimbursementHistoryTable({ expenses }: Props) {
                 </td>
 
                 <td className="px-5 py-4 text-slate-600">
-                  {expense.reimbursedBy?.name ?? "Unknown"}
+                  {expense.reimbursementBy?.name ?? "Unknown"}
                 </td>
 
                 <td className="px-5 py-4 text-slate-600">
-                  {expense.reimbursedAt
-                    ? new Date(expense.reimbursedAt).toLocaleDateString(
+                  {expense.reimbursementAt
+                    ? new Date(expense.reimbursementAt).toLocaleDateString(
                         "en-GB",
                         {
                           day: "2-digit",

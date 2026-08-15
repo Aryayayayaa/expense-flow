@@ -331,9 +331,7 @@ export default async function ApprovalsPage({
                             ? "bg-green-100 text-green-700"
                             : expense.status === "REJECTED"
                               ? "bg-red-100 text-red-700"
-                              : expense.status === "REIMBURSED"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-yellow-100 text-yellow-700"
+                              : "bg-yellow-100 text-yellow-700"
                         }`}
                       >
                         {expense.status}

@@ -43,7 +43,8 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
 
   const isApproved = expense.status === "APPROVED";
   const isRejected = expense.status === "REJECTED";
-  const isReimbursed = expense.status === "REIMBURSED";
+  const isReimbursed = expense.reimbursementStatus === "REIMBURSED";
+  const isReimbursementRejected = expense.reimbursementStatus === "REJECTED";
   const isPending = expense.status === "PENDING";
 
   return (
@@ -224,17 +225,17 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
             </div>
           </div>
 
-          {isReimbursed && expense.reimbursedBy && (
+          {isReimbursed && expense.reimbursementBy && (
             <div className="mt-3 border-t border-blue-200 pt-3 text-sm text-blue-700">
               <p>
                 <span className="font-medium">Reimbursed by:</span>{" "}
-                {expense.reimbursedBy.name}
+                {expense.reimbursementBy.name}
               </p>
 
-              {expense.reimbursedAt && (
+              {expense.reimbursementAt && (
                 <p className="mt-1">
                   <span className="font-medium">Reimbursed on:</span>{" "}
-                  {formatDate(expense.reimbursedAt)}
+                  {formatDate(expense.reimbursementAt)}
                 </p>
               )}
             </div>

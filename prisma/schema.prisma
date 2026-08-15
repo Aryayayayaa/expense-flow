@@ -17,7 +17,12 @@ enum ExpenseStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum ReimbursementStatus {
+  PENDING
   REIMBURSED
+  REJECTED
 }
 
 enum ExpenseAuditAction {
@@ -54,17 +59,17 @@ model User {
 
   expenses        Expense[]
   decidedExpenses Expense[] @relation("ExpenseDecisionMaker")
-  reimbursedExpenses Expense[] @relation("ExpenseReimbursement")
-  expenseAuditLogs ExpenseAuditLog[] @relation("ExpenseAuditActor")
 
+  reimbursementExpenses Expense[] @relation("ExpenseReimbursementProcessor")
+
+  expenseAuditLogs ExpenseAuditLog[] @relation("ExpenseAuditActor")
 
   roleRequests         RoleVerificationRequest[]
   reviewedRoleRequests RoleVerificationRequest[] @relation("RoleRequestReviewer")
 
-  employeeVerificationRequests EmployeeVerificationRequest[]
+  employeeVerificationRequests  EmployeeVerificationRequest[]
   reviewedEmployeeVerifications EmployeeVerificationRequest[] @relation("EmployeeVerificationReviewer")
 }
-  
 
 model Expense {
   id          Int       @id @default(autoincrement())
@@ -79,26 +84,31 @@ model Expense {
   ocrReceiptPath String?
   ocrRawText     String?
 
-  // Bill proof — can be replaced/removed
+  // Bill proof
   billProofUrl  String?
   billProofPath String?
 
+  // Approval workflow
   status          ExpenseStatus @default(PENDING)
   decidedAt       DateTime?
   decidedById     Int?
   rejectionReason String?
 
-  reimbursedAt     DateTime?
-  reimbursedById   Int?
+  // Reimbursement workflow
+  reimbursementStatus ReimbursementStatus @default(PENDING)
+  reimbursementAt     DateTime?
+  reimbursementById   Int?
+  reimbursementReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId    Int?
-  user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int?
+
   decidedBy User? @relation("ExpenseDecisionMaker", fields: [decidedById], references: [id], onDelete: SetNull)
 
-  reimbursedBy User? @relation("ExpenseReimbursement", fields: [reimbursedById], references: [id], onDelete: SetNull)
+  reimbursementBy User? @relation("ExpenseReimbursementProcessor", fields: [reimbursementById], references: [id], onDelete: SetNull)
 
   auditLogs ExpenseAuditLog[]
 }
@@ -119,13 +129,13 @@ model RoleVerificationRequest {
   reviewedById Int?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
+  userId    Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("RoleRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-
 }
 
 model EmployeeVerificationRequest {
@@ -145,24 +155,23 @@ model EmployeeVerificationRequest {
   updatedAt DateTime @updatedAt
 
   userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("EmployeeVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 }
 
 model ExpenseAuditLog {
-  id Int @id @default(autoincrement())
-
-  action ExpenseAuditAction
-  reason String?
-  metadata Json?
+  id        Int                @id @default(autoincrement())
+  action    ExpenseAuditAction
+  reason    String?
+  metadata  Json?
+  details   String?
+  createdAt DateTime           @default(now())
 
   expenseId Int?
   expense   Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
-  details String?
 
   actorId Int?
   actor   User? @relation("ExpenseAuditActor", fields: [actorId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now())
 }

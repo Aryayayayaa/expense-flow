@@ -10,7 +10,7 @@ export type SerializedExpense = Omit<Expense, "amount"> & {
     role: Role;
   } | null;
 
-  reimbursedBy: {
+  reimbursementBy: {
     id: number;
     name: string;
     email: string;

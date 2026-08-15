@@ -5,6 +5,7 @@ export async function getExpenses(userId: number) {
     where: {
       userId,
     },
+
     include: {
       decidedBy: {
         select: {
@@ -14,7 +15,8 @@ export async function getExpenses(userId: number) {
           role: true,
         },
       },
-      reimbursedBy: {
+
+      reimbursementBy: {
         select: {
           id: true,
           name: true,
@@ -23,6 +25,7 @@ export async function getExpenses(userId: number) {
         },
       },
     },
+
     orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
 
@@ -74,10 +77,6 @@ export async function updateExpense(
 
   if (!expense) {
     throw new Error("Expense not found.");
-  }
-
-  if (expense.status !== "PENDING") {
-    throw new Error("Only pending expenses can be edited.");
   }
 
   if (expense.status !== "PENDING") {
@@ -164,9 +163,7 @@ export async function getAllExpensesForAdmin() {
   });
 }
 
-/**
- * Get expenses that are currently waiting for admin approval.
- */
+//Get expenses that are currently waiting for admin approval.
 export async function getPendingExpensesForAdmin(adminId: number) {
   return prisma.expense.findMany({
     where: {
@@ -175,6 +172,7 @@ export async function getPendingExpensesForAdmin(adminId: number) {
         not: adminId,
       },
     },
+
     include: {
       user: {
         select: {
@@ -189,9 +187,20 @@ export async function getPendingExpensesForAdmin(adminId: number) {
           id: true,
           name: true,
           email: true,
+          role: true,
+        },
+      },
+
+      reimbursementBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
         },
       },
     },
+
     orderBy: [{ expenseDate: "asc" }, { createdAt: "asc" }],
   });
 }
@@ -293,8 +302,8 @@ export async function getReimbursementHistory(
   const safePageSize = Math.max(1, pageSize);
 
   const where = {
-    status: "REIMBURSED" as const,
-    reimbursedAt: {
+    reimbursementStatus: "REIMBURSED" as const,
+    reimbursementAt: {
       not: null,
     },
   };
@@ -316,20 +325,22 @@ export async function getReimbursementHistory(
             id: true,
             name: true,
             email: true,
+            role: true,
           },
         },
 
-        reimbursedBy: {
+        reimbursementBy: {
           select: {
             id: true,
             name: true,
             email: true,
+            role: true,
           },
         },
       },
 
       orderBy: {
-        reimbursedAt: "desc",
+        reimbursementAt: "desc",
       },
 
       skip: (safePage - 1) * safePageSize,
@@ -342,7 +353,10 @@ export async function getReimbursementHistory(
   ]);
 
   return {
-    expenses,
+    expenses: expenses.map((expense) => ({
+      ...expense,
+      amount: Number(expense.amount),
+    })),
     total,
     page: safePage,
     pageSize: safePageSize,
