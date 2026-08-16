@@ -17,6 +17,7 @@ import {
 import { expenseSchema } from "../schemas/expense-schema";
 
 import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+import { createNotification } from "@/features/notifications/lib/notifications";
 
 import { capitalize } from "@/utils/capitalize";
 
@@ -82,6 +83,40 @@ export async function createExpenseAction(
       actorId: Number(session.user.id),
       action: "CREATED",
     });
+
+    /*
+     * Notify all Admin and HR users that a new expense
+     * has been submitted.
+     */
+    const reviewers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ["ADMIN", "HR"],
+        },
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+    await Promise.all(
+      reviewers.map((reviewer) =>
+        createNotification({
+          userId: reviewer.id,
+          type: "EXPENSE_SUBMITTED",
+          title: "New Expense Submitted",
+          message: `A new expense "${expense.title}" has been submitted for review.`,
+          expenseId: expense.id,
+          metadata: {
+            expenseTitle: expense.title,
+            amount: Number(expense.amount),
+            category: expense.category,
+            submittedById: Number(session.user.id),
+          },
+        }),
+      ),
+    );
 
     revalidatePath("/expenses");
 
@@ -305,6 +340,34 @@ export async function updateExpenseAction(
           changes,
         },
       });
+
+      /*
+       * Notify the expense owner when an Admin or HR modifies
+       * the expense.
+
+       * Employees editing their own expense do not need to
+       * receive a notification about their own modification.
+       */
+      if (
+        (role === "ADMIN" || role === "HR") &&
+        existingExpense.userId !== null
+      ) {
+        await createNotification({
+          userId: existingExpense.userId,
+          type: "EXPENSE_MODIFIED",
+          title: "Expense Modified",
+          message: `Your expense "${updatedExpense.title}" has been modified by ${
+            role === "ADMIN" ? "Admin" : "HR"
+          }.`,
+          expenseId: updatedExpense.id,
+          metadata: {
+            expenseTitle: updatedExpense.title,
+            changes,
+            modifiedById: userId,
+            modifiedByRole: role,
+          },
+        });
+      }
     }
 
     revalidatePath("/expenses");
