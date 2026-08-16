@@ -8,8 +8,11 @@ import {
   createExpense,
   deleteExpense,
   getExpense,
+  getExpenseForAdmin,
   updateExpense,
+  updateExpenseAsAdmin,
 } from "@/features/expenses/lib/expenses";
+
 import { expenseSchema } from "../schemas/expense-schema";
 
 import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
@@ -49,13 +52,16 @@ export async function createExpenseAction(
         : capitalize(selectedCategory);
 
     const expenseDate = formData.get("expenseDate");
+
     const values = {
       title: capitalize(String(formData.get("title"))),
       amount: formData.get("amount"),
       category,
       expenseDate,
     };
+
     const result = expenseSchema.safeParse(values);
+
     if (!result.success) {
       return {
         success: false,
@@ -64,8 +70,6 @@ export async function createExpenseAction(
         expenseId: undefined,
       };
     }
-
-    //console.log("Parsed Data:", result.data);
 
     const expense = await createExpense({
       ...result.data,
@@ -89,6 +93,7 @@ export async function createExpenseAction(
   } catch (error) {
     console.error("Create Expense Error:");
     console.error(error);
+
     return {
       success: false,
       errors: {},
@@ -208,8 +213,25 @@ export async function updateExpenseAction(
     }
 
     const userId = Number(session.user.id);
+    const role = session.user.role;
 
-    const existingExpense = await getExpense(id, userId);
+    let existingExpense;
+
+    /*
+     * ADMIN
+     *
+     * Admins can edit any user's PENDING expense.
+     */
+    if (role === "ADMIN") {
+      existingExpense = await getExpenseForAdmin(id);
+    } else {
+      /*
+       * EMPLOYEE / HR
+       *
+       * They can only edit their own expense.
+       */
+      existingExpense = await getExpense(id, userId);
+    }
 
     if (!existingExpense) {
       return {
@@ -229,7 +251,10 @@ export async function updateExpenseAction(
       };
     }
 
-    const updatedExpense = await updateExpense(id, userId, result.data);
+    const updatedExpense =
+      role === "ADMIN"
+        ? await updateExpenseAsAdmin(id, result.data)
+        : await updateExpense(id, userId, result.data);
 
     const changes: Record<
       string,
@@ -282,15 +307,19 @@ export async function updateExpenseAction(
     }
 
     revalidatePath("/expenses");
+    revalidatePath("/approvals");
 
     return {
       success: true,
       errors: {},
-      message: "Expense updated successfully.",
+      message:
+        role === "ADMIN"
+          ? "Expense updated successfully by Admin."
+          : "Expense updated successfully.",
       expenseId: undefined,
     };
   } catch (error) {
-    console.error(error);
+    console.error("Update Expense Error:", error);
 
     return {
       success: false,

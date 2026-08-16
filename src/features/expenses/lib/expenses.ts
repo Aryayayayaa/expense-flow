@@ -2,6 +2,8 @@ import { Prisma, ReimbursementStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
+import type { AdminModification } from "../types";
+
 export type ReimbursementHistoryExpense = {
   id: number;
   title: string;
@@ -65,15 +67,79 @@ export async function getExpenses(userId: number) {
           role: true,
         },
       },
+
+      auditLogs: {
+        where: {
+          action: "UPDATED",
+          actor: {
+            role: "ADMIN",
+          },
+        },
+
+        include: {
+          actor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+
+        take: 1,
+      },
     },
 
     orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
 
-  return expenses.map((expense) => ({
-    ...expense,
-    amount: Number(expense.amount),
-  }));
+  return expenses.map((expense) => {
+    const latestAdminModification = expense.auditLogs[0];
+
+    let adminModification: AdminModification | null = null;
+
+    if (latestAdminModification?.actor) {
+      const metadata = latestAdminModification.metadata;
+
+      let changes: AdminModification["changes"] = {};
+
+      if (
+        metadata &&
+        typeof metadata === "object" &&
+        !Array.isArray(metadata) &&
+        "changes" in metadata
+      ) {
+        const metadataChanges = metadata.changes;
+
+        if (
+          metadataChanges &&
+          typeof metadataChanges === "object" &&
+          !Array.isArray(metadataChanges)
+        ) {
+          changes = metadataChanges as AdminModification["changes"];
+        }
+      }
+
+      adminModification = {
+        admin: latestAdminModification.actor,
+        modifiedAt: latestAdminModification.createdAt,
+        changes,
+      };
+    }
+
+    return {
+      ...expense,
+
+      amount: Number(expense.amount),
+
+      adminModification,
+    };
+  });
 }
 
 export async function getExpense(id: number, userId: number) {
@@ -132,13 +198,63 @@ export async function updateExpense(
   });
 }
 
-export async function deleteExpense(id: number, userId: number) {
-  const expense = await prisma.expense.findFirst({
+/* -------------------------------------------------------------------------- */
+/* Admin Expense Editing                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Get a specific expense for Admin editing.
+ *
+ * Unlike getExpense(), this intentionally does not restrict the expense
+ * by userId because an Admin can edit another user's pending expense.
+ */
+export async function getExpenseForAdmin(id: number) {
+  return prisma.expense.findUnique({
     where: {
       id,
-      userId,
     },
   });
+}
+
+/**
+ * Update another user's pending expense as an Admin.
+ *
+ * The caller is responsible for verifying that the authenticated user
+ * actually has the ADMIN role.
+ */
+export async function updateExpenseAsAdmin(
+  id: number,
+  data: Partial<{
+    title: string;
+    amount: number;
+    category: string;
+    expenseDate: Date;
+  }>,
+) {
+  const expense = await prisma.expense.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!expense) {
+    throw new Error("Expense not found.");
+  }
+
+  if (expense.status !== "PENDING") {
+    throw new Error("Only pending expenses can be edited.");
+  }
+
+  return prisma.expense.update({
+    where: {
+      id,
+    },
+    data,
+  });
+}
+
+export async function deleteExpense(id: number, userId: number) {
+  const expense = await getExpense(id, userId);
 
   if (!expense) {
     throw new Error("Expense not found.");
@@ -350,7 +466,6 @@ export async function getApprovedExpensesForHR(hrId: number) {
           id: true,
           name: true,
           email: true,
-          role: true,
         },
       },
     },

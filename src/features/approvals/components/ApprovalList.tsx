@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { useRouter } from "next/navigation";
 
 import {
   approveExpenseAction,
   rejectExpenseAction,
 } from "@/features/expenses/actions/approval-actions";
+
+import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
 
 import type { SerializedExpense } from "@/features/expenses/types";
 
@@ -28,8 +32,27 @@ type ApprovalListProps = {
 };
 
 export default function ApprovalList({ expenses }: ApprovalListProps) {
+  const router = useRouter();
+
   const [selectedExpense, setSelectedExpense] =
     useState<ApprovalExpense | null>(null);
+
+  const [editingExpense, setEditingExpense] =
+    useState<SerializedExpense | null>(null);
+
+  const wasEditing = useRef(false);
+
+  /*
+   * Refresh the Admin approval list after the Admin finishes editing
+   * an expense.
+   */
+  useEffect(() => {
+    if (wasEditing.current && !editingExpense) {
+      router.refresh();
+    }
+
+    wasEditing.current = editingExpense !== null;
+  }, [editingExpense, router]);
 
   if (expenses.length === 0) {
     return (
@@ -155,7 +178,32 @@ export default function ApprovalList({ expenses }: ApprovalListProps) {
         <ReviewExpenseModal
           expense={selectedExpense}
           onClose={() => setSelectedExpense(null)}
+          onEdit={() => {
+            setEditingExpense(selectedExpense);
+            setSelectedExpense(null);
+          }}
         />
+      )}
+
+      {editingExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setEditingExpense(null)}
+                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+              >
+                Close
+              </button>
+            </div>
+
+            <AddExpenseForm
+              editingExpense={editingExpense}
+              setEditingExpense={setEditingExpense}
+            />
+          </div>
+        </div>
       )}
     </>
   );
@@ -189,9 +237,11 @@ function EvidenceIndicator({ expense }: { expense: ApprovalExpense }) {
 function ReviewExpenseModal({
   expense,
   onClose,
+  onEdit,
 }: {
   expense: ApprovalExpense;
   onClose: () => void;
+  onEdit: () => void;
 }) {
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState("");
@@ -221,6 +271,7 @@ function ReviewExpenseModal({
       window.location.reload();
     } catch (error) {
       console.error("Approve expense error:", error);
+
       setMessage("Unable to approve expense.");
     } finally {
       setProcessing(false);
@@ -249,6 +300,7 @@ function ReviewExpenseModal({
       window.location.reload();
     } catch (error) {
       console.error("Reject expense error:", error);
+
       setMessage("Unable to reject expense.");
     } finally {
       setProcessing(false);
@@ -268,6 +320,7 @@ function ReviewExpenseModal({
       window.open(data.url, "_blank");
     } catch (error) {
       console.error("Proof view error:", error);
+
       setMessage(errorMessage);
     }
   }
@@ -429,6 +482,15 @@ function ReviewExpenseModal({
             className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
           >
             Close
+          </button>
+
+          <button
+            type="button"
+            onClick={onEdit}
+            disabled={processing}
+            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Edit Expense
           </button>
 
           {!showReject && (

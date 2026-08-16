@@ -64,17 +64,19 @@ export async function GET(request: Request, { params }: RouteContext) {
       );
     }
 
+    const validUntil = Date.now() + 5 * 60 * 1000;
+
     const signedToken = await issueSignedToken({
       pathname: expense.ocrReceiptPath,
       operations: ["get"],
-      validUntil: Date.now() + 5 * 60 * 1000,
+      validUntil,
     });
 
     const { presignedUrl } = await presignUrl(signedToken, {
       pathname: expense.ocrReceiptPath,
       operation: "get",
       access: "private",
-      validUntil: Date.now() + 5 * 60 * 1000,
+      validUntil,
     });
 
     return NextResponse.json({

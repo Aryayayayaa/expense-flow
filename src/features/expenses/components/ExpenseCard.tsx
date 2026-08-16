@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Banknote,
+  ShieldAlert,
 } from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -46,6 +47,8 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const isReimbursed = expense.reimbursementStatus === "REIMBURSED";
   const isReimbursementRejected = expense.reimbursementStatus === "REJECTED";
   const isPending = expense.status === "PENDING";
+
+  const hasAdminModification = Boolean(expense.adminModification);
 
   return (
     <Card className="flex min-h-60 flex-col text-black">
@@ -82,6 +85,74 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
           <span>{formatTime(expense.expenseDate ?? expense.createdAt)}</span>
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Admin Modification Notice                                         */}
+      {/* ------------------------------------------------------------------ */}
+
+      {hasAdminModification && expense.adminModification && (
+        <div className="mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
+          <div className="flex items-start gap-3">
+            <ShieldAlert
+              size={19}
+              className="mt-0.5 shrink-0 text-purple-600"
+            />
+
+            <div className="min-w-0">
+              <p className="font-semibold text-purple-900">
+                Expense Modified by Admin
+              </p>
+
+              <p className="mt-1 text-sm text-purple-700">
+                This expense was updated by{" "}
+                <span className="font-medium">
+                  {expense.adminModification.admin.name}
+                </span>
+                .
+              </p>
+
+              <p className="mt-1 text-xs text-purple-600">
+                Modified on {formatDate(expense.adminModification.modifiedAt)}
+              </p>
+            </div>
+          </div>
+
+          {Object.keys(expense.adminModification.changes).length > 0 && (
+            <div className="mt-4 border-t border-purple-200 pt-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-purple-800">
+                Changes made
+              </p>
+
+              <div className="space-y-2">
+                {Object.entries(expense.adminModification.changes).map(
+                  ([field, change]) => (
+                    <div
+                      key={field}
+                      className="rounded-md bg-white/70 px-3 py-2 text-sm"
+                    >
+                      <p className="font-medium capitalize text-purple-900">
+                        {field}
+                      </p>
+
+                      <p className="mt-1 text-purple-700">
+                        <span className="line-through">
+                          {change.from ?? "—"}
+                        </span>
+
+                        {" → "}
+
+                        <span className="font-semibold">
+                          {change.to ?? "—"}
+                        </span>
+                      </p>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Approval Status */}
       <div className="mt-4">
@@ -220,7 +291,11 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
               </p>
 
               <p className="text-sm text-blue-700">
-                {isReimbursed ? "Reimbursed" : "Pending Reimbursement"}
+                {isReimbursed
+                  ? "Reimbursed"
+                  : isReimbursementRejected
+                    ? "Reimbursement Rejected"
+                    : "Pending Reimbursement"}
               </p>
             </div>
           </div>
