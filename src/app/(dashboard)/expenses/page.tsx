@@ -1,6 +1,9 @@
 import ExpensesPageClient from "@/features/expenses/components/ExpensesPageClient";
 
-import { getExpenses } from "@/features/expenses/lib/expenses";
+import {
+  getDeletedExpensesForUser,
+  getExpenses,
+} from "@/features/expenses/lib/expenses";
 
 import { auth } from "@/auth";
 
@@ -10,16 +13,30 @@ export default async function ExpensesPage() {
   if (!session?.user?.id) {
     return null;
   }
-  const expenses = await getExpenses(Number(session.user.id));
+
+  const userId = Number(session.user.id);
+
+  const [expenses, deletedExpenses] = await Promise.all([
+    getExpenses(userId),
+    getDeletedExpensesForUser(userId),
+  ]);
 
   const serializedExpenses = expenses.map((expense) => ({
     ...expense,
     amount: Number(expense.amount),
   }));
 
-   return (
+  const serializedDeletedExpenses = deletedExpenses.map((expense) => ({
+    ...expense,
+    amount: Number(expense.amount),
+  }));
+
+  return (
     <main className="mx-auto w-full max-w-7xl space-y-8 p-8">
-      <ExpensesPageClient expenses={serializedExpenses} />
+      <ExpensesPageClient
+        expenses={serializedExpenses}
+        deletedExpenses={serializedDeletedExpenses}
+      />
     </main>
   );
 }

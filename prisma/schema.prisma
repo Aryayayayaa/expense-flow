@@ -17,9 +17,22 @@ enum ExpenseStatus {
   PENDING
   APPROVED
   REJECTED
-  REIMBURSED
 }
 
+enum ReimbursementStatus {
+  PENDING
+  REIMBURSED
+  REJECTED
+}
+
+enum ExpenseAuditAction {
+  CREATED
+  UPDATED
+  DELETED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
 
 enum RoleRequestStatus {
   PENDING
@@ -31,6 +44,42 @@ enum EmployeeVerificationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum NotificationType {
+  // Expense lifecycle
+  EXPENSE_SUBMITTED
+  EXPENSE_APPROVED
+  EXPENSE_REJECTED
+  EXPENSE_MODIFIED
+  EXPENSE_DELETED
+
+  // Reimbursement lifecycle
+  REIMBURSEMENT_PENDING
+  EXPENSE_REIMBURSED
+  REIMBURSEMENT_REJECTED
+
+  // Employee / account lifecycle
+  EMPLOYEE_ACCOUNT_CREATED
+  EMPLOYEE_ACCOUNT_DELETED
+  EMPLOYEE_ACCOUNT_UPDATED
+
+  // Role / access lifecycle
+  ROLE_UPGRADED
+  ROLE_DOWNGRADED
+  ROLE_CHANGED
+  ROLE_VERIFICATION_PENDING
+  ROLE_VERIFICATION_APPROVED
+  ROLE_VERIFICATION_REJECTED
+
+  // Employee verification
+  EMPLOYEE_VERIFICATION_PENDING
+  EMPLOYEE_VERIFICATION_APPROVED
+  EMPLOYEE_VERIFICATION_REJECTED
+
+  // Administrative events
+  ADMIN_ACTION
+  SYSTEM
 }
 
 model User {
@@ -47,12 +96,20 @@ model User {
   expenses        Expense[]
   decidedExpenses Expense[] @relation("ExpenseDecisionMaker")
 
+  reimbursementExpenses Expense[] @relation("ExpenseReimbursementProcessor")
+
+  expenseAuditLogs ExpenseAuditLog[] @relation("ExpenseAuditActor")
+
+  deletedExpenses   DeletedExpense[] @relation("DeletedExpenseOwner")
+  deletedByExpenses DeletedExpense[] @relation("DeletedExpenseAdmin")
 
   roleRequests         RoleVerificationRequest[]
   reviewedRoleRequests RoleVerificationRequest[] @relation("RoleRequestReviewer")
 
-  employeeVerificationRequests EmployeeVerificationRequest[]
+  employeeVerificationRequests  EmployeeVerificationRequest[]
   reviewedEmployeeVerifications EmployeeVerificationRequest[] @relation("EmployeeVerificationReviewer")
+
+  notifications Notification[]
 }
 
 model Expense {
@@ -68,22 +125,35 @@ model Expense {
   ocrReceiptPath String?
   ocrRawText     String?
 
-  // Bill proof — can be replaced/removed
+  // Bill proof
   billProofUrl  String?
   billProofPath String?
 
+  // Approval workflow
   status          ExpenseStatus @default(PENDING)
   decidedAt       DateTime?
   decidedById     Int?
   rejectionReason String?
 
+  // Reimbursement workflow
+  reimbursementStatus ReimbursementStatus @default(PENDING)
+  reimbursementAt     DateTime?
+  reimbursementById   Int?
+  reimbursementReason String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int?
 
-  userId    Int?
-  user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   decidedBy User? @relation("ExpenseDecisionMaker", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  reimbursementBy User? @relation("ExpenseReimbursementProcessor", fields: [reimbursementById], references: [id], onDelete: SetNull)
+
+  auditLogs ExpenseAuditLog[]
+
+  notifications Notification[]
 }
 
 model RoleVerificationRequest {
@@ -102,13 +172,13 @@ model RoleVerificationRequest {
   reviewedById Int?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
+  userId    Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("RoleRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-
 }
 
 model EmployeeVerificationRequest {
@@ -128,7 +198,77 @@ model EmployeeVerificationRequest {
   updatedAt DateTime @updatedAt
 
   userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("EmployeeVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+}
+
+model ExpenseAuditLog {
+  id        Int                @id @default(autoincrement())
+  action    ExpenseAuditAction
+  reason    String?
+  metadata  Json?
+  details   String?
+  createdAt DateTime           @default(now())
+
+  expenseId Int?
+  expense   Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+
+  actorId Int?
+  actor   User? @relation("ExpenseAuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+}
+
+model DeletedExpense {
+  id Int @id @default(autoincrement())
+
+  originalExpenseId Int
+
+  title       String
+  amount      Decimal   @db.Decimal(12, 2)
+  category    String
+  expenseDate DateTime?
+
+  ocrReceiptUrl  String?
+  ocrReceiptPath String?
+  ocrRawText     String?
+
+  billProofUrl  String?
+  billProofPath String?
+
+  deletionReason String
+
+  deletedAt   DateTime @default(now())
+  deletedById Int
+
+  userId Int
+
+  user User @relation("DeletedExpenseOwner", fields: [userId], references: [id], onDelete: Restrict)
+
+  deletedBy User @relation("DeletedExpenseAdmin", fields: [deletedById], references: [id], onDelete: Restrict)
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+
+  type NotificationType
+
+  title   String
+  message String
+
+  isRead Boolean @default(false)
+
+  metadata Json?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expenseId Int?
+  expense   Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }

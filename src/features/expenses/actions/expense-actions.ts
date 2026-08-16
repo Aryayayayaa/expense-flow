@@ -7,9 +7,18 @@ import { prisma } from "@/lib/prisma";
 import {
   createExpense,
   deleteExpense,
+  deleteExpenseAsAdmin,
+  getExpense,
+  getExpenseForAdmin,
   updateExpense,
+  updateExpenseAsAdmin,
 } from "@/features/expenses/lib/expenses";
+
 import { expenseSchema } from "../schemas/expense-schema";
+
+import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+import { createNotification } from "@/features/notifications/lib/notifications";
+
 import { capitalize } from "@/utils/capitalize";
 
 type ExpenseActionState = {
@@ -45,13 +54,16 @@ export async function createExpenseAction(
         : capitalize(selectedCategory);
 
     const expenseDate = formData.get("expenseDate");
+
     const values = {
       title: capitalize(String(formData.get("title"))),
       amount: formData.get("amount"),
       category,
       expenseDate,
     };
+
     const result = expenseSchema.safeParse(values);
+
     if (!result.success) {
       return {
         success: false,
@@ -61,12 +73,50 @@ export async function createExpenseAction(
       };
     }
 
-    //console.log("Parsed Data:", result.data);
-
     const expense = await createExpense({
       ...result.data,
       userId: Number(session.user.id),
     });
+
+    await createExpenseAuditLog({
+      expenseId: expense.id,
+      actorId: Number(session.user.id),
+      action: "CREATED",
+    });
+
+    /*
+     * Notify all Admin and HR users that a new expense
+     * has been submitted.
+     */
+    const reviewers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ["ADMIN", "HR"],
+        },
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+    await Promise.all(
+      reviewers.map((reviewer) =>
+        createNotification({
+          userId: reviewer.id,
+          type: "EXPENSE_SUBMITTED",
+          title: "New Expense Submitted",
+          message: `A new expense "${expense.title}" has been submitted for review.`,
+          expenseId: expense.id,
+          metadata: {
+            expenseTitle: expense.title,
+            amount: Number(expense.amount),
+            category: expense.category,
+            submittedById: Number(session.user.id),
+          },
+        }),
+      ),
+    );
 
     revalidatePath("/expenses");
 
@@ -79,6 +129,7 @@ export async function createExpenseAction(
   } catch (error) {
     console.error("Create Expense Error:");
     console.error(error);
+
     return {
       success: false,
       errors: {},
@@ -197,18 +248,142 @@ export async function updateExpenseAction(
       };
     }
 
-    await updateExpense(id, Number(session.user.id), result.data);
+    const userId = Number(session.user.id);
+    const role = session.user.role;
+
+    let existingExpense;
+
+    /*
+     * ADMIN
+     *
+     * Admins can edit any user's PENDING expense.
+     */
+    if (role === "ADMIN") {
+      existingExpense = await getExpenseForAdmin(id);
+    } else {
+      /*
+       * EMPLOYEE / HR
+       *
+       * They can only edit their own expense.
+       */
+      existingExpense = await getExpense(id, userId);
+    }
+
+    if (!existingExpense) {
+      return {
+        success: false,
+        errors: {},
+        message: "Expense not found.",
+        expenseId: undefined,
+      };
+    }
+
+    if (existingExpense.status !== "PENDING") {
+      return {
+        success: false,
+        errors: {},
+        message: "Only pending expenses can be edited.",
+        expenseId: undefined,
+      };
+    }
+
+    const updatedExpense =
+      role === "ADMIN"
+        ? await updateExpenseAsAdmin(id, result.data)
+        : await updateExpense(id, userId, result.data);
+
+    const changes: Record<
+      string,
+      {
+        from: string | number | null;
+        to: string | number | null;
+      }
+    > = {};
+
+    if (existingExpense.title !== updatedExpense.title) {
+      changes.title = {
+        from: existingExpense.title,
+        to: updatedExpense.title,
+      };
+    }
+
+    if (Number(existingExpense.amount) !== Number(updatedExpense.amount)) {
+      changes.amount = {
+        from: Number(existingExpense.amount),
+        to: Number(updatedExpense.amount),
+      };
+    }
+
+    if (existingExpense.category !== updatedExpense.category) {
+      changes.category = {
+        from: existingExpense.category,
+        to: updatedExpense.category,
+      };
+    }
+
+    const oldDate = existingExpense.expenseDate?.toISOString() ?? null;
+    const newDate = updatedExpense.expenseDate?.toISOString() ?? null;
+
+    if (oldDate !== newDate) {
+      changes.expenseDate = {
+        from: oldDate,
+        to: newDate,
+      };
+    }
+
+    if (Object.keys(changes).length > 0) {
+      await createExpenseAuditLog({
+        expenseId: updatedExpense.id,
+        actorId: userId,
+        action: "UPDATED",
+        metadata: {
+          changes,
+        },
+      });
+
+      /*
+       * Notify the expense owner when an Admin or HR modifies
+       * the expense.
+
+       * Employees editing their own expense do not need to
+       * receive a notification about their own modification.
+       */
+      if (
+        (role === "ADMIN" || role === "HR") &&
+        existingExpense.userId !== null
+      ) {
+        await createNotification({
+          userId: existingExpense.userId,
+          type: "EXPENSE_MODIFIED",
+          title: "Expense Modified",
+          message: `Your expense "${updatedExpense.title}" has been modified by ${
+            role === "ADMIN" ? "Admin" : "HR"
+          }.`,
+          expenseId: updatedExpense.id,
+          metadata: {
+            expenseTitle: updatedExpense.title,
+            changes,
+            modifiedById: userId,
+            modifiedByRole: role,
+          },
+        });
+      }
+    }
 
     revalidatePath("/expenses");
+    revalidatePath("/approvals");
 
     return {
       success: true,
       errors: {},
-      message: "Expense updated successfully.",
+      message:
+        role === "ADMIN"
+          ? "Expense updated successfully by Admin."
+          : "Expense updated successfully.",
       expenseId: undefined,
     };
   } catch (error) {
-    console.error(error);
+    console.error("Update Expense Error:", error);
 
     return {
       success: false,
@@ -225,7 +400,21 @@ export async function deleteExpenseAction(id: number) {
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
-  await deleteExpense(id, Number(session.user.id));
+
+  const userId = Number(session.user.id);
+
+  const expense = await getExpense(id, userId);
+
+  if (!expense) {
+    throw new Error("Expense not found.");
+  }
+
+  if (expense.status !== "PENDING") {
+    throw new Error("Only pending expenses can be deleted.");
+  }
+
+  await deleteExpense(id, userId);
+
   revalidatePath("/expenses");
 }
 
@@ -301,6 +490,57 @@ export async function saveBillProofAction(
     return {
       success: false,
       message: "Unable to save bill proof.",
+    };
+  }
+}
+
+export async function deleteExpenseAsAdminAction(
+  id: number,
+  deletionReason: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    if (session.user.role !== "ADMIN") {
+      return {
+        success: false,
+        message: "Only Admins can delete expenses from the approval queue.",
+      };
+    }
+
+    const reason = deletionReason.trim();
+
+    if (!reason) {
+      return {
+        success: false,
+        message: "Deletion reason is required.",
+      };
+    }
+
+    await deleteExpenseAsAdmin(id, Number(session.user.id), reason);
+
+    revalidatePath("/approvals");
+    revalidatePath("/expenses");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Expense deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Admin Delete Expense Error:", error);
+
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Unable to delete expense.",
     };
   }
 }

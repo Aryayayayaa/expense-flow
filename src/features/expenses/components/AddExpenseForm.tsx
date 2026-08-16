@@ -1,5 +1,6 @@
 "use client";
-import { useActionState, useEffect, useRef, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
 import {
@@ -43,10 +44,17 @@ export default function AddExpenseForm({
   const [amount, setAmount] = useState("");
   const [customCategory, setCustomCategory] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
+
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  function getCurrentDateTime() {
+    return new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  }
 
   function resetForm() {
     setTitle("");
@@ -57,11 +65,7 @@ export default function AddExpenseForm({
     setOcrResult(null);
     setReceiptFile(null);
 
-    setExpenseDate(
-      new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16),
-    );
+    setExpenseDate(getCurrentDateTime());
 
     setEditingExpense(null);
     formRef.current?.reset();
@@ -69,7 +73,10 @@ export default function AddExpenseForm({
   }
 
   useEffect(() => {
-    if (!editingExpense) return;
+    if (!editingExpense) {
+      return;
+    }
+
     setState(initialState);
 
     setTitle(editingExpense.title);
@@ -97,12 +104,22 @@ export default function AddExpenseForm({
         .slice(0, 16),
     );
 
+    /*
+     * Editing an existing expense must never carry over
+     * OCR information from a previously selected receipt.
+     */
+    setOcrResult(null);
+    setReceiptFile(null);
+
     formRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
   }, [editingExpense]);
 
+  /*
+   * Apply OCR results to the form.
+   */
   useEffect(() => {
     if (!ocrResult) {
       return;
@@ -115,7 +132,54 @@ export default function AddExpenseForm({
     if (ocrResult.amount !== null) {
       setAmount(String(ocrResult.amount));
     }
+
+    if (ocrResult.expenseDate) {
+      setExpenseDate(ocrResult.expenseDate);
+    }
   }, [ocrResult]);
+
+  /*
+   * Upload the original receipt and save its metadata.
+   *
+   * This is deliberately kept separate from OCR extraction.
+   * OCR can fail while the original receipt can still be saved.
+   */
+  async function saveOriginalReceipt(
+    expenseId: number,
+    file: File,
+    rawText: string,
+  ) {
+    const extensionMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "application/pdf": "pdf",
+    };
+
+    const extension = extensionMap[file.type] ?? "bin";
+
+    const safePath = `expenses/${expenseId}/original-receipt-${Date.now()}.${extension}`;
+
+    const blob = await upload(safePath, file, {
+      access: "private",
+      handleUploadUrl: "/api/upload",
+      clientPayload: JSON.stringify({
+        expenseId,
+        type: "ocr-receipt",
+      }),
+    });
+
+    const saveResult = await saveOcrReceiptAction(
+      expenseId,
+      blob.url,
+      blob.pathname,
+      rawText,
+    );
+
+    if (!saveResult.success) {
+      throw new Error(saveResult.message);
+    }
+  }
 
   return (
     <Card>
@@ -127,125 +191,80 @@ export default function AddExpenseForm({
           try {
             let result;
 
+            /*
+             * ---------------------------------------------------------
+             * EDIT EXISTING EXPENSE
+             * ---------------------------------------------------------
+             *
+             * Editing never changes or uploads an OCR receipt.
+             */
             if (editingExpense) {
               result = await updateExpenseAction(editingExpense.id, formData);
+
+              setState(result);
+
+              if (!result.success) {
+                return;
+              }
             } else {
+              /*
+               * -------------------------------------------------------
+               * CREATE NEW EXPENSE
+               * -------------------------------------------------------
+               */
               result = await createExpenseAction(null, formData);
 
+              if (!result.success) {
+                setState(result);
+                return;
+              }
+
               /*
-               * If the user uploaded an original receipt during creation,
-               * permanently store that receipt against the newly created
-               * expense.
+               * -------------------------------------------------------
+               * SAVE ORIGINAL RECEIPT
+               * -------------------------------------------------------
+               *
+               * The receipt is saved whenever a file was selected.
+               *
+               * This happens regardless of whether OCR succeeded.
+               *
+               * Therefore:
+               *
+               * OCR succeeds
+               *   → expense fields are populated automatically
+               *   → original receipt is saved
+               *
+               * OCR fails
+               *   → user enters fields manually
+               *   → original receipt is still saved
                */
-              if (result.success && result.expenseId && receiptFile) {
+              if (result.expenseId && receiptFile) {
                 try {
-                  const extensionMap: Record<string, string> = {
-                    "image/jpeg": "jpg",
-                    "image/png": "png",
-                    "image/webp": "webp",
-                    "application/pdf": "pdf",
-                  };
-
-                  const extension = extensionMap[receiptFile.type] ?? "bin";
-
-                  const safePath = `expenses/${result.expenseId}/original-receipt-${Date.now()}.${extension}`;
-
-                  const blob = await upload(safePath, receiptFile, {
-                    access: "private",
-                    handleUploadUrl: "/api/upload",
-                    clientPayload: JSON.stringify({
-                      expenseId: result.expenseId,
-                    }),
-                  });
-
-                  // Save the original receipt metadata.
-                  //This action also makes sure the receipt is immutable.
-                  const receiptResult = await saveOcrReceiptAction(
+                  await saveOriginalReceipt(
                     result.expenseId,
-                    blob.url,
-                    blob.pathname,
+                    receiptFile,
                     ocrResult?.rawText ?? "",
                   );
-
-                  if (!receiptResult.success) {
-                    console.error(
-                      "Unable to save original receipt:",
-                      receiptResult.message,
-                    );
-                  }
                 } catch (error) {
                   console.error("Original receipt storage error:", error);
+
+                  setState({
+                    ...result,
+                    success: false,
+                    message:
+                      "Expense was created, but the original receipt could not be saved.",
+                  });
+
+                  return;
                 }
               }
-            }
 
-            setState(result);
-
-            setState(result);
-
-            if (!result.success) {
-              return;
+              setState(result);
             }
 
             /*
-             * ---------------------------------------------------------
-             * Save original OCR receipt
-             *
-             * Only new expenses can have an OCR receipt.
-             * Editing an existing expense never touches it.
-             * ---------------------------------------------------------
+             * Reset the form after successful creation/update.
              */
-
-            if (
-              !editingExpense &&
-              receiptFile &&
-              ocrResult &&
-              result.expenseId
-            ) {
-              const extensionMap: Record<string, string> = {
-                "image/jpeg": "jpg",
-                "image/png": "png",
-                "image/webp": "webp",
-                "application/pdf": "pdf",
-              };
-
-              const extension = extensionMap[receiptFile.type] ?? "bin";
-
-              const safePath = `expenses/${result.expenseId}/original-receipt-${Date.now()}.${extension}`;
-
-              const blob = await upload(safePath, receiptFile, {
-                access: "private",
-                handleUploadUrl: "/api/upload",
-                clientPayload: JSON.stringify({
-                  expenseId: result.expenseId,
-                  type: "ocr-receipt",
-                }),
-              });
-
-              const saveResult = await saveOcrReceiptAction(
-                result.expenseId,
-                blob.url,
-                blob.pathname,
-                ocrResult.rawText,
-              );
-
-              if (!saveResult.success) {
-                console.error(
-                  "OCR receipt database save failed:",
-                  saveResult.message,
-                );
-
-                setState({
-                  ...result,
-                  success: false,
-                  message:
-                    "Expense was created, but the original receipt could not be saved.",
-                });
-
-                return;
-              }
-            }
-
             setTimeout(() => {
               resetForm();
             }, 1000);
@@ -269,6 +288,7 @@ export default function AddExpenseForm({
           <h2 className="text-2xl font-semibold">
             {editingExpense ? "Edit Expense" : "Add Expense"}
           </h2>
+
           <p className="mt-1 text-sm text-gray-500">
             {editingExpense
               ? "Modify the details below and save your changes."
@@ -278,18 +298,15 @@ export default function AddExpenseForm({
 
         {!editingExpense && (
           <ReceiptOcrUpload
-            onOcrComplete={(result, file) => {
+            onOcrComplete={(result: OcrResult | null, file: File) => {
               setReceiptFile(file);
-
-              if (result) {
-                setOcrResult(result);
-              }
+              setOcrResult(result);
             }}
           />
         )}
 
         <div className="space-y-1">
-          <label className="block mb-1">Title</label>
+          <label className="mb-1 block">Title</label>
 
           <input
             disabled={pending}
@@ -301,12 +318,12 @@ export default function AddExpenseForm({
           />
 
           {state.errors?.title && (
-            <p className="text-red-500 text-sm">{state.errors.title[0]}</p>
+            <p className="text-sm text-red-500">{state.errors.title[0]}</p>
           )}
         </div>
 
         <div className="space-y-1">
-          <label className="block mb-1">Amount</label>
+          <label className="mb-1 block">Amount</label>
 
           <input
             disabled={pending}
@@ -319,12 +336,13 @@ export default function AddExpenseForm({
           />
 
           {state.errors?.amount && (
-            <p className="text-red-500 text-sm">{state.errors.amount[0]}</p>
+            <p className="text-sm text-red-500">{state.errors.amount[0]}</p>
           )}
         </div>
 
         <div className="space-y-1">
-          <label className="block mb-1">Category</label>
+          <label className="mb-1 block">Category</label>
+
           <select
             disabled={pending}
             name="category"
@@ -358,26 +376,19 @@ export default function AddExpenseForm({
           )}
 
           {state.errors?.category && (
-            <p className="text-red-500 text-sm">{state.errors.category[0]}</p>
+            <p className="text-sm text-red-500">{state.errors.category[0]}</p>
           )}
         </div>
 
         <div>
-          <label className="block mb-1">Expense Date & Time</label>
+          <label className="mb-1 block">Expense Date & Time</label>
 
           <input
             disabled={pending}
             name="expenseDate"
             type="datetime-local"
-            value={
-              expenseDate ||
-              new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-                .toISOString()
-                .slice(0, 16)
-            }
-            max={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-              .toISOString()
-              .slice(0, 16)}
+            value={expenseDate || getCurrentDateTime()}
+            max={getCurrentDateTime()}
             onChange={(e) => setExpenseDate(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
@@ -386,7 +397,7 @@ export default function AddExpenseForm({
         <Button
           type="submit"
           disabled={pending}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+          className="w-full rounded bg-blue-600 px-4 py-2 text-white"
         >
           {pending
             ? "Saving..."

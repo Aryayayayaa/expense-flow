@@ -4,6 +4,14 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  sendExpenseApprovedEmail,
+  sendExpenseRejectedEmail,
+} from "@/lib/email";
+
+import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+import { deleteExpenseAsAdmin } from "@/features/expenses/lib/expenses";
+import { createNotification } from "@/features/notifications/lib/notifications";
 
 type ApprovalActionResult = {
   success: boolean;
@@ -49,8 +57,20 @@ export async function approveExpenseAction(
       },
       select: {
         id: true,
+        title: true,
+        amount: true,
+        category: true,
+        expenseDate: true,
         status: true,
+
         userId: true,
+
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -75,21 +95,57 @@ export async function approveExpenseAction(
       };
     }
 
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        status: "APPROVED",
-        decidedAt: new Date(),
-        decidedById: admin.userId,
-        rejectionReason: null,
-      },
+    const decidedAt = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.expense.update({
+        where: {
+          id: expenseId,
+        },
+        data: {
+          status: "APPROVED",
+          decidedAt,
+          decidedById: admin.userId,
+          rejectionReason: null,
+        },
+      });
+
+      await tx.expenseAuditLog.create({
+        data: {
+          expenseId,
+          actorId: admin.userId,
+          action: "APPROVED",
+        },
+      });
     });
 
     revalidatePath("/approvals");
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
+
+    if (expense.user) {
+      await createNotification({
+        userId: expense.userId!,
+        type: "EXPENSE_APPROVED",
+        title: "Expense Approved",
+        message: `Your expense "${expense.title}" has been approved by Admin.`,
+        expenseId: expense.id,
+        metadata: {
+          expenseTitle: expense.title,
+          amount: Number(expense.amount),
+          category: expense.category,
+        },
+      });
+
+      await sendExpenseApprovedEmail({
+        employeeName: expense.user.name,
+        employeeEmail: expense.user.email,
+        expenseTitle: expense.title,
+        amount: Number(expense.amount),
+        category: expense.category,
+        expenseDate: expense.expenseDate,
+      });
+    }
 
     return {
       success: true,
@@ -131,8 +187,20 @@ export async function rejectExpenseAction(
       },
       select: {
         id: true,
+        title: true,
+        amount: true,
+        category: true,
+        expenseDate: true,
         status: true,
+
         userId: true,
+
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -157,21 +225,60 @@ export async function rejectExpenseAction(
       };
     }
 
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        status: "REJECTED",
-        decidedAt: new Date(),
-        decidedById: admin.userId,
-        rejectionReason: reason,
-      },
+    const decidedAt = new Date();
+
+    await prisma.$transaction(async (tx) => {
+      await tx.expense.update({
+        where: {
+          id: expenseId,
+        },
+        data: {
+          status: "REJECTED",
+          decidedAt,
+          decidedById: admin.userId,
+          rejectionReason: reason,
+        },
+      });
+
+      await tx.expenseAuditLog.create({
+        data: {
+          expenseId,
+          actorId: admin.userId,
+          action: "REJECTED",
+          reason,
+        },
+      });
     });
 
     revalidatePath("/approvals");
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
+
+    if (expense.user) {
+      await createNotification({
+        userId: expense.userId!,
+        type: "EXPENSE_REJECTED",
+        title: "Expense Rejected",
+        message: `Your expense "${expense.title}" has been rejected by Admin.`,
+        expenseId: expense.id,
+        metadata: {
+          expenseTitle: expense.title,
+          amount: Number(expense.amount),
+          category: expense.category,
+          rejectionReason: reason,
+        },
+      });
+
+      await sendExpenseRejectedEmail({
+        employeeName: expense.user.name,
+        employeeEmail: expense.user.email,
+        expenseTitle: expense.title,
+        amount: Number(expense.amount),
+        category: expense.category,
+        expenseDate: expense.expenseDate,
+        rejectionReason: reason,
+      });
+    }
 
     return {
       success: true,
@@ -183,6 +290,56 @@ export async function rejectExpenseAction(
     return {
       success: false,
       message: "Unable to reject expense.",
+    };
+  }
+}
+
+export async function deleteExpenseAsAdminAction(
+  expenseId: number,
+  deletionReason: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    if (session.user.role !== "ADMIN") {
+      return {
+        success: false,
+        message: "Only Admins can delete expenses.",
+      };
+    }
+
+    const reason = deletionReason.trim();
+
+    if (!reason) {
+      return {
+        success: false,
+        message: "Deletion reason is required.",
+      };
+    }
+
+    await deleteExpenseAsAdmin(expenseId, Number(session.user.id), reason);
+
+    revalidatePath("/approvals");
+    revalidatePath("/expenses");
+
+    return {
+      success: true,
+      message: "Expense deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Admin Delete Expense Error:", error);
+
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Unable to delete expense.",
     };
   }
 }

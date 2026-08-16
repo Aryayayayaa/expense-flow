@@ -62,3 +62,34 @@ export async function getLatestEmployeeVerificationRequest(userId: number) {
     },
   });
 }
+
+export async function getEmployeeVerificationHistory() {
+  return prisma.employeeVerificationRequest.findMany({
+    where: {
+      status: {
+        in: ["APPROVED", "REJECTED"],
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      reviewedAt: "desc",
+    },
+  });
+}

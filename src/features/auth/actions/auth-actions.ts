@@ -1,5 +1,7 @@
 "use server";
 
+import { prisma } from "@/lib/prisma";
+
 import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
 import { signIn } from "@/auth";
@@ -8,6 +10,8 @@ import { createUser, getUserByEmail } from "../lib/users";
 import { registerSchema } from "../schemas/register-schema";
 import { loginSchema } from "../schemas/login-schema";
 import { AuthState } from "../types/auth";
+
+import { createNotification } from "@/features/notifications/lib/notifications";
 
 export async function registerUserAction(
   prevState: AuthState,
@@ -47,10 +51,38 @@ export async function registerUserAction(
   const hashedPassword = await bcrypt.hash(result.data.password, 10);
 
   // Save user
-  await createUser({
+  const newUser = await createUser({
     ...result.data,
     password: hashedPassword,
   });
+
+  // Notify HR and Admin
+  const reviewers = await prisma.user.findMany({
+    where: {
+      role: {
+        in: ["ADMIN", "HR"],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  await Promise.all(
+    reviewers.map((reviewer) =>
+      createNotification({
+        userId: reviewer.id,
+        type: "EMPLOYEE_ACCOUNT_CREATED",
+        title: "New Employee Account",
+        message: `A new employee account has been created for ${newUser.name}.`,
+        metadata: {
+          employeeId: newUser.id,
+          employeeName: newUser.name,
+          employeeEmail: newUser.email,
+        },
+      }),
+    ),
+  );
 
   redirect("/login");
 

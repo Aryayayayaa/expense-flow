@@ -2,27 +2,34 @@ import Link from "next/link";
 
 import { getDashboardData } from "@/features/dashboard/lib/getDashboardData";
 
+import {
+  getNotifications,
+  getUnreadNotificationCount,
+} from "@/features/notifications/lib/notifications";
+
+import NotificationBell from "@/features/notifications/components/NotificationBell";
+
 export default async function DashboardPage() {
   const data = await getDashboardData();
+
+  const [notifications, unreadNotificationCount] = await Promise.all([
+    getNotifications(data.user.id, 20),
+    getUnreadNotificationCount(data.user.id),
+  ]);
 
   return (
     <>
       {/* Top Bar */}
       <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 lg:px-8">
         <div className="hidden lg:block">
-          <p className="text-sm font-medium text-slate-500">
-            Dashboard
-          </p>
+          <p className="text-sm font-medium text-slate-500">Dashboard</p>
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-          >
-            <BellIcon />
-          </button>
+          <NotificationBell
+            notifications={notifications}
+            unreadCount={unreadNotificationCount}
+          />
 
           <button
             type="button"
@@ -183,10 +190,7 @@ export default async function DashboardPage() {
               {/* Mobile */}
               <div className="divide-y divide-slate-100 md:hidden">
                 {data.recentExpenses.map((expense) => (
-                  <div
-                    key={expense.id}
-                    className="space-y-3 px-5 py-4"
-                  >
+                  <div key={expense.id} className="space-y-3 px-5 py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-medium text-slate-900">
@@ -194,8 +198,7 @@ export default async function DashboardPage() {
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
-                          {expense.category} ·{" "}
-                          {formatDate(expense.date)}
+                          {expense.category} · {formatDate(expense.date)}
                         </p>
                       </div>
 
@@ -255,19 +258,12 @@ type StatCardProps = {
   icon: React.ReactNode;
 };
 
-function StatCard({
-  title,
-  value,
-  description,
-  icon,
-}: StatCardProps) {
+function StatCard({ title, value, description, icon }: StatCardProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">
-            {title}
-          </p>
+          <p className="text-sm font-medium text-slate-500">{title}</p>
 
           <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
             {value}
@@ -279,9 +275,7 @@ function StatCard({
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
-        {description}
-      </p>
+      <p className="mt-3 text-xs text-slate-500">{description}</p>
     </div>
   );
 }
@@ -297,12 +291,7 @@ type QuickActionProps = {
   icon: React.ReactNode;
 };
 
-function QuickAction({
-  href,
-  title,
-  description,
-  icon,
-}: QuickActionProps) {
+function QuickAction({ href, title, description, icon }: QuickActionProps) {
   return (
     <Link
       href={href}
@@ -312,17 +301,11 @@ function QuickAction({
         {icon}
       </div>
 
-      <h3 className="mt-4 text-sm font-semibold text-slate-900">
-        {title}
-      </h3>
+      <h3 className="mt-4 text-sm font-semibold text-slate-900">{title}</h3>
 
-      <p className="mt-1 text-sm leading-6 text-slate-500">
-        {description}
-      </p>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
 
-      <p className="mt-3 text-sm font-medium text-blue-600">
-        Open →
-      </p>
+      <p className="mt-3 text-sm font-medium text-blue-600">Open →</p>
     </Link>
   );
 }

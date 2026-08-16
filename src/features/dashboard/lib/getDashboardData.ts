@@ -44,6 +44,7 @@ export async function getDashboardData() {
 
   return {
     user: {
+      id: Number(session.user.id),
       name: session.user.name ?? "User",
       email: session.user.email ?? "",
     },

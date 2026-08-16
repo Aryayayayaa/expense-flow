@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getAdminOverview } from "@/features/admin/lib/admin";
+import { getReimbursementHistory } from "@/features/expenses/lib/expenses";
+
+import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -14,7 +17,10 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
-  const overview = await getAdminOverview();
+  const [overview, reimbursementHistory] = await Promise.all([
+    getAdminOverview(),
+    getReimbursementHistory(),
+  ]);
 
   return (
     <main className="p-6 sm:p-8 lg:p-10">
@@ -109,6 +115,22 @@ export default async function AdminPage() {
               </table>
             </div>
           </div>
+        </section>
+
+        {/* Reimbursement History */}
+        <section className="mt-10">
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Reimbursement History
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Review expenses that have been reimbursed, including the Admin who
+              approved them and the HR member who processed the reimbursement.
+            </p>
+          </div>
+
+          <ReimbursementHistoryTable expenses={reimbursementHistory.expenses} />
         </section>
       </div>
     </main>

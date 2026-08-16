@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createEmployeeVerificationRequest } from "../lib/employee-verification";
+import { createNotification } from "@/features/notifications/lib/notifications";
 
 export async function createEmployeeVerificationAction(
   proofUrl?: string,
@@ -43,11 +44,35 @@ export async function createEmployeeVerificationAction(
       };
     }
 
-    await createEmployeeVerificationRequest({
+    const request = await createEmployeeVerificationRequest({
       userId,
       proofUrl,
       proofPath,
     });
+
+    const hrUsers = await prisma.user.findMany({
+      where: {
+        role: "HR",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await Promise.all(
+      hrUsers.map((hr) =>
+        createNotification({
+          userId: hr.id,
+          type: "EMPLOYEE_VERIFICATION_PENDING",
+          title: "Employee Verification Request",
+          message: `${session.user.name ?? "An employee"} has submitted an identity verification request.`,
+          metadata: {
+            requestId: request.id,
+            employeeId: userId,
+          },
+        }),
+      ),
+    );
 
     revalidatePath("/profile");
     revalidatePath("/hr");
@@ -105,6 +130,8 @@ export async function approveEmployeeVerificationAction(requestId: number) {
         id: true,
         status: true,
         userId: true,
+
+        user: { select: { name: true } },
       },
     });
 
@@ -138,6 +165,16 @@ export async function approveEmployeeVerificationAction(requestId: number) {
         reviewedAt: new Date(),
         reviewedById: hr.reviewerId,
         rejectionReason: null,
+      },
+    });
+
+    await createNotification({
+      userId: request.userId,
+      type: "EMPLOYEE_VERIFICATION_APPROVED",
+      title: "Identity Verification Approved",
+      message: "Your employee identity verification has been approved by HR.",
+      metadata: {
+        requestId: request.id,
       },
     });
 
@@ -219,6 +256,17 @@ export async function rejectEmployeeVerificationAction(
         rejectionReason: reason,
         reviewedAt: new Date(),
         reviewedById: hr.reviewerId,
+      },
+    });
+
+    await createNotification({
+      userId: request.userId,
+      type: "EMPLOYEE_VERIFICATION_REJECTED",
+      title: "Identity Verification Rejected",
+      message: "Your employee identity verification has been rejected by HR.",
+      metadata: {
+        requestId: request.id,
+        rejectionReason: reason,
       },
     });
 

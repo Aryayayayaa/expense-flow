@@ -163,7 +163,7 @@ export default function RoleVerificationTable({
                         onClick={async () => {
                           try {
                             const response = await fetch(
-                              `/api/role-verification/${request.id}/proof`,
+                              `/api/role-verification/upload/${request.id}/proof`,
                             );
 
                             const data = await response.json();
