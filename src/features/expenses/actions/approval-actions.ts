@@ -4,9 +4,14 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  sendExpenseApprovedEmail,
+  sendExpenseRejectedEmail,
+} from "@/lib/email";
 
 import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
 import { deleteExpenseAsAdmin } from "@/features/expenses/lib/expenses";
+import { createNotification } from "@/features/notifications/lib/notifications";
 
 type ApprovalActionResult = {
   success: boolean;
@@ -52,8 +57,20 @@ export async function approveExpenseAction(
       },
       select: {
         id: true,
+        title: true,
+        amount: true,
+        category: true,
+        expenseDate: true,
         status: true,
+
         userId: true,
+
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -106,6 +123,30 @@ export async function approveExpenseAction(
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
 
+    if (expense.user) {
+      await createNotification({
+        userId: expense.userId!,
+        type: "EXPENSE_APPROVED",
+        title: "Expense Approved",
+        message: `Your expense "${expense.title}" has been approved by Admin.`,
+        expenseId: expense.id,
+        metadata: {
+          expenseTitle: expense.title,
+          amount: Number(expense.amount),
+          category: expense.category,
+        },
+      });
+
+      await sendExpenseApprovedEmail({
+        employeeName: expense.user.name,
+        employeeEmail: expense.user.email,
+        expenseTitle: expense.title,
+        amount: Number(expense.amount),
+        category: expense.category,
+        expenseDate: expense.expenseDate,
+      });
+    }
+
     return {
       success: true,
       message: "Expense approved successfully.",
@@ -146,8 +187,20 @@ export async function rejectExpenseAction(
       },
       select: {
         id: true,
+        title: true,
+        amount: true,
+        category: true,
+        expenseDate: true,
         status: true,
+
         userId: true,
+
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -200,6 +253,32 @@ export async function rejectExpenseAction(
     revalidatePath("/approvals");
     revalidatePath("/expenses");
     revalidatePath("/dashboard");
+
+    if (expense.user) {
+      await createNotification({
+        userId: expense.userId!,
+        type: "EXPENSE_REJECTED",
+        title: "Expense Rejected",
+        message: `Your expense "${expense.title}" has been rejected by Admin.`,
+        expenseId: expense.id,
+        metadata: {
+          expenseTitle: expense.title,
+          amount: Number(expense.amount),
+          category: expense.category,
+          rejectionReason: reason,
+        },
+      });
+
+      await sendExpenseRejectedEmail({
+        employeeName: expense.user.name,
+        employeeEmail: expense.user.email,
+        expenseTitle: expense.title,
+        amount: Number(expense.amount),
+        category: expense.category,
+        expenseDate: expense.expenseDate,
+        rejectionReason: reason,
+      });
+    }
 
     return {
       success: true,

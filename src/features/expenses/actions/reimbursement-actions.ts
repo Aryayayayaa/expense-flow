@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  sendExpenseReimbursedEmail,
+  sendReimbursementRejectedEmail,
+} from "@/lib/email";
+
+import { createNotification } from "@/features/notifications/lib/notifications";
 
 type ReimbursementActionResult = {
   success: boolean;
@@ -40,9 +46,20 @@ async function getReimbursementExpense(expenseId: number, hrId: number) {
     },
     select: {
       id: true,
+      title: true,
+      amount: true,
+      category: true,
+      expenseDate: true,
       status: true,
       reimbursementStatus: true,
       userId: true,
+
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
@@ -124,6 +141,30 @@ export async function reimburseExpenseAction(
 
     revalidateReimbursementPaths();
 
+    if (expenseResult.expense.user) {
+      await createNotification({
+        userId: expenseResult.expense.userId!,
+        type: "EXPENSE_REIMBURSED",
+        title: "Expense Reimbursed",
+        message: `Your expense "${expenseResult.expense.title}" has been reimbursed by HR.`,
+        expenseId: expenseResult.expense.id,
+        metadata: {
+          expenseTitle: expenseResult.expense.title,
+          amount: Number(expenseResult.expense.amount),
+          category: expenseResult.expense.category,
+        },
+      });
+
+      await sendExpenseReimbursedEmail({
+        employeeName: expenseResult.expense.user.name,
+        employeeEmail: expenseResult.expense.user.email,
+        expenseTitle: expenseResult.expense.title,
+        amount: Number(expenseResult.expense.amount),
+        category: expenseResult.expense.category,
+        expenseDate: expenseResult.expense.expenseDate,
+      });
+    }
+
     return {
       success: true,
       message: "Expense marked as reimbursed successfully.",
@@ -193,6 +234,32 @@ export async function rejectReimbursementAction(
     });
 
     revalidateReimbursementPaths();
+
+    if (expenseResult.expense.user) {
+      await createNotification({
+        userId: expenseResult.expense.userId!,
+        type: "REIMBURSEMENT_REJECTED",
+        title: "Reimbursement Rejected",
+        message: `The reimbursement for your expense "${expenseResult.expense.title}" has been rejected by HR.`,
+        expenseId: expenseResult.expense.id,
+        metadata: {
+          expenseTitle: expenseResult.expense.title,
+          amount: Number(expenseResult.expense.amount),
+          category: expenseResult.expense.category,
+          rejectionReason: reason,
+        },
+      });
+
+      await sendReimbursementRejectedEmail({
+        employeeName: expenseResult.expense.user.name,
+        employeeEmail: expenseResult.expense.user.email,
+        expenseTitle: expenseResult.expense.title,
+        amount: Number(expenseResult.expense.amount),
+        category: expenseResult.expense.category,
+        expenseDate: expenseResult.expense.expenseDate,
+        rejectionReason: reason,
+      });
+    }
 
     return {
       success: true,
