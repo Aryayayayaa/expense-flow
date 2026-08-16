@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   approveExpenseAction,
   rejectExpenseAction,
+  deleteExpenseAsAdminAction,
 } from "@/features/expenses/actions/approval-actions";
 
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
@@ -248,6 +249,9 @@ function ReviewExpenseModal({
   const [showReject, setShowReject] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  const [showDelete, setShowDelete] = useState(false);
+  const [deletionReason, setDeletionReason] = useState("");
+
   async function handleApprove() {
     const confirmed = window.confirm(
       "Are you sure you want to approve this expense?",
@@ -302,6 +306,43 @@ function ReviewExpenseModal({
       console.error("Reject expense error:", error);
 
       setMessage("Unable to reject expense.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function handleDelete() {
+    const reason = deletionReason.trim();
+
+    if (!reason) {
+      setMessage("Please provide a deletion reason.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this expense? The expense will be removed from the active expense list and preserved in deleted-expense history.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setProcessing(true);
+    setMessage("");
+
+    try {
+      const result = await deleteExpenseAsAdminAction(expense.id, reason);
+
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Admin delete expense error:", error);
+
+      setMessage("Unable to delete expense.");
     } finally {
       setProcessing(false);
     }
@@ -467,6 +508,41 @@ function ReviewExpenseModal({
             </section>
           )}
 
+          {showDelete && (
+            <section className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <label
+                htmlFor={`deletion-${expense.id}`}
+                className="block text-sm font-semibold text-red-900"
+              >
+                Deletion Reason
+              </label>
+
+              <p className="mt-1 text-xs text-red-700">
+                This reason will be permanently stored with the deleted expense
+                history.
+              </p>
+
+              <textarea
+                id={`deletion-${expense.id}`}
+                value={deletionReason}
+                onChange={(event) => setDeletionReason(event.target.value)}
+                disabled={processing}
+                rows={4}
+                placeholder="Explain why this expense is being deleted..."
+                className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400"
+              />
+
+              <button
+                type="button"
+                disabled={processing}
+                onClick={handleDelete}
+                className="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {processing ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </section>
+          )}
+
           {message && (
             <p className="rounded-lg bg-slate-100 p-3 text-sm text-slate-700">
               {message}
@@ -501,6 +577,17 @@ function ReviewExpenseModal({
               className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Reject
+            </button>
+          )}
+
+          {!showDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDelete(true)}
+              disabled={processing}
+              className="rounded-lg border border-red-300 bg-white px-5 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Delete
             </button>
           )}
 

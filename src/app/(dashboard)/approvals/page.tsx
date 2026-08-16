@@ -6,9 +6,11 @@ import {
   getExpenseApprovalHistory,
   getExpenses,
   getPendingExpensesForAdmin,
+  getExpenseDeletionHistoryForAdmin,
 } from "@/features/expenses/lib/expenses";
 
 import ApprovalList from "@/features/approvals/components/ApprovalList";
+import ApprovalDeleteHistory from "@/features/approvals/components/ApprovalDeleteHistory";
 
 type ApprovalsPageProps = {
   searchParams: Promise<{
@@ -30,7 +32,6 @@ export default async function ApprovalsPage({
 
   /*
    * ADMIN
-   *
    * Admins review other users' pending expenses
    * and can view the complete approval history.
    */
@@ -42,9 +43,10 @@ export default async function ApprovalsPage({
     const historyPage =
       Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-    const [pendingExpenses, history] = await Promise.all([
+    const [pendingExpenses, history, deletionHistory] = await Promise.all([
       getPendingExpensesForAdmin(userId),
       getExpenseApprovalHistory(historyPage, 10),
+      getExpenseDeletionHistoryForAdmin(),
     ]);
 
     const serializedPendingExpenses = pendingExpenses.map((expense) => ({
@@ -200,6 +202,21 @@ export default async function ApprovalsPage({
                 </div>
               )}
             </div>
+
+            <section className="mt-10">
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Approval Delete History
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Expenses deleted by Admins are preserved here with their
+                  deletion reason and employee information.
+                </p>
+              </div>
+
+              <ApprovalDeleteHistory expenses={deletionHistory.expenses} />
+            </section>
 
             {/* Pagination */}
             {history.totalPages > 1 && (

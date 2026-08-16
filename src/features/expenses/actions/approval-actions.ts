@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+import { deleteExpenseAsAdmin } from "@/features/expenses/lib/expenses";
 
 type ApprovalActionResult = {
   success: boolean;
@@ -210,6 +211,56 @@ export async function rejectExpenseAction(
     return {
       success: false,
       message: "Unable to reject expense.",
+    };
+  }
+}
+
+export async function deleteExpenseAsAdminAction(
+  expenseId: number,
+  deletionReason: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    if (session.user.role !== "ADMIN") {
+      return {
+        success: false,
+        message: "Only Admins can delete expenses.",
+      };
+    }
+
+    const reason = deletionReason.trim();
+
+    if (!reason) {
+      return {
+        success: false,
+        message: "Deletion reason is required.",
+      };
+    }
+
+    await deleteExpenseAsAdmin(expenseId, Number(session.user.id), reason);
+
+    revalidatePath("/approvals");
+    revalidatePath("/expenses");
+
+    return {
+      success: true,
+      message: "Expense deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Admin Delete Expense Error:", error);
+
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Unable to delete expense.",
     };
   }
 }

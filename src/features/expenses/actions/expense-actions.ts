@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import {
   createExpense,
   deleteExpense,
+  deleteExpenseAsAdmin,
   getExpense,
   getExpenseForAdmin,
   updateExpense,
@@ -426,6 +427,57 @@ export async function saveBillProofAction(
     return {
       success: false,
       message: "Unable to save bill proof.",
+    };
+  }
+}
+
+export async function deleteExpenseAsAdminAction(
+  id: number,
+  deletionReason: string,
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "Unauthorized.",
+      };
+    }
+
+    if (session.user.role !== "ADMIN") {
+      return {
+        success: false,
+        message: "Only Admins can delete expenses from the approval queue.",
+      };
+    }
+
+    const reason = deletionReason.trim();
+
+    if (!reason) {
+      return {
+        success: false,
+        message: "Deletion reason is required.",
+      };
+    }
+
+    await deleteExpenseAsAdmin(id, Number(session.user.id), reason);
+
+    revalidatePath("/approvals");
+    revalidatePath("/expenses");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: "Expense deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Admin Delete Expense Error:", error);
+
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Unable to delete expense.",
     };
   }
 }

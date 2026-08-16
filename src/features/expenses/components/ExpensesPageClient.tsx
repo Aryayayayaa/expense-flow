@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from 'next/link';
-import { Wallet, Calendar, Folder, X, Plus } from "lucide-react";
+import Link from "next/link";
+import { Wallet, Calendar, Folder, X, Plus, AlertTriangle } from "lucide-react";
 
 import ExpenseList from "./ExpenseList";
 import AddExpenseForm from "./AddExpenseForm";
@@ -17,14 +17,42 @@ import { SerializedExpense } from "../types";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
+type DeletedExpense = {
+  id: number;
+  originalExpenseId: number;
+  title: string;
+  amount: number;
+  category: string;
+  expenseDate: Date | null;
 
+  ocrReceiptUrl: string | null;
+  ocrReceiptPath: string | null;
+  ocrRawText: string | null;
+
+  billProofUrl: string | null;
+  billProofPath: string | null;
+
+  deletionReason: string;
+  deletedAt: Date;
+
+  deletedBy: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+
+  userId: number;
+};
 
 type ExpensesPageClientProps = {
   expenses: SerializedExpense[];
+  deletedExpenses: DeletedExpense[];
 };
 
 export default function ExpensesPageClient({
   expenses,
+  deletedExpenses,
 }: ExpensesPageClientProps) {
   const [editingExpense, setEditingExpense] =
     useState<SerializedExpense | null>(null);
@@ -166,8 +194,7 @@ export default function ExpensesPageClient({
       /* Category */
 
       const matchesCategory =
-        selectedCategory === "" ||
-        expense.category === selectedCategory;
+        selectedCategory === "" || expense.category === selectedCategory;
 
       /* Year */
 
@@ -205,11 +232,7 @@ export default function ExpensesPageClient({
       const startOfLast30Days = new Date(startOfToday);
       startOfLast30Days.setDate(startOfToday.getDate() - 29);
 
-      const startOfThisMonth = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        1,
-      );
+      const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       const startOfLastMonth = new Date(
         now.getFullYear(),
@@ -230,44 +253,37 @@ export default function ExpensesPageClient({
       switch (dateFilter) {
         case "today":
           matchesDate =
-            expenseDate >= startOfToday &&
-            expenseDate < startOfTomorrow;
+            expenseDate >= startOfToday && expenseDate < startOfTomorrow;
           break;
 
         case "yesterday":
           matchesDate =
-            expenseDate >= startOfYesterday &&
-            expenseDate < startOfToday;
+            expenseDate >= startOfYesterday && expenseDate < startOfToday;
           break;
 
         case "last-7-days":
           matchesDate =
-            expenseDate >= startOfLast7Days &&
-            expenseDate < startOfTomorrow;
+            expenseDate >= startOfLast7Days && expenseDate < startOfTomorrow;
           break;
 
         case "last-30-days":
           matchesDate =
-            expenseDate >= startOfLast30Days &&
-            expenseDate < startOfTomorrow;
+            expenseDate >= startOfLast30Days && expenseDate < startOfTomorrow;
           break;
 
         case "this-month":
           matchesDate =
-            expenseDate >= startOfThisMonth &&
-            expenseDate < startOfNextMonth;
+            expenseDate >= startOfThisMonth && expenseDate < startOfNextMonth;
           break;
 
         case "last-month":
           matchesDate =
-            expenseDate >= startOfLastMonth &&
-            expenseDate < startOfThisMonth;
+            expenseDate >= startOfLastMonth && expenseDate < startOfThisMonth;
           break;
 
         case "this-year":
           matchesDate =
-            expenseDate >= startOfThisYear &&
-            expenseDate < startOfNextYear;
+            expenseDate >= startOfThisYear && expenseDate < startOfNextYear;
           break;
 
         case "custom":
@@ -275,9 +291,7 @@ export default function ExpensesPageClient({
             const start = new Date(`${customStartDate}T00:00:00`);
             const end = new Date(`${customEndDate}T23:59:59`);
 
-            matchesDate =
-              expenseDate >= start &&
-              expenseDate <= end;
+            matchesDate = expenseDate >= start && expenseDate <= end;
           }
           break;
 
@@ -286,12 +300,7 @@ export default function ExpensesPageClient({
           matchesDate = true;
       }
 
-      return (
-        matchesCategory &&
-        matchesYear &&
-        matchesMonth &&
-        matchesDate
-      );
+      return matchesCategory && matchesYear && matchesMonth && matchesDate;
     });
   }, [
     expenses,
@@ -314,26 +323,21 @@ export default function ExpensesPageClient({
 
   const thisMonthExpenses = filteredExpenses
     .filter((expense) => {
-      const expenseDate =
-        expense.expenseDate ?? expense.createdAt;
+      const expenseDate = expense.expenseDate ?? expense.createdAt;
 
       return (
         expenseDate.getMonth() === currentDate.getMonth() &&
         expenseDate.getFullYear() === currentDate.getFullYear()
       );
     })
-    .reduce(
-      (sum, expense) => sum + Number(expense.amount),
-      0,
-    );
+    .reduce((sum, expense) => sum + Number(expense.amount), 0);
 
   const totalCategories = new Set(
     filteredExpenses.map((expense) => expense.category),
   ).size;
 
   const disableDatePresets =
-    isMonthSelected ||
-    (isYearSelected && !isCurrentYearSelected);
+    isMonthSelected || (isYearSelected && !isCurrentYearSelected);
 
   /* ---------------------------------------------------------------------- */
   /* Clear filters                                                           */
@@ -381,6 +385,98 @@ export default function ExpensesPageClient({
           icon={<Folder size={20} />}
         />
       </div>
+
+      {/* Admin deleted expense notification */}
+
+      {deletedExpenses.length > 0 && (
+        <section className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-lg bg-amber-100 p-2 text-amber-700">
+              <AlertTriangle size={20} />
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold text-amber-900">
+                Admin Removed Expenses
+              </h2>
+
+              <p className="mt-1 text-xs text-amber-800">
+                The following expense
+                {deletedExpenses.length === 1 ? " was" : "s were"} removed by an
+                administrator.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {deletedExpenses.map((expense) => (
+              <div
+                key={expense.id}
+                className="rounded-lg border border-amber-200 bg-white p-4"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-slate-900">
+                        {expense.title}
+                      </h3>
+
+                      <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+                        DELETED
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      ₹{expense.amount.toFixed(2)} • {expense.category}
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    Deleted on{" "}
+                    {new Date(expense.deletedAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Deleted by
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-800">
+                      {expense.deletedBy.name}
+                    </p>
+
+                    <p className="text-xs text-slate-500">
+                      {expense.deletedBy.email}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                      Original Expense ID
+                    </p>
+
+                    <p className="mt-1 text-sm font-medium text-slate-800">
+                      #{expense.originalExpenseId}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-lg border border-red-100 bg-red-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+                    Reason for deletion
+                  </p>
+
+                  <p className="mt-1 text-sm text-red-900">
+                    {expense.deletionReason}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Filters */}
 
@@ -446,36 +542,28 @@ export default function ExpensesPageClient({
       {/* Expense count */}
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-  <div>
-    <h2 className="text-lg font-semibold text-slate-900">
-      My Expenses
-    </h2>
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">My Expenses</h2>
 
-    <p className="mt-1 text-sm text-slate-500">
-      {filteredExpenses.length}{" "}
-      {filteredExpenses.length === 1
-        ? "expense"
-        : "expenses"}{" "}
-      found
-    </p>
-  </div>
+          <p className="mt-1 text-sm text-slate-500">
+            {filteredExpenses.length}{" "}
+            {filteredExpenses.length === 1 ? "expense" : "expenses"} found
+          </p>
+        </div>
 
-  <Link
-    href="/expenses/new"
-    className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
-  >
-    <Plus size={18} />
-    Add New Expense
-  </Link>
-</div>
+        <Link
+          href="/expenses/new"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+        >
+          <Plus size={18} />
+          Add New Expense
+        </Link>
+      </div>
 
       {/* Expense cards */}
 
       <div className="mt-4">
-        <ExpenseList
-          expenses={filteredExpenses}
-          onEdit={setEditingExpense}
-        />
+        <ExpenseList expenses={filteredExpenses} onEdit={setEditingExpense} />
       </div>
 
       {/* Edit Expense */}
