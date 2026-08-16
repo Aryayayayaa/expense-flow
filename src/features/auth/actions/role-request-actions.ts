@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createRoleVerificationRequest } from "../lib/role-requests";
+import { createNotification } from "@/features/notifications/lib/notifications";
 import {
   canReviewOwnRoleRequest,
   canReviewRoleRequest,
@@ -86,6 +87,33 @@ export async function createRoleRequestAction(
       proofPath,
     });
 
+    const reviewers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ["ADMIN", "HR"],
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    await Promise.all(
+      reviewers.map((reviewer) =>
+        createNotification({
+          userId: reviewer.id,
+          type: "ROLE_VERIFICATION_PENDING",
+          title: "Role Verification Request",
+          message: `${session.user.name ?? "An employee"} has requested verification for the ${requestedRole} role.`,
+          metadata: {
+            requestId: request.id,
+            requestedRole,
+            employeeId: userId,
+          },
+        }),
+      ),
+    );
+
     revalidatePath("/profile");
     revalidatePath("/admin");
 
@@ -125,6 +153,7 @@ export async function approveRoleRequestAction(requestId: number) {
         user: {
           select: {
             id: true,
+            name: true,
             role: true,
           },
         },
@@ -180,6 +209,32 @@ export async function approveRoleRequestAction(requestId: number) {
         },
       }),
     ]);
+
+    await createNotification({
+      userId: request.user.id,
+      type: "ROLE_VERIFICATION_APPROVED",
+      title: "Role Request Approved",
+      message: `Your request for the ${request.requestedRole} role has been approved.`,
+      metadata: {
+        requestId: request.id,
+        previousRole: request.user.role,
+        newRole: request.requestedRole,
+      },
+    });
+
+    if (request.user.role !== request.requestedRole) {
+      await createNotification({
+        userId: request.user.id,
+        type: "ROLE_UPGRADED",
+        title: "Role Updated",
+        message: `Your account role has been upgraded from ${request.user.role} to ${request.requestedRole}.`,
+        metadata: {
+          requestId: request.id,
+          previousRole: request.user.role,
+          newRole: request.requestedRole,
+        },
+      });
+    }
 
     revalidatePath("/admin");
     revalidatePath("/profile");
@@ -273,6 +328,18 @@ export async function rejectRoleRequestAction(
         rejectionReason: reason,
         reviewedAt: new Date(),
         reviewedById: reviewerId,
+      },
+    });
+
+    await createNotification({
+      userId: request.user.id,
+      type: "ROLE_VERIFICATION_REJECTED",
+      title: "Role Request Rejected",
+      message: `Your request for the ${request.requestedRole} role has been rejected.`,
+      metadata: {
+        requestId: request.id,
+        requestedRole: request.requestedRole,
+        rejectionReason: reason,
       },
     });
 
