@@ -44,7 +44,7 @@ export async function createEmployeeVerificationAction(
       };
     }
 
-    await createEmployeeVerificationRequest({
+    const request = await createEmployeeVerificationRequest({
       userId,
       proofUrl,
       proofPath,
@@ -67,6 +67,7 @@ export async function createEmployeeVerificationAction(
           title: "Employee Verification Request",
           message: `${session.user.name ?? "An employee"} has submitted an identity verification request.`,
           metadata: {
+            requestId: request.id,
             employeeId: userId,
           },
         }),
