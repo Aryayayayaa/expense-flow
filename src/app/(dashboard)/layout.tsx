@@ -1,7 +1,10 @@
 import MobileSidebar from "@/features/dashboard/components/MobileSidebar";
 import Sidebar from "@/features/dashboard/components/Sidebar";
 import DashboardHeaderActions from "@/features/dashboard/components/DashboardHeaderActions";
+
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
   children,
@@ -9,6 +12,23 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(session.user.id),
+    },
+    select: {
+      isActive: true,
+    },
+  });
+
+  if (!user || !user.isActive) {
+    redirect("/account-disabled");
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">

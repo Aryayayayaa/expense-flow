@@ -5,6 +5,7 @@ import { getAdminOverview } from "@/features/admin/lib/admin";
 import { getReimbursementHistory } from "@/features/expenses/lib/expenses";
 
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
+import UserManagementTable from "@/features/admin/components/UserManagementTable";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -55,66 +56,7 @@ export default async function AdminPage() {
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50">
-                  <tr>
-                    <th className="px-5 py-4 font-medium text-slate-500">
-                      Name
-                    </th>
-
-                    <th className="px-5 py-4 font-medium text-slate-500">
-                      Email
-                    </th>
-
-                    <th className="px-5 py-4 font-medium text-slate-500">
-                      Role
-                    </th>
-
-                    <th className="px-5 py-4 font-medium text-slate-500">
-                      Joined
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100">
-                  {overview.users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-5 py-4 font-medium text-slate-900">
-                        {user.name}
-                      </td>
-
-                      <td className="px-5 py-4 text-slate-600">{user.email}</td>
-
-                      <td className="px-5 py-4">
-                        <RoleBadge role={user.role} />
-                      </td>
-
-                      <td className="px-5 py-4 text-slate-600">
-                        {user.createdAt.toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-
-                  {overview.users.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-5 py-8 text-center text-slate-500"
-                      >
-                        No users found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <UserManagementTable users={overview.users} />
         </section>
 
         {/* Reimbursement History */}
@@ -146,13 +88,5 @@ function OverviewCard({ label, value }: { label: string; value: number }) {
         {value}
       </p>
     </div>
-  );
-}
-
-function RoleBadge({ role }: { role: "ADMIN" | "HR" | "EMPLOYEE" }) {
-  return (
-    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-      {role}
-    </span>
   );
 }

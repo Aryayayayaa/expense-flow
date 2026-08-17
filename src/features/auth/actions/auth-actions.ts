@@ -122,6 +122,18 @@ export async function loginUserAction(
     };
   }
 
+  if (!user.isActive) {
+    return {
+      success: false,
+      errors: {
+        email: [
+          "Your account has been deactivated. Please contact HR or an administrator.",
+        ],
+      },
+      message: "",
+    };
+  }
+
   if (!user.password) {
     return {
       success: false,

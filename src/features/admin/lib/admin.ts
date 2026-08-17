@@ -16,6 +16,7 @@ export async function getAdminOverview() {
         name: true,
         email: true,
         role: true,
+        isActive: true,
         createdAt: true,
       },
       orderBy: {

@@ -30,7 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await getUserByEmail(String(credentials.email));
 
-        if (!user || !user.password) {
+        if (!user || !user.password || !user.isActive) {
           return null;
         }
 
