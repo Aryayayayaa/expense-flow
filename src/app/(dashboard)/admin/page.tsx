@@ -4,8 +4,7 @@ import { auth } from "@/auth";
 import { getAdminOverview } from "@/features/admin/lib/admin";
 import { getReimbursementHistory } from "@/features/expenses/lib/expenses";
 
-import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
-import UserManagementTable from "@/features/admin/components/UserManagementTable";
+import AdminManagementSelector from "@/features/admin/components/AdminManagementSelector";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -46,34 +45,11 @@ export default async function AdminPage() {
           />
         </div>
 
-        {/* Users */}
-        <section className="mt-8">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-slate-900">Users</h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              View all registered users and their current roles.
-            </p>
-          </div>
-
-          <UserManagementTable users={overview.users} />
-        </section>
-
-        {/* Reimbursement History */}
-        <section className="mt-10">
-          <div className="mb-5">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Reimbursement History
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Review expenses that have been reimbursed, including the Admin who
-              approved them and the HR member who processed the reimbursement.
-            </p>
-          </div>
-
-          <ReimbursementHistoryTable expenses={reimbursementHistory.expenses} />
-        </section>
+        {/* Management Views */}
+        <AdminManagementSelector
+          users={overview.users}
+          reimbursementExpenses={reimbursementHistory.expenses}
+        />
       </div>
     </main>
   );

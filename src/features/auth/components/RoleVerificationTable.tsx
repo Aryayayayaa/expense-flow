@@ -26,10 +26,12 @@ type RoleVerificationRequest = {
 
 type RoleVerificationTableProps = {
   requests: RoleVerificationRequest[];
+  canReview: boolean;
 };
 
 export default function RoleVerificationTable({
   requests,
+  canReview,
 }: RoleVerificationTableProps) {
   const [processingId, setProcessingId] = useState<number | null>(null);
 
@@ -122,7 +124,11 @@ export default function RoleVerificationTable({
 
               <th className="px-6 py-4 font-semibold text-slate-700">Proof</th>
 
-              <th className="px-6 py-4 font-semibold text-slate-700">Action</th>
+              {canReview && (
+                <th className="px-5 py-4 text-right font-medium text-slate-500">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -191,27 +197,29 @@ export default function RoleVerificationTable({
                     )}
                   </td>
 
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handleApprove(request.id)}
-                        className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isProcessing ? "Processing..." : "Approve"}
-                      </button>
+                  {canReview && (
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          disabled={isProcessing}
+                          onClick={() => handleApprove(request.id)}
+                          className="rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isProcessing ? "Processing..." : "Approve"}
+                        </button>
 
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handleReject(request.id)}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </td>
+                        <button
+                          type="button"
+                          disabled={isProcessing}
+                          onClick={() => handleReject(request.id)}
+                          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}

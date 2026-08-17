@@ -11,7 +11,7 @@ export default async function RoleVerificationPage() {
     redirect("/login");
   }
 
-  if (session.user.role !== "HR") {
+  if (session.user.role !== "ADMIN" && session.user.role !== "HR") {
     redirect("/dashboard");
   }
 
@@ -21,7 +21,7 @@ export default async function RoleVerificationPage() {
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
             Role Verification
           </h1>
 
@@ -30,7 +30,10 @@ export default async function RoleVerificationPage() {
           </p>
         </div>
 
-        <RoleVerificationTable requests={requests} />
+        <RoleVerificationTable
+          requests={requests}
+          canReview={session.user.role === "HR"}
+        />
       </div>
     </main>
   );

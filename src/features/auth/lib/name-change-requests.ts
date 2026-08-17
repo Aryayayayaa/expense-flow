@@ -34,6 +34,37 @@ export async function getPendingNameChangeRequests() {
   });
 }
 
+export async function getNameChangeRequestHistory() {
+  return prisma.nameChangeRequest.findMany({
+    where: {
+      status: {
+        in: ["APPROVED", "REJECTED"],
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      reviewedAt: "desc",
+    },
+  });
+}
+
 export async function getNameChangeRequestsForUser(userId: number) {
   return prisma.nameChangeRequest.findMany({
     where: {
