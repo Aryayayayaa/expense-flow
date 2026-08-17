@@ -26,11 +26,14 @@ type RoleVerificationRequest = {
 
 type RoleVerificationTableProps = {
   requests: RoleVerificationRequest[];
+  canReview: boolean;
 };
 
 export default function RoleVerificationTable({
   requests,
+  canReview,
 }: RoleVerificationTableProps) {
+  const [items, setItems] = useState(requests);
   const [processingId, setProcessingId] = useState<number | null>(null);
 
   async function handleApprove(requestId: number) {
@@ -49,7 +52,19 @@ export default function RoleVerificationTable({
 
       if (!result.success) {
         alert(result.message);
+        return;
       }
+
+      setItems((current) =>
+        current.map((request) =>
+          request.id === requestId
+            ? {
+                ...request,
+                status: "APPROVED",
+              }
+            : request,
+        ),
+      );
     } catch (error) {
       console.error("Approve role request error:", error);
       alert("Unable to approve role request.");
@@ -79,7 +94,19 @@ export default function RoleVerificationTable({
 
       if (!result.success) {
         alert(result.message);
+        return;
       }
+
+      setItems((current) =>
+        current.map((request) =>
+          request.id === requestId
+            ? {
+                ...request,
+                status: "REJECTED",
+              }
+            : request,
+        ),
+      );
     } catch (error) {
       console.error("Reject role request error:", error);
       alert("Unable to reject role request.");
@@ -88,15 +115,15 @@ export default function RoleVerificationTable({
     }
   }
 
-  if (requests.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">
-          No pending requests
+          No role verification requests
         </h2>
 
         <p className="mt-2 text-sm text-slate-500">
-          There are currently no role verification requests waiting for review.
+          There are currently no role verification requests.
         </p>
       </div>
     );
@@ -105,7 +132,7 @@ export default function RoleVerificationTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left text-sm">
+        <table className="w-full min-w-[1000px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50">
             <tr>
               <th className="px-6 py-4 font-semibold text-slate-700">
@@ -116,19 +143,26 @@ export default function RoleVerificationTable({
                 Requested Role
               </th>
 
+              <th className="px-6 py-4 font-semibold text-slate-700">Status</th>
+
               <th className="px-6 py-4 font-semibold text-slate-700">
                 Submitted
               </th>
 
               <th className="px-6 py-4 font-semibold text-slate-700">Proof</th>
 
-              <th className="px-6 py-4 font-semibold text-slate-700">Action</th>
+              {canReview && (
+                <th className="px-6 py-4 text-right font-semibold text-slate-700">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
 
           <tbody className="divide-y divide-slate-200">
-            {requests.map((request) => {
+            {items.map((request) => {
               const isProcessing = processingId === request.id;
+              const isPending = request.status === "PENDING";
 
               return (
                 <tr key={request.id} className="transition hover:bg-slate-50">
@@ -148,8 +182,12 @@ export default function RoleVerificationTable({
                     </span>
                   </td>
 
+                  <td className="px-6 py-4">
+                    <StatusBadge status={request.status} />
+                  </td>
+
                   <td className="px-6 py-4 text-slate-600">
-                    {request.createdAt.toLocaleDateString("en-GB", {
+                    {new Date(request.createdAt).toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
@@ -176,7 +214,11 @@ export default function RoleVerificationTable({
                               return;
                             }
 
-                            window.open(data.url, "_blank");
+                            window.open(
+                              data.url,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
                           } catch (error) {
                             console.error("Proof view error:", error);
                             alert("Unable to open verification proof.");
@@ -187,31 +229,37 @@ export default function RoleVerificationTable({
                         View Proof
                       </button>
                     ) : (
-                      <span className="text-sm text-red-600">No proof</span>
+                      <span className="text-sm text-slate-400">No proof</span>
                     )}
                   </td>
 
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handleApprove(request.id)}
-                        className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isProcessing ? "Processing..." : "Approve"}
-                      </button>
+                  {canReview && (
+                    <td className="px-6 py-4">
+                      {isPending ? (
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            disabled={isProcessing}
+                            onClick={() => handleApprove(request.id)}
+                            className="rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isProcessing ? "Processing..." : "Approve"}
+                          </button>
 
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handleReject(request.id)}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </td>
+                          <button
+                            type="button"
+                            disabled={isProcessing}
+                            onClick={() => handleReject(request.id)}
+                            className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">Reviewed</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -219,5 +267,22 @@ export default function RoleVerificationTable({
         </table>
       </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: RoleRequestStatus }) {
+  const classes =
+    status === "APPROVED"
+      ? "bg-green-50 text-green-700"
+      : status === "REJECTED"
+        ? "bg-red-50 text-red-700"
+        : "bg-yellow-50 text-yellow-700";
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${classes}`}
+    >
+      {status}
+    </span>
   );
 }

@@ -1,18 +1,20 @@
 import { prisma } from "@/lib/prisma";
 
-export async function createRoleVerificationRequest(data: {
+export async function createNameChangeRequest(data: {
   userId: number;
-  requestedRole: "ADMIN" | "HR";
+  currentName: string;
+  requestedName: string;
+  reason: string;
   proofUrl?: string;
   proofPath?: string;
 }) {
-  return prisma.roleVerificationRequest.create({
+  return prisma.nameChangeRequest.create({
     data,
   });
 }
 
-export async function getPendingRoleRequests() {
-  return prisma.roleVerificationRequest.findMany({
+export async function getPendingNameChangeRequests() {
+  return prisma.nameChangeRequest.findMany({
     where: {
       status: "PENDING",
     },
@@ -32,8 +34,13 @@ export async function getPendingRoleRequests() {
   });
 }
 
-export async function getAllRoleRequests() {
-  return prisma.roleVerificationRequest.findMany({
+export async function getNameChangeRequestHistory() {
+  return prisma.nameChangeRequest.findMany({
+    where: {
+      status: {
+        in: ["APPROVED", "REJECTED"],
+      },
+    },
     include: {
       user: {
         select: {
@@ -43,15 +50,23 @@ export async function getAllRoleRequests() {
           role: true,
         },
       },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
     },
     orderBy: {
-      createdAt: "desc",
+      reviewedAt: "desc",
     },
   });
 }
 
-export async function getRoleRequestsForUser(userId: number) {
-  return prisma.roleVerificationRequest.findMany({
+export async function getNameChangeRequestsForUser(userId: number) {
+  return prisma.nameChangeRequest.findMany({
     where: {
       userId,
     },

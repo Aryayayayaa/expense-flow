@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN" && session.user.role !== "HR") {
+    if (session.user.role !== "HR") {
       return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     }
 
@@ -27,29 +27,28 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     if (!Number.isInteger(requestId)) {
       return NextResponse.json(
-        { error: "Invalid role request ID." },
+        { error: "Invalid name change request ID." },
         { status: 400 },
       );
     }
 
-    const roleRequest = await prisma.roleVerificationRequest.findUnique({
+    const nameChangeRequest = await prisma.nameChangeRequest.findUnique({
       where: {
         id: requestId,
       },
       select: {
         proofPath: true,
-        status: true,
       },
     });
 
-    if (!roleRequest) {
+    if (!nameChangeRequest) {
       return NextResponse.json(
-        { error: "Role verification request not found." },
+        { error: "Name change request not found." },
         { status: 404 },
       );
     }
 
-    if (!roleRequest.proofPath) {
+    if (!nameChangeRequest.proofPath) {
       return NextResponse.json(
         { error: "No verification proof attached." },
         { status: 404 },
@@ -57,13 +56,13 @@ export async function GET(request: Request, { params }: RouteContext) {
     }
 
     const signedToken = await issueSignedToken({
-      pathname: roleRequest.proofPath,
+      pathname: nameChangeRequest.proofPath,
       operations: ["get"],
       validUntil: Date.now() + 5 * 60 * 1000,
     });
 
     const { presignedUrl } = await presignUrl(signedToken, {
-      pathname: roleRequest.proofPath,
+      pathname: nameChangeRequest.proofPath,
       operation: "get",
       access: "private",
       validUntil: Date.now() + 5 * 60 * 1000,
@@ -73,10 +72,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       url: presignedUrl,
     });
   } catch (error) {
-    console.error("Role verification proof view error:", error);
+    console.error("Name change proof view error:", error);
 
     return NextResponse.json(
-      { error: "Unable to access verification proof." },
+      { error: "Unable to access name change proof." },
       { status: 500 },
     );
   }
