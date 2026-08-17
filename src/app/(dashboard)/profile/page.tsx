@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import RoleVerificationRequest from "@/features/auth/components/RoleVerificationRequest";
 import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
 import ProfileEditor from "@/features/auth/components/ProfileEditor";
+import ProfileImageEditor from "@/features/auth/components/ProfileImageEditor";
 
 import { getLatestEmployeeVerificationRequest } from "@/features/auth/lib/employee-verification";
 
@@ -24,6 +25,7 @@ export default async function ProfilePage() {
       name: true,
       email: true,
       role: true,
+      image: true,
       createdAt: true,
     },
   });
@@ -47,6 +49,8 @@ export default async function ProfilePage() {
             View your account information and role.
           </p>
         </div>
+
+        <ProfileImageEditor currentImage={user.image} />
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="space-y-6">
