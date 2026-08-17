@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 
 import RoleVerificationRequest from "@/features/auth/components/RoleVerificationRequest";
 import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
+import ProfileEditor from "@/features/auth/components/ProfileEditor";
+
 import { getLatestEmployeeVerificationRequest } from "@/features/auth/lib/employee-verification";
 
 export default async function ProfilePage() {
@@ -83,6 +85,8 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <ProfileEditor name={user.name} email={user.email} />
 
         <RoleVerificationRequest currentRole={user.role} />
 
