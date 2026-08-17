@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AnalyticsTabs from "./AnalyticsTabs";
 
@@ -18,15 +19,23 @@ import CategoryComparisonChart from "./charts/CategoryComparisonChart";
 
 import { AnalyticsExpense } from "../types";
 
+type AnalyticsScope = "OWN" | "ALL" | "EMPLOYEES";
+
 type AnalyticsPageClientProps = {
   expenses: AnalyticsExpense[];
+  scope: AnalyticsScope;
+  role: "ADMIN" | "HR" | "EMPLOYEE";
 };
 
 type AnalyticsTab = "categories" | "monthly" | "yearly";
 
 export default function AnalyticsPageClient({
   expenses,
+  scope,
+  role,
 }: AnalyticsPageClientProps) {
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("categories");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
@@ -248,6 +257,26 @@ export default function AnalyticsPageClient({
         <h2 className="mb-4 text-sm font-semibold text-gray-700">
           Filter Analytics
         </h2>
+
+        {(role === "ADMIN" || role === "HR") && (
+          <div className="flex min-w-[180px] flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">
+              Expense Scope
+            </label>
+
+            <select
+              value={scope}
+              onChange={(event) => {
+                router.push(`/analytics?scope=${event.target.value}`);
+              }}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+            >
+              <option value="OWN">OWN</option>
+              <option value="ALL">ALL</option>
+              <option value="EMPLOYEES">EMPLOYEES</option>
+            </select>
+          </div>
+        )}
 
         <div className="flex flex-col gap-4 lg:flex-row">
           <CategoryFilter

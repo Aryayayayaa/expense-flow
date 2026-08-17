@@ -18,9 +18,6 @@ import {
 import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
 import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
 
-import EmployeeAccountManagement from "@/features/auth/components/EmployeeAccountManagement";
-import { getEmployeesForHr } from "@/features/auth/lib/users";
-
 import { getPendingNameChangeRequests } from "@/features/auth/lib/name-change-requests";
 import NameChangeRequestTable from "@/features/auth/components/NameChangeRequestTable";
 
@@ -43,14 +40,12 @@ export default async function HrPage() {
     approvedExpenses,
     reimbursementHistory,
     nameChangeRequests,
-    employees,
   ] = await Promise.all([
     getPendingEmployeeVerificationRequests(),
     getEmployeeVerificationHistory(),
     getApprovedExpensesForHR(hrId),
     getReimbursementHistory(),
     getPendingNameChangeRequests(),
-    getEmployeesForHr(),
   ]);
 
   return (
@@ -100,20 +95,6 @@ export default async function HrPage() {
           <EmployeeVerificationHistoryTable
             requests={employeeVerificationHistory}
           />
-        </section>
-
-        <section className="mt-10">
-          <div className="mb-5">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Employee Account Management
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Update employee email addresses and passwords.
-            </p>
-          </div>
-
-          <EmployeeAccountManagement employees={employees} />
         </section>
 
         {/* ---------------------------------------------------------------- */}

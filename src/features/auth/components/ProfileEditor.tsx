@@ -7,11 +7,13 @@ import { updateOwnProfileAction } from "../actions/profile-actions";
 type ProfileEditorProps = {
   name: string;
   email: string;
+  role: "ADMIN" | "HR" | "EMPLOYEE";
 };
 
 export default function ProfileEditor({
   name: initialName,
   email: initialEmail,
+  role,
 }: ProfileEditorProps) {
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
@@ -77,8 +79,14 @@ export default function ProfileEditor({
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            disabled={role === "EMPLOYEE" || role === "ADMIN"}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
           />
+          {(role === "EMPLOYEE" || role === "ADMIN") && (
+            <p className="mt-2 text-xs text-slate-500">
+              Name changes must be requested through HR.
+            </p>
+          )}
         </div>
 
         <div>

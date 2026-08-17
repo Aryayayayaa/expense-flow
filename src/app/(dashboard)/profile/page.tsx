@@ -7,6 +7,7 @@ import RoleVerificationRequest from "@/features/auth/components/RoleVerification
 import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
 import ProfileEditor from "@/features/auth/components/ProfileEditor";
 import ProfileImageEditor from "@/features/auth/components/ProfileImageEditor";
+import NameChangeRequest from "@/features/auth/components/NameChangeRequest";
 
 import { getLatestEmployeeVerificationRequest } from "@/features/auth/lib/employee-verification";
 
@@ -90,7 +91,11 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <ProfileEditor name={user.name} email={user.email} />
+        <ProfileEditor name={user.name} email={user.email} role={user.role} />
+
+        {user.role === "EMPLOYEE" && (
+          <NameChangeRequest currentName={user.name} />
+        )}
 
         <RoleVerificationRequest currentRole={user.role} />
 

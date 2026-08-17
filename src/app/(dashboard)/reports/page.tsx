@@ -1,15 +1,33 @@
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
 import { getAnalyticsData } from "@/features/analytics/lib/getAnalyticsData";
 
-import OverviewSummaryCards from "@/features/analytics/components/OverviewSummaryCards";
-import CategoryComparisonChart from "@/features/analytics/components/charts/CategoryComparisonChart";
+import ReportsPageClient from "@/features/reports/components/ReportsPageClient";
+import ReportsFilters from "@/features/reports/components/ReportsFilters";
 
-import ReportSummary from "@/features/analytics/components/reports/ReportSummary";
-import SpendingSummary from "@/features/analytics/components/reports/SpendingSummary";
-import LargestExpenses from "@/features/analytics/components/reports/LargestExpenses";
-import TopCategories from "@/features/analytics/components/reports/TopCategories";
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>;
+}) {
+  const session = await auth();
 
-export default async function ReportsPage() {
-  const expenses = await getAnalyticsData();
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const params = await searchParams;
+
+  const scope =
+    params.scope === "ALL" || params.scope === "EMPLOYEES"
+      ? params.scope
+      : "OWN";
+
+  const expenses = await getAnalyticsData(scope);
+
+  const canChooseScope =
+    session.user.role === "ADMIN" || session.user.role === "HR";
 
   return (
     <div className="p-6">
@@ -19,18 +37,14 @@ export default async function ReportsPage() {
         Review summaries and detailed insights from your expenses.
       </p>
 
-      <div className="mt-6 space-y-6">
-        <OverviewSummaryCards expenses={expenses} />
+      {canChooseScope && (
+        <div className="mt-6">
+          <ReportsPageClient scope={scope} />
+        </div>
+      )}
 
-        <CategoryComparisonChart expenses={expenses} />
-
-        <ReportSummary expenses={expenses} />
-
-        <SpendingSummary expenses={expenses} />
-
-        <LargestExpenses expenses={expenses} />
-
-        <TopCategories expenses={expenses} />
+      <div className="mt-6">
+        <ReportsFilters expenses={expenses} />
       </div>
     </div>
   );

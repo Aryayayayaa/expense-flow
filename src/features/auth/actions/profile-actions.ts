@@ -75,6 +75,13 @@ export async function updateOwnProfileAction(data: {
       }
 
       if (name !== user.name) {
+        if (currentUser.role !== "ADMIN" && currentUser.role !== "HR") {
+          return {
+            success: false,
+            message: "Employees must submit a name change request to HR.",
+          };
+        }
+
         updateData.name = name;
         changes.push("name");
       }
