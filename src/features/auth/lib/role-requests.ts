@@ -32,6 +32,24 @@ export async function getPendingRoleRequests() {
   });
 }
 
+export async function getAllRoleRequests() {
+  return prisma.roleVerificationRequest.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
 export async function getRoleRequestsForUser(userId: number) {
   return prisma.roleVerificationRequest.findMany({
     where: {

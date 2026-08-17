@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    if (session.user.role !== "HR") {
+    if (session.user.role !== "ADMIN" && session.user.role !== "HR") {
       return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     }
 

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { getPendingRoleRequests } from "@/features/auth/lib/role-requests";
+import { getAllRoleRequests } from "@/features/auth/lib/role-requests";
 import RoleVerificationTable from "@/features/auth/components/RoleVerificationTable";
 
 export default async function RoleVerificationPage() {
@@ -15,7 +15,9 @@ export default async function RoleVerificationPage() {
     redirect("/dashboard");
   }
 
-  const requests = await getPendingRoleRequests();
+  const requests = await getAllRoleRequests();
+
+  const canReview = session.user.role === "HR";
 
   return (
     <main className="p-6 sm:p-8 lg:p-10">
@@ -26,14 +28,13 @@ export default async function RoleVerificationPage() {
           </h1>
 
           <p className="mt-2 text-sm text-slate-500">
-            Review employee requests for ADMIN and HR privileges.
+            {canReview
+              ? "Review employee requests for ADMIN and HR privileges."
+              : "View employee role verification requests and their current status."}
           </p>
         </div>
 
-        <RoleVerificationTable
-          requests={requests}
-          canReview={session.user.role === "HR"}
-        />
+        <RoleVerificationTable requests={requests} canReview={canReview} />
       </div>
     </main>
   );
