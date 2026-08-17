@@ -37,3 +37,21 @@ export async function activateUser(userId: number) {
     },
   });
 }
+
+export async function getEmployeesForHr() {
+  return prisma.user.findMany({
+    where: {
+      role: "EMPLOYEE",
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      isActive: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}

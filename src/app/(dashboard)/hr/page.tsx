@@ -18,6 +18,12 @@ import {
 import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
 import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
 
+import EmployeeAccountManagement from "@/features/auth/components/EmployeeAccountManagement";
+import { getEmployeesForHr } from "@/features/auth/lib/users";
+
+import { getPendingNameChangeRequests } from "@/features/auth/lib/name-change-requests";
+import NameChangeRequestTable from "@/features/auth/components/NameChangeRequestTable";
+
 export default async function HrPage() {
   const session = await auth();
 
@@ -36,11 +42,15 @@ export default async function HrPage() {
     employeeVerificationHistory,
     approvedExpenses,
     reimbursementHistory,
+    nameChangeRequests,
+    employees,
   ] = await Promise.all([
     getPendingEmployeeVerificationRequests(),
     getEmployeeVerificationHistory(),
     getApprovedExpensesForHR(hrId),
     getReimbursementHistory(),
+    getPendingNameChangeRequests(),
+    getEmployeesForHr(),
   ]);
 
   return (
@@ -92,6 +102,20 @@ export default async function HrPage() {
           />
         </section>
 
+        <section className="mt-10">
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Employee Account Management
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Update employee email addresses and passwords.
+            </p>
+          </div>
+
+          <EmployeeAccountManagement employees={employees} />
+        </section>
+
         {/* ---------------------------------------------------------------- */}
         {/* Reimbursement Queue                                              */}
         {/* ---------------------------------------------------------------- */}
@@ -128,6 +152,20 @@ export default async function HrPage() {
           </div>
 
           <ReimbursementHistoryTable expenses={reimbursementHistory.expenses} />
+        </section>
+
+        <section className="mt-10">
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Name Change Requests
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Review employee requests to change their account name.
+            </p>
+          </div>
+
+          <NameChangeRequestTable requests={nameChangeRequests} />
         </section>
       </div>
     </main>
