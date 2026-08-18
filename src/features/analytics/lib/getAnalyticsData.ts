@@ -52,7 +52,22 @@ export async function getAnalyticsData(
   return expenses.map((expense) => ({
     id: expense.id,
     title: expense.title,
+
+    // Original transaction amount and currency.
     amount: Number(expense.amount),
+    currency: expense.currency,
+
+    // Normalized base-currency information.
+    baseCurrencyAmount:
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : null,
+
+    exchangeRate:
+      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+
+    exchangeRateAt: expense.exchangeRateAt,
+
     category: expense.category,
     expenseDate: expense.expenseDate,
     billProofUrl: expense.billProofUrl,

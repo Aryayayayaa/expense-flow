@@ -13,6 +13,7 @@ import {
   updateExpense,
   updateExpenseAsAdmin,
 } from "@/features/expenses/lib/expenses";
+import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 
 import { expenseSchema } from "../schemas/expense-schema";
 
@@ -55,10 +56,14 @@ export async function createExpenseAction(
 
     const expenseDate = formData.get("expenseDate");
 
+    const currency = String(formData.get("currency") ?? "INR")
+      .trim()
+      .toUpperCase();
+
     const values = {
       title: capitalize(String(formData.get("title"))),
       amount: formData.get("amount"),
-      currency: String(formData.get("currency") ?? "INR").toUpperCase(),
+      currency,
       category,
       expenseDate,
     };
@@ -74,9 +79,17 @@ export async function createExpenseAction(
       };
     }
 
+    const exchangeRateResult = await getExchangeRate(currency, "INR");
+
+    const baseCurrencyAmount = result.data.amount * exchangeRateResult.rate;
+
     const expense = await createExpense({
       ...result.data,
       userId: Number(session.user.id),
+      currency,
+      baseCurrencyAmount,
+      exchangeRate: exchangeRateResult.rate,
+      exchangeRateAt: exchangeRateResult.rateDate,
     });
 
     await createExpenseAuditLog({
@@ -239,6 +252,14 @@ export async function updateExpenseAction(
       };
     }
 
+    const currency = String(formData.get("currency") ?? "INR")
+      .trim()
+      .toUpperCase();
+
+    const exchangeRateResult = await getExchangeRate(currency, "INR");
+
+    const baseCurrencyAmount = result.data.amount * exchangeRateResult.rate;
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -255,11 +276,8 @@ export async function updateExpenseAction(
 
     let existingExpense;
 
-    /*
-     * ADMIN
-     *
-     * Admins can edit any user's PENDING expense.
-     */
+    // ADMIN: Admins can edit any user's PENDING expense.
+
     if (role === "ADMIN") {
       existingExpense = await getExpenseForAdmin(id);
     } else {
@@ -289,10 +307,23 @@ export async function updateExpenseAction(
       };
     }
 
+    const currencyData = {
+      currency,
+      baseCurrencyAmount,
+      exchangeRate: exchangeRateResult.rate,
+      exchangeRateAt: exchangeRateResult.rateDate,
+    };
+
     const updatedExpense =
       role === "ADMIN"
-        ? await updateExpenseAsAdmin(id, result.data)
-        : await updateExpense(id, userId, result.data);
+        ? await updateExpenseAsAdmin(id, {
+            ...result.data,
+            ...currencyData,
+          })
+        : await updateExpense(id, userId, {
+            ...result.data,
+            ...currencyData,
+          });
 
     const changes: Record<
       string,

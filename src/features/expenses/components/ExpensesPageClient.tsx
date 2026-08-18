@@ -317,7 +317,8 @@ export default function ExpensesPageClient({
   /* ---------------------------------------------------------------------- */
 
   const totalExpenses = filteredExpenses.reduce(
-    (sum, expense) => sum + Number(expense.amount),
+    (sum, expense) =>
+      sum + Number(expense.baseCurrencyAmount ?? expense.amount),
     0,
   );
 
@@ -330,7 +331,11 @@ export default function ExpensesPageClient({
         expenseDate.getFullYear() === currentDate.getFullYear()
       );
     })
-    .reduce((sum, expense) => sum + Number(expense.amount), 0);
+    .reduce(
+      (sum, expense) =>
+        sum + Number(expense.baseCurrencyAmount ?? expense.amount),
+      0,
+    );
 
   const totalCategories = new Set(
     filteredExpenses.map((expense) => expense.category),

@@ -19,8 +19,13 @@ export type AdminModification = {
   >;
 };
 
-export type SerializedExpense = Omit<Expense, "amount"> & {
+export type SerializedExpense = Omit<
+  Expense,
+  "amount" | "baseCurrencyAmount" | "exchangeRate"
+> & {
   amount: number;
+  baseCurrencyAmount: number | null;
+  exchangeRate: number | null;
 
   decidedBy: {
     id: number;

@@ -10,6 +10,8 @@ import YearFilter from "@/features/expenses/components/YearFilter";
 import MonthFilter from "@/features/expenses/components/MonthFilter";
 import DateFilter from "@/features/expenses/components/DateFilter";
 
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from "@/constants/currencies";
+
 import CategoryPieChart from "./charts/CategoryPieChart";
 import MonthlyTrendChart from "./charts/MonthlyTrendChart";
 import YearlyTrendChart from "./charts/YearlyTrendChart";
@@ -41,6 +43,8 @@ export default function AnalyticsPageClient({
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+
+  const [selectedCurrency, setSelectedCurrency] = useState("DEFAULT");
 
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -153,6 +157,14 @@ export default function AnalyticsPageClient({
     const matchesCategory =
       selectedCategory === "" || expense.category === selectedCategory;
 
+    // Currency filter.
+    //
+    // DEFAULT = include every original transaction currency.
+    // Otherwise only include expenses originally recorded
+    // in the selected currency. No currency conversion is performed.
+    const matchesCurrency =
+      selectedCurrency === "DEFAULT" || expense.currency === selectedCurrency;
+
     // Year filter
     const matchesYear =
       selectedYear === "" || expenseDate.getFullYear() === Number(selectedYear);
@@ -245,7 +257,13 @@ export default function AnalyticsPageClient({
         matchesDate = true;
     }
 
-    return matchesCategory && matchesYear && matchesMonth && matchesDate;
+    return (
+      matchesCategory &&
+      matchesCurrency &&
+      matchesYear &&
+      matchesMonth &&
+      matchesDate
+    );
   });
 
   const disableDatePresets =
@@ -279,6 +297,26 @@ export default function AnalyticsPageClient({
         )}
 
         <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="flex min-w-[180px] flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">
+              Currency
+            </label>
+
+            <select
+              value={selectedCurrency}
+              onChange={(event) => setSelectedCurrency(event.target.value)}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+            >
+              <option value="DEFAULT">Default — All Currencies</option>
+
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.code} — {currency.name} ({currency.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <CategoryFilter
             value={selectedCategory}
             onChange={setSelectedCategory}

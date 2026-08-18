@@ -134,9 +134,13 @@ export async function getExpenses(userId: number) {
 
     return {
       ...expense,
-
       amount: Number(expense.amount),
-
+      baseCurrencyAmount:
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null,
+      exchangeRate:
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
       adminModification,
     };
   });
@@ -154,10 +158,13 @@ export async function getExpense(id: number, userId: number) {
 export async function createExpense(data: {
   title: string;
   amount: number;
-  currency: string;
   category: string;
   expenseDate: Date;
   userId: number;
+  currency: string;
+  baseCurrencyAmount: number;
+  exchangeRate: number;
+  exchangeRateAt: Date;
 }) {
   console.log("Saving to Prisma:", data);
 
@@ -173,6 +180,9 @@ export async function updateExpense(
     title: string;
     amount: number;
     currency: string;
+    baseCurrencyAmount: number;
+    exchangeRate: number;
+    exchangeRateAt: Date;
     category: string;
     expenseDate: Date;
   }>,
@@ -272,7 +282,7 @@ export async function getAllExpensesForAdmin() {
 //Get expenses that are currently waiting for admin approval.
 
 export async function getPendingExpensesForAdmin(adminId: number) {
-  return prisma.expense.findMany({
+  const expenses = await prisma.expense.findMany({
     where: {
       status: "PENDING",
       userId: {
@@ -310,6 +320,20 @@ export async function getPendingExpensesForAdmin(adminId: number) {
 
     orderBy: [{ expenseDate: "asc" }, { createdAt: "asc" }],
   });
+
+  return expenses.map((expense) => ({
+    ...expense,
+
+    amount: Number(expense.amount),
+
+    baseCurrencyAmount:
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : null,
+
+    exchangeRate:
+      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+  }));
 }
 
 export async function getExpenseApprovalHistory(
@@ -451,6 +475,9 @@ export async function updateExpenseAsAdmin(
     title: string;
     amount: number;
     currency: string;
+    baseCurrencyAmount: number;
+    exchangeRate: number;
+    exchangeRateAt: Date;
     category: string;
     expenseDate: Date;
   }>,

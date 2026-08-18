@@ -58,9 +58,18 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
           {expense.title}
         </h2>
 
-        <p className="text-2xl font-bold tracking-tight text-green-600">
-          {formatCurrency(expense.amount)}
-        </p>
+        <div>
+          <p className="text-2xl font-bold tracking-tight text-green-600">
+            {formatCurrency(expense.amount, expense.currency)}
+          </p>
+
+          {expense.currency !== "INR" &&
+            expense.baseCurrencyAmount !== null && (
+              <p className="mt-1 text-sm text-gray-500">
+                ≈ {formatCurrency(expense.baseCurrencyAmount, "INR")}
+              </p>
+            )}
+        </div>
       </div>
 
       {/* Category */}

@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import { getExpenses } from "@/features/expenses/lib/expenses";
-import { redirect } from "next/dist/server/api-utils";
 
 export async function getDashboardData() {
   const session = await auth();
@@ -15,8 +14,32 @@ export async function getDashboardData() {
 
   const now = new Date();
 
+  function getBaseCurrencyAmount(expense: {
+    amount: unknown;
+    currency: string;
+    baseCurrencyAmount: unknown;
+  }) {
+    if (expense.baseCurrencyAmount !== null) {
+      return Number(expense.baseCurrencyAmount);
+    }
+
+    // Existing INR expenses created before multi-currency support
+    // do not have baseCurrencyAmount populated.
+    if (expense.currency === "INR") {
+      return Number(expense.amount);
+    }
+
+    return 0;
+  }
+
+  /*
+   * Dashboard totals are stored in the application's base currency (INR).
+   *
+   * Individual expenses retain their original amount/currency.
+   * baseCurrencyAmount is the normalized value used for aggregation.
+   */
   const totalSpent = expenses.reduce(
-    (total, expense) => total + Number(expense.amount),
+    (total, expense) => total + getBaseCurrencyAmount(expense),
     0,
   );
 
@@ -30,7 +53,7 @@ export async function getDashboardData() {
   });
 
   const monthlySpent = monthlyExpenses.reduce(
-    (total, expense) => total + Number(expense.amount),
+    (total, expense) => total + getBaseCurrencyAmount(expense),
     0,
   );
 
@@ -38,7 +61,19 @@ export async function getDashboardData() {
     id: expense.id,
     title: expense.title,
     category: expense.category,
+
+    // Original transaction amount.
     amount: Number(expense.amount),
+
+    // Original transaction currency.
+    currency: expense.currency,
+
+    // Normalized INR value.
+    baseCurrencyAmount: getBaseCurrencyAmount(expense),
+
+    // Useful later when the dashboard gets a display-currency filter.
+    exchangeRate: Number(expense.exchangeRate ?? 1),
+
     date: expense.expenseDate ?? expense.createdAt,
   }));
 

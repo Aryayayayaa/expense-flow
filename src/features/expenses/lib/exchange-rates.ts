@@ -11,6 +11,10 @@ export async function getExchangeRate(
   baseCurrency: string,
   quoteCurrency: string,
 ): Promise<ExchangeRateResult> {
+  if (typeof baseCurrency !== "string" || typeof quoteCurrency !== "string") {
+    throw new Error("Base and quote currencies must be valid strings.");
+  }
+
   const base = baseCurrency.trim().toUpperCase();
   const quote = quoteCurrency.trim().toUpperCase();
 
@@ -35,7 +39,24 @@ export async function getExchangeRate(
   );
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch exchange rate for ${base}/${quote}.`);
+    let message = `Unable to fetch exchange rate for ${base}/${quote}.`;
+
+    try {
+      const errorData: unknown = await response.json();
+
+      if (
+        typeof errorData === "object" &&
+        errorData !== null &&
+        "message" in errorData &&
+        typeof errorData.message === "string"
+      ) {
+        message = errorData.message;
+      }
+    } catch {
+      // Keep the default error message.
+    }
+
+    throw new Error(message);
   }
 
   const data: unknown = await response.json();
@@ -51,15 +72,14 @@ export async function getExchangeRate(
     throw new Error(`Invalid exchange rate received for ${base}/${quote}.`);
   }
 
-  const rateDate =
-    "date" in data && typeof data.date === "string"
-      ? new Date(data.date)
-      : new Date();
+  let rateDate = new Date();
 
-  if (Number.isNaN(rateDate.getTime())) {
-    throw new Error(
-      `Invalid exchange-rate date received for ${base}/${quote}.`,
-    );
+  if ("date" in data && typeof data.date === "string" && data.date.trim()) {
+    const parsedDate = new Date(data.date);
+
+    if (!Number.isNaN(parsedDate.getTime())) {
+      rateDate = parsedDate;
+    }
   }
 
   return {

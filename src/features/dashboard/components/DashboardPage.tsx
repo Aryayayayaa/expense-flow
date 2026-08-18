@@ -72,14 +72,14 @@ export default async function DashboardPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           <StatCard
             title="Total Expenses"
-            value={formatCurrency(data.summary.totalSpent)}
+            value={formatCurrency(data.summary.totalSpent, "INR")}
             description={`${data.summary.totalExpenses} expenses recorded`}
             icon={<WalletIcon />}
           />
 
           <StatCard
             title="This Month"
-            value={formatCurrency(data.summary.monthlySpent)}
+            value={formatCurrency(data.summary.monthlySpent, "INR")}
             description="Expenses recorded this month"
             icon={<CalendarIcon />}
           />
@@ -179,7 +179,19 @@ export default async function DashboardPage() {
                         </td>
 
                         <td className="px-5 py-4 text-sm font-semibold text-slate-900">
-                          {formatCurrency(expense.amount)}
+                          <div>
+                            {formatCurrency(expense.amount, expense.currency)}
+                          </div>
+
+                          {expense.currency !== "INR" && (
+                            <div className="mt-1 text-xs font-normal text-slate-500">
+                              ≈{" "}
+                              {formatCurrency(
+                                expense.baseCurrencyAmount,
+                                "INR",
+                              )}
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -202,9 +214,18 @@ export default async function DashboardPage() {
                         </p>
                       </div>
 
-                      <p className="text-sm font-semibold text-slate-900">
-                        {formatCurrency(expense.amount)}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {formatCurrency(expense.amount, expense.currency)}
+                        </p>
+
+                        {expense.currency !== "INR" && (
+                          <p className="mt-1 text-xs font-normal text-slate-500">
+                            ≈{" "}
+                            {formatCurrency(expense.baseCurrencyAmount, "INR")}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -314,11 +335,12 @@ function QuickAction({ href, title, description, icon }: QuickActionProps) {
 /* Formatting                                                                 */
 /* -------------------------------------------------------------------------- */
 
-function formatCurrency(amount: number) {
+function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency,
     minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
