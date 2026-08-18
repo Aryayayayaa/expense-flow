@@ -17,6 +17,8 @@ import TopCategories from "@/features/analytics/components/reports/TopCategories
 
 import type { AnalyticsExpense } from "@/features/analytics/types";
 
+import { DEFAULT_CURRENCY } from "@/constants/currencies";
+
 type ReportsFiltersProps = {
   expenses: AnalyticsExpense[];
 };
@@ -295,7 +297,10 @@ export default function ReportsFilters({ expenses }: ReportsFiltersProps) {
       <div className="space-y-6">
         <OverviewSummaryCards expenses={filteredExpenses} />
 
-        <CategoryComparisonChart expenses={filteredExpenses} />
+        <CategoryComparisonChart
+          expenses={filteredExpenses}
+          currency={DEFAULT_CURRENCY}
+        />
 
         <ReportSummary expenses={filteredExpenses} />
 

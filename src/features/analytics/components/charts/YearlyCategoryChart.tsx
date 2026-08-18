@@ -12,9 +12,11 @@ import {
 } from "recharts";
 
 import { AnalyticsExpense } from "../../types";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 type YearlyCategoryChartProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
 const categoryColors = [
@@ -30,6 +32,7 @@ const categoryColors = [
 
 export default function YearlyCategoryChart({
   expenses,
+  currency,
 }: YearlyCategoryChartProps) {
   const categories = [
     ...new Set(expenses.map((expense) => expense.category)),
@@ -89,10 +92,15 @@ export default function YearlyCategoryChart({
 
           <XAxis dataKey="year" />
 
-          <YAxis />
+          <YAxis
+            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+          />
 
           <Tooltip
-            formatter={(value) => [`₹${Number(value).toFixed(2)}`, "Expenses"]}
+            formatter={(value) => [
+              formatCurrency(Number(value), currency),
+              "Expenses",
+            ]}
           />
 
           <Legend />

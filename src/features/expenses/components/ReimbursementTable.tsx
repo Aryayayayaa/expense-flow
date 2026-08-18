@@ -17,10 +17,13 @@ import {
   rejectReimbursementAction,
 } from "../actions/reimbursement-actions";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
 type ReimbursementExpense = {
   id: number;
   title: string;
   amount: unknown;
+  currency: string;
   category: string;
   vendor: string | null;
   expenseDate: Date | null;
@@ -231,7 +234,7 @@ export default function ReimbursementTable({ expenses }: Props) {
 
                     {/* Amount */}
                     <td className="px-5 py-4 font-semibold text-slate-900">
-                      ₹{Number(expense.amount).toFixed(2)}
+                      {formatCurrency(Number(expense.amount), expense.currency)}
                     </td>
 
                     {/* Approved By */}
@@ -381,7 +384,10 @@ export default function ReimbursementTable({ expenses }: Props) {
                     </p>
 
                     <p className="mt-1 text-lg font-semibold text-green-600">
-                      ₹{Number(selectedExpense.amount).toFixed(2)}
+                      {formatCurrency(
+                        Number(selectedExpense.amount),
+                        selectedExpense.currency,
+                      )}
                     </p>
                   </div>
 

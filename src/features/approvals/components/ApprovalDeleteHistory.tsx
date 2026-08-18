@@ -1,8 +1,11 @@
+import { formatCurrency } from "@/utils/formatCurrency";
+
 type DeletedExpense = {
   id: number;
   originalExpenseId: number;
   title: string;
   amount: number;
+  currency: string;
   category: string;
   expenseDate: Date | null;
   deletionReason: string;
@@ -96,7 +99,7 @@ export default function ApprovalDeleteHistory({
                 </td>
 
                 <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-700">
-                  ₹{expense.amount.toFixed(2)}
+                  {formatCurrency(expense.amount, expense.currency)}
                 </td>
 
                 <td className="px-5 py-4">

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/utils/formatCurrency";
 import type { ReimbursementHistoryExpense } from "../lib/expenses";
 
 type Props = {
@@ -78,7 +79,7 @@ export default function ReimbursementHistoryTable({ expenses }: Props) {
 
                 {/* Amount */}
                 <td className="px-5 py-4 font-semibold text-slate-900">
-                  ₹{Number(expense.amount).toFixed(2)}
+                  {formatCurrency(expense.amount, expense.currency)}
                 </td>
 
                 {/* Expense Status */}

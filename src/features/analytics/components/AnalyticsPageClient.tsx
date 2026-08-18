@@ -10,7 +10,11 @@ import YearFilter from "@/features/expenses/components/YearFilter";
 import MonthFilter from "@/features/expenses/components/MonthFilter";
 import DateFilter from "@/features/expenses/components/DateFilter";
 
-import { SUPPORTED_CURRENCIES } from "@/constants/currencies";
+import {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "@/constants/currencies";
 
 import CategoryPieChart from "./charts/CategoryPieChart";
 import MonthlyTrendChart from "./charts/MonthlyTrendChart";
@@ -44,7 +48,8 @@ export default function AnalyticsPageClient({
   const [selectedMonth, setSelectedMonth] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
 
-  const [selectedCurrency, setSelectedCurrency] = useState("DEFAULT");
+  const [selectedCurrency, setSelectedCurrency] =
+    useState<CurrencyCode>(DEFAULT_CURRENCY);
 
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -158,12 +163,7 @@ export default function AnalyticsPageClient({
       selectedCategory === "" || expense.category === selectedCategory;
 
     // Currency filter.
-    //
-    // DEFAULT = include every original transaction currency.
-    // Otherwise only include expenses originally recorded
-    // in the selected currency. No currency conversion is performed.
-    const matchesCurrency =
-      selectedCurrency === "DEFAULT" || expense.currency === selectedCurrency;
+    const matchesCurrency = expense.currency === selectedCurrency;
 
     // Year filter
     const matchesYear =
@@ -304,11 +304,11 @@ export default function AnalyticsPageClient({
 
             <select
               value={selectedCurrency}
-              onChange={(event) => setSelectedCurrency(event.target.value)}
+              onChange={(event) =>
+                setSelectedCurrency(event.target.value as CurrencyCode)
+              }
               className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
             >
-              <option value="DEFAULT">Default — All Currencies</option>
-
               {SUPPORTED_CURRENCIES.map((currency) => (
                 <option key={currency.code} value={currency.code}>
                   {currency.code} — {currency.name} ({currency.symbol})
@@ -363,7 +363,10 @@ export default function AnalyticsPageClient({
             </p>
 
             <div className="mt-6">
-              <CategoryPieChart expenses={filteredExpenses} />
+              <CategoryPieChart
+                expenses={filteredExpenses}
+                currency={selectedCurrency}
+              />
             </div>
 
             <div className="mt-10 border-t pt-8">
@@ -376,7 +379,10 @@ export default function AnalyticsPageClient({
               </p>
 
               <div className="mt-6">
-                <CategoryComparisonChart expenses={filteredExpenses} />
+                <CategoryComparisonChart
+                  expenses={filteredExpenses}
+                  currency={selectedCurrency}
+                />
               </div>
             </div>
           </div>
@@ -397,7 +403,10 @@ export default function AnalyticsPageClient({
                 Total Monthly Expenses
               </h3>
 
-              <MonthlyTrendChart expenses={filteredExpenses} />
+              <MonthlyTrendChart
+                expenses={filteredExpenses}
+                currency={selectedCurrency}
+              />
             </div>
 
             <div className="mt-10 border-t pt-8">
@@ -409,7 +418,10 @@ export default function AnalyticsPageClient({
                 Compare how each expense category changes month by month.
               </p>
 
-              <MonthlyCategoryTrendChart expenses={filteredExpenses} />
+              <MonthlyCategoryTrendChart
+                expenses={filteredExpenses}
+                currency={selectedCurrency}
+              />
             </div>
           </div>
         )}
@@ -429,7 +441,10 @@ export default function AnalyticsPageClient({
                 Total Yearly Expenses
               </h3>
 
-              <YearlyTrendChart expenses={filteredExpenses} />
+              <YearlyTrendChart
+                expenses={filteredExpenses}
+                currency={selectedCurrency}
+              />
             </div>
 
             <div className="mt-10 border-t pt-8">
@@ -441,7 +456,10 @@ export default function AnalyticsPageClient({
                 Compare category-wise spending across different years.
               </p>
 
-              <YearlyCategoryChart expenses={filteredExpenses} />
+              <YearlyCategoryChart
+                expenses={filteredExpenses}
+                currency={selectedCurrency}
+              />
             </div>
           </div>
         )}

@@ -12,8 +12,11 @@ import {
 
 import { AnalyticsExpense } from "../../types";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
 type MonthlyTrendChartProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
 const monthNames = [
@@ -33,6 +36,7 @@ const monthNames = [
 
 export default function MonthlyTrendChart({
   expenses,
+  currency,
 }: MonthlyTrendChartProps) {
   const monthlyTotals = new Map<string, number>();
 
@@ -93,11 +97,13 @@ export default function MonthlyTrendChart({
 
           <XAxis dataKey="month" />
 
-          <YAxis />
+          <YAxis
+            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+          />
 
           <Tooltip
             formatter={(value) => [
-              `₹${Number(value).toFixed(2)}`,
+              formatCurrency(Number(value), currency),
               "Total Expenses",
             ]}
           />

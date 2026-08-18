@@ -13,6 +13,7 @@ import {
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
 
 import type { SerializedExpense } from "@/features/expenses/types";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 type ApprovalExpense = SerializedExpense & {
   user: {
@@ -134,7 +135,7 @@ export default function ApprovalList({ expenses }: ApprovalListProps) {
                   </td>
 
                   <td className="whitespace-nowrap px-5 py-4 font-semibold text-green-600">
-                    ₹{expense.amount.toFixed(2)}
+                    {formatCurrency(expense.amount, expense.currency)}
                   </td>
 
                   <td className="px-5 py-4">
@@ -405,7 +406,10 @@ function ReviewExpenseModal({
 
               <Detail label="Email" value={expense.user?.email ?? "—"} />
 
-              <Detail label="Amount" value={`₹${expense.amount.toFixed(2)}`} />
+              <Detail
+                label="Amount"
+                value={formatCurrency(expense.amount, expense.currency)}
+              />
 
               <Detail label="Category" value={expense.category} />
 

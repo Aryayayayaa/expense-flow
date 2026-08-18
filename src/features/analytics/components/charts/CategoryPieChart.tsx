@@ -13,6 +13,7 @@ import { AnalyticsExpense } from "../../types";
 
 type CategoryPieChartProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
 const CATEGORY_COLORS = [
@@ -26,7 +27,10 @@ const CATEGORY_COLORS = [
   "#f97316",
 ];
 
-export default function CategoryPieChart({ expenses }: CategoryPieChartProps) {
+export default function CategoryPieChart({
+  expenses,
+  currency,
+}: CategoryPieChartProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
       totals[expense.category] =
@@ -76,7 +80,13 @@ export default function CategoryPieChart({ expenses }: CategoryPieChartProps) {
           </Pie>
 
           <Tooltip
-            formatter={(value) => [`₹${Number(value).toFixed(2)}`, "Expenses"]}
+            formatter={(value) => [
+              new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency,
+              }).format(Number(value)),
+              "Expenses",
+            ]}
           />
 
           <Legend />
@@ -98,7 +108,10 @@ export default function CategoryPieChart({ expenses }: CategoryPieChartProps) {
             dominantBaseline="middle"
             className="fill-gray-900 text-lg font-semibold"
           >
-            ₹{totalExpenses.toFixed(2)}
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency,
+            }).format(totalExpenses)}
           </text>
         </PieChart>
       </ResponsiveContainer>

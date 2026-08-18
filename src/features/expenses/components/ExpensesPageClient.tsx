@@ -15,6 +15,12 @@ import DateFilter from "./DateFilter";
 
 import { SerializedExpense } from "../types";
 
+import {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "@/constants/currencies";
+
 import { formatCurrency } from "@/utils/formatCurrency";
 
 type DeletedExpense = {
@@ -22,6 +28,7 @@ type DeletedExpense = {
   originalExpenseId: number;
   title: string;
   amount: number;
+  currency: string;
   category: string;
   expenseDate: Date | null;
 
@@ -65,6 +72,9 @@ export default function ExpensesPageClient({
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+
+  const [selectedCurrency, setSelectedCurrency] =
+    useState<CurrencyCode>(DEFAULT_CURRENCY);
 
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -192,28 +202,25 @@ export default function ExpensesPageClient({
       const expenseDate = expense.expenseDate ?? expense.createdAt;
 
       /* Category */
-
       const matchesCategory =
         selectedCategory === "" || expense.category === selectedCategory;
 
-      /* Year */
+      /* Currency */
+      const matchesCurrency = expense.currency === selectedCurrency;
 
+      /* Year */
       const matchesYear =
         selectedYear === "" ||
         expenseDate.getFullYear() === Number(selectedYear);
 
       /* Month */
-
       const matchesMonth =
         selectedMonth === "" ||
         expenseDate.getMonth() + 1 === Number(selectedMonth);
 
       /* Date */
-
       let matchesDate = true;
-
       const now = new Date();
-
       const startOfToday = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -300,11 +307,18 @@ export default function ExpensesPageClient({
           matchesDate = true;
       }
 
-      return matchesCategory && matchesYear && matchesMonth && matchesDate;
+      return (
+        matchesCategory &&
+        matchesCurrency &&
+        matchesYear &&
+        matchesMonth &&
+        matchesDate
+      );
     });
   }, [
     expenses,
     selectedCategory,
+    selectedCurrency,
     selectedYear,
     selectedMonth,
     dateFilter,
@@ -312,13 +326,16 @@ export default function ExpensesPageClient({
     customEndDate,
   ]);
 
+  function getDisplayAmount(expense: SerializedExpense) {
+    return Number(expense.amount);
+  }
+
   /* ---------------------------------------------------------------------- */
   /* Summary                                                                */
   /* ---------------------------------------------------------------------- */
 
   const totalExpenses = filteredExpenses.reduce(
-    (sum, expense) =>
-      sum + Number(expense.baseCurrencyAmount ?? expense.amount),
+    (sum, expense) => sum + getDisplayAmount(expense),
     0,
   );
 
@@ -331,11 +348,7 @@ export default function ExpensesPageClient({
         expenseDate.getFullYear() === currentDate.getFullYear()
       );
     })
-    .reduce(
-      (sum, expense) =>
-        sum + Number(expense.baseCurrencyAmount ?? expense.amount),
-      0,
-    );
+    .reduce((sum, expense) => sum + getDisplayAmount(expense), 0);
 
   const totalCategories = new Set(
     filteredExpenses.map((expense) => expense.category),
@@ -349,6 +362,7 @@ export default function ExpensesPageClient({
   /* ---------------------------------------------------------------------- */
 
   function clearFilters() {
+    setSelectedCurrency(DEFAULT_CURRENCY);
     setSelectedCategory("");
     setSelectedYear("");
     setSelectedMonth("");
@@ -358,6 +372,7 @@ export default function ExpensesPageClient({
   }
 
   const hasActiveFilters =
+    selectedCurrency !== DEFAULT_CURRENCY ||
     selectedCategory !== "" ||
     selectedYear !== "" ||
     selectedMonth !== "" ||
@@ -432,7 +447,8 @@ export default function ExpensesPageClient({
                     </div>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      ₹{expense.amount.toFixed(2)} • {expense.category}
+                      {formatCurrency(expense.amount, expense.currency)} •{" "}
+                      {expense.category}
                     </p>
                   </div>
 
@@ -510,7 +526,31 @@ export default function ExpensesPageClient({
             )}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-4">
+          <div className="grid gap-4 lg:grid-cols-5">
+            <div className="flex min-w-[180px] flex-col gap-1">
+              <label
+                className="text-xs font-medium text-slate-600"
+                htmlFor="expense-currency-filter"
+              >
+                Currency
+              </label>
+
+              <select
+                id="expense-currency-filter"
+                value={selectedCurrency}
+                onChange={(event) =>
+                  setSelectedCurrency(event.target.value as CurrencyCode)
+                }
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500"
+              >
+                {SUPPORTED_CURRENCIES.map((currency) => (
+                  <option key={currency.code} value={currency.code}>
+                    {currency.code} — {currency.name} ({currency.symbol})
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <CategoryFilter
               value={selectedCategory}
               onChange={setSelectedCategory}

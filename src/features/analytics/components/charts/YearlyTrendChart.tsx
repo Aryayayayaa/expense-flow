@@ -12,11 +12,17 @@ import {
 
 import { AnalyticsExpense } from "../../types";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
 type YearlyTrendChartProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
-export default function YearlyTrendChart({ expenses }: YearlyTrendChartProps) {
+export default function YearlyTrendChart({
+  expenses,
+  currency,
+}: YearlyTrendChartProps) {
   const yearlyData = expenses.reduce(
     (acc, expense) => {
       const date = expense.expenseDate ?? expense.createdAt;
@@ -56,11 +62,13 @@ export default function YearlyTrendChart({ expenses }: YearlyTrendChartProps) {
 
           <XAxis dataKey="year" />
 
-          <YAxis />
+          <YAxis
+            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+          />
 
           <Tooltip
             formatter={(value) => [
-              `₹${Number(value).toFixed(2)}`,
+              formatCurrency(Number(value), currency),
               "Total Expenses",
             ]}
           />

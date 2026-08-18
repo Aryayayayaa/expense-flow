@@ -18,10 +18,13 @@ Task 01 represents the complete multi-currency bonus feature. The numbered subta
 - Display currency information consistently across expense views.
 - Ensure existing INR expenses continue working correctly.
 - Validate currency and conversion data server-side.
-- Allow Analytics/Reports to filter by original transaction currency.
+- Allow Analytics/Reports to filter by original transaction currency where supported.
 - Preserve original transaction amounts when displaying currency-specific analytics.
-- Support a default Analytics/Reports view containing expenses across all original currencies.
+- Analytics defaults to INR when the page is opened.
+- Selecting a specific currency filters by the expense's original currency.
 - Do not convert INR expenses into USD/EUR/etc. merely because the user selects that currency as an Analytics filter.
+- Do not mix incompatible original currencies when displaying currency-specific analytics.
+- Display the correct currency symbol on Analytics chart axes, totals, and tooltips.
 
 ## Implementation Tasks
 
@@ -32,7 +35,7 @@ Task 01 represents the complete multi-currency bonus feature. The numbered subta
 - [x] Task 01.3.2 — Persist exchange-rate conversion data
 - [x] Task 01.4 — Implement server-side currency conversion
 - [x] Task 01.5 — Update expense retrieval/types
-- [ ] Task 01.6 — Update expense and reimbursement UI
+- [x] Task 01.6 — Update expense and reimbursement UI
 - [ ] Task 01.7 — Test existing INR workflow and new multi-currency workflow
 - [ ] Task 01.8 — Review implementation and run TypeScript/build checks
 - [ ] Task 01.9 — Commit feature branch and merge into main
@@ -47,16 +50,21 @@ Task 01 represents the complete multi-currency bonus feature. The numbered subta
 - [x] Invalid/unsupported currencies are rejected.
 - [x] API failures are handled safely.
 - [x] No client-side trust is used for financial conversion.
+- [x] Affected expense UI displays the correct original currency.
+- [x] Dashboard recent expense displays retain original currency.
+- [x] Approval and reimbursement displays use the original currency.
+- [x] Analytics defaults to INR.
+- [x] Analytics filters by original transaction currency.
+- [x] Analytics does not convert expenses into the selected filter currency.
+- [x] Analytics charts use the selected currency symbol.
+- [x] Analytics chart axes and tooltips use the selected currency.
 - [x] `npx tsc --noEmit` passes.
-- [x] Production build passes.
-- [ ] All affected expense UI displays the correct original currency.
-- [ ] Analytics currency filtering is fully implemented and verified.
+- [x] Production build previously passed.
+- [x] Existing tests previously passed.
 - [ ] Reports currency filtering is fully implemented and verified.
-- [ ] Multi-currency totals and charts behave correctly.
-- [ ] Reimbursement-related currency displays are reviewed.
-- [ ] Existing INR workflow remains correct after all UI changes.
-- [ ] Final feature tests pass.
+- [ ] Final multi-currency regression testing is complete.
 - [ ] Final production build passes.
+- [ ] Final test suite passes.
 - [ ] Final feature commit is created.
 - [ ] Feature branch is merged into main.
 
@@ -100,12 +108,12 @@ Status: COMPLETED
 
 Implemented:
 
-- Created `src/features/expenses/lib/exchange-rates.ts`.
-- Added server-side Frankfurter exchange-rate lookup.
-- Added same-currency handling with a rate of `1`.
-- Added currency normalization and API-response validation.
-- Added exchange-rate date handling.
-- Added safe handling for invalid or failed API responses.
+- [x] Created `src/features/expenses/lib/exchange-rates.ts`.
+- [x] Added server-side Frankfurter exchange-rate lookup.
+- [x] Added same-currency handling with a rate of `1`.
+- [x] Added currency normalization and API-response validation.
+- [x] Added exchange-rate date handling.
+- [x] Added safe handling for invalid or failed API responses.
 
 Review:
 
@@ -120,43 +128,27 @@ Review:
 
 Status: COMPLETED
 
-#### Completed
+Completed:
 
-- Added server-side exchange-rate lookup.
-- Added base-currency conversion during expense creation.
-- Added conversion recalculation during expense editing.
-- Persisted:
+- [x] Added server-side exchange-rate lookup.
+- [x] Added base-currency conversion during expense creation.
+- [x] Added conversion recalculation during expense editing.
+- [x] Persisted:
   - `currency`
   - `baseCurrencyAmount`
   - `exchangeRate`
   - `exchangeRateAt`
-- Preserved the original expense amount and selected currency.
-- Added server-side validation before accessing validated form data.
-- Added immutable OCR receipt handling.
-- Added immutable bill-proof handling.
-- Added Admin/HR expense modification auditing and notification behavior where applicable.
-- Verified TypeScript compilation:
-  - `npx tsc --noEmit` passed.
-- Verified production build:
-  - `npm run build` passed.
-- Verified tests passed.
-- Reviewed invalid/unsupported currency handling.
-- Reviewed exchange-rate API failure handling.
-- Confirmed financial conversion does not rely on client-supplied exchange-rate data.
-
-#### Review Checklist
-
-- [x] Original amount is preserved.
-- [x] Original currency is preserved.
-- [x] Converted base-currency amount is calculated correctly.
-- [x] Exchange-rate timestamp is recorded.
-- [x] Existing expenses remain compatible.
-- [x] Invalid/unsupported currencies are rejected.
-- [x] API failures are handled safely.
-- [x] No client-side trust is used for financial conversion.
-- [x] `npx tsc --noEmit` passes.
-- [x] Production build passes.
-- [x] Tests pass.
+- [x] Preserved the original expense amount and selected currency.
+- [x] Added server-side validation before accessing validated form data.
+- [x] Added immutable OCR receipt handling.
+- [x] Added immutable bill-proof handling.
+- [x] Added Admin/HR expense modification auditing and notification behavior where applicable.
+- [x] `npx tsc --noEmit` passed.
+- [x] `npm run build` passed.
+- [x] Tests passed.
+- [x] Reviewed invalid/unsupported currency handling.
+- [x] Reviewed exchange-rate API failure handling.
+- [x] Confirmed financial conversion does not rely on client-supplied exchange-rate data.
 
 ### Task 01.4 — Server-side Currency Conversion
 
@@ -169,8 +161,8 @@ Status: COMPLETED
 - [x] Exchange rate used for the conversion is stored.
 - [x] Exchange-rate date is stored.
 - [x] Dashboard aggregation uses `baseCurrencyAmount` rather than summing incompatible original currencies.
-- [x] Dashboard total expenses therefore represents normalized INR totals.
-- [x] Dashboard monthly expenses therefore represents normalized INR totals.
+- [x] Dashboard total expenses represents normalized INR totals.
+- [x] Dashboard monthly expenses represents normalized INR totals.
 - [x] Dashboard recent expense records retain both original amount/currency and normalized INR amount.
 
 ### Task 01.5 — Expense Retrieval and Types
@@ -187,32 +179,36 @@ Status: COMPLETED
 
 ### Task 01.6 — Expense and Reimbursement UI
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 Completed:
 
 - [x] Centralized supported currencies in `src/constants/currencies.ts`.
 - [x] Expense creation/editing displays the selected currency.
-- [x] Expense cards use currency-aware formatting work.
-- [x] Dashboard recent expenses retain original transaction currency.
-- [x] Analytics includes a currency filter.
-- [x] Analytics currency filter supports `DEFAULT — All Currencies`.
-- [x] Selecting a specific currency filters by the expense's original currency.
-- [x] Selecting USD does not convert INR expenses into USD.
-- [x] Selecting EUR does not convert INR expenses into EUR.
-- [x] Default Analytics filtering includes all stored original currencies.
+- [x] Expense cards display the original transaction currency.
+- [x] Dashboard recent expenses display the original transaction currency.
+- [x] Approval page displays the original transaction currency.
+- [x] Reimbursement table displays the original transaction currency.
+- [x] Reimbursement history displays the original transaction currency.
+- [x] Analytics currency filter defaults to INR.
+- [x] Removed the `DEFAULT — All Currencies` Analytics option.
+- [x] Analytics filters by original transaction currency.
+- [x] Selecting USD only includes expenses originally recorded in USD.
+- [x] Selecting EUR only includes expenses originally recorded in EUR.
+- [x] Selecting GBP only includes expenses originally recorded in GBP.
+- [x] INR expenses are not converted into USD/EUR/GBP for Analytics filtering.
+- [x] Analytics category charts accept the selected currency.
+- [x] Analytics monthly charts accept the selected currency.
+- [x] Analytics yearly charts accept the selected currency.
+- [x] Analytics chart Y-axis formatting uses the selected currency.
+- [x] Analytics chart tooltip formatting uses the selected currency.
+- [x] Removed hard-coded INR symbols from affected Analytics charts.
+- [x] Reports category comparison chart receives the default INR currency.
+- [x] `npx tsc --noEmit` passes.
 
-Remaining:
+Note:
 
-- [ ] Ensure ExpenseCard consistently displays the original transaction currency symbol.
-- [ ] Replace remaining hard-coded INR displays in affected expense/reimbursement components.
-- [ ] Ensure dashboard recent expense amounts display their original currency.
-- [ ] Review reimbursement history/table/detail currency displays.
-- [ ] Complete Reports currency filtering.
-- [ ] Ensure Analytics charts display the correct symbol for the selected currency.
-- [ ] Ensure Analytics/Reports totals and chart values use the selected original currency without mixing incompatible currencies when a specific currency is selected.
-- [ ] Define correct presentation behavior for the `DEFAULT — All Currencies` state where multiple currencies coexist.
-- [ ] Review and expand the supported currency list if required.
+Reports currently does not have its own currency selector. Its existing category comparison chart therefore uses `INR` explicitly. Full Reports currency filtering remains outside the completed UI work and must be verified/implemented if retained in the final Task 01 scope.
 
 ### Task 01.7 — Testing
 
@@ -226,14 +222,17 @@ Completed:
 - [x] Exchange-rate conversion tested.
 - [x] Dashboard normalized totals tested.
 - [x] TypeScript compilation tested.
-- [x] Production build tested.
-- [x] Existing tests passed.
+- [x] Production build previously tested.
+- [x] Existing tests previously passed.
+- [x] Approval currency display reviewed.
+- [x] Reimbursement currency display reviewed.
+- [x] Analytics currency filtering implementation reviewed.
+- [x] Analytics chart currency formatting implemented.
 
 Remaining:
 
-- [ ] Test Analytics currency filtering with INR, USD, EUR, and GBP expenses.
-- [ ] Test Analytics `DEFAULT — All Currencies` behavior.
-- [ ] Test Reports currency filtering.
+- [ ] Test Analytics filtering with INR, USD, EUR, and GBP expenses.
+- [ ] Test Reports currency behavior if Reports currency filtering remains in scope.
 - [ ] Test currency symbols across all affected UI.
 - [ ] Test dashboard recent expense original-currency display.
 - [ ] Test reimbursement currency displays.
@@ -248,16 +247,19 @@ Status: IN PROGRESS
 Completed:
 
 - [x] `npx tsc --noEmit` passes.
-- [x] `npm run build` passes.
-- [x] Existing tests pass.
+- [x] `npm run build` previously passed.
+- [x] Existing tests previously passed.
 - [x] Reviewed Server Component → Client Component Decimal serialization issue.
 - [x] Reviewed unsupported/invalid currency handling.
 - [x] Reviewed exchange-rate API error handling.
+- [x] Reviewed hard-coded INR UI displays.
+- [x] Reviewed Analytics currency filter behavior.
+- [x] Reviewed Analytics chart currency formatting.
 
 Remaining:
 
-- [ ] Complete Analytics/Reports UI review.
-- [ ] Complete reimbursement UI review.
+- [ ] Complete final Analytics/Reports UI review.
+- [ ] Complete final reimbursement UI review.
 - [ ] Complete multi-currency regression testing.
 - [ ] Run final TypeScript check.
 - [ ] Run final production build.
@@ -270,6 +272,7 @@ Status: NOT STARTED
 
 - [ ] Final Task 01 implementation completed.
 - [ ] Final `task01/task.md` updated.
+- [ ] Master `plan/tasks/task.md` updated where required.
 - [ ] Final tests pass.
 - [ ] Final TypeScript check passes.
 - [ ] Final production build passes.

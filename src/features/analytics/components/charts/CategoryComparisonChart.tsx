@@ -15,6 +15,7 @@ import { AnalyticsExpense } from "../../types";
 
 type CategoryComparisonChartProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
 const CATEGORY_COLORS = [
@@ -30,6 +31,7 @@ const CATEGORY_COLORS = [
 
 export default function CategoryComparisonChart({
   expenses,
+  currency,
 }: CategoryComparisonChartProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
@@ -71,13 +73,25 @@ export default function CategoryComparisonChart({
         >
           <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis type="number" tickFormatter={(value) => `₹${value}`} />
+          <XAxis
+            type="number"
+            tickFormatter={(value) =>
+              new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency,
+                maximumFractionDigits: 0,
+              }).format(Number(value))
+            }
+          />
 
           <YAxis type="category" dataKey="category" width={100} />
 
           <Tooltip
             formatter={(value) => [
-              `₹${Number(value).toFixed(2)}`,
+              new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency,
+              }).format(Number(value)),
               "Total Expenses",
             ]}
           />

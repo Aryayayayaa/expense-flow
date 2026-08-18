@@ -13,8 +13,11 @@ import {
 
 import { AnalyticsExpense } from "../../types";
 
+import { formatCurrency } from "@/utils/formatCurrency";
+
 type MonthlyCategoryTrendChartProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
 const monthNames = [
@@ -45,6 +48,7 @@ const categoryColors = [
 
 export default function MonthlyCategoryTrendChart({
   expenses,
+  currency,
 }: MonthlyCategoryTrendChartProps) {
   const categories = [
     ...new Set(expenses.map((expense) => expense.category)),
@@ -115,10 +119,15 @@ export default function MonthlyCategoryTrendChart({
 
           <XAxis dataKey="label" />
 
-          <YAxis />
+          <YAxis
+            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+          />
 
           <Tooltip
-            formatter={(value) => [`₹${Number(value).toFixed(2)}`, "Expenses"]}
+            formatter={(value) => [
+              formatCurrency(Number(value), currency),
+              "Expenses",
+            ]}
           />
 
           <Legend />
