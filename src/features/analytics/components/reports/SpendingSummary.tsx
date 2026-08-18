@@ -15,7 +15,9 @@ export default function SpendingSummary({ expenses }: SpendingSummaryProps) {
     );
   }
 
-  const amounts = expenses.map((expense) => Number(expense.amount));
+  const amounts = expenses.map((expense) =>
+    Number(expense.baseCurrencyAmount ?? expense.amount),
+  );
 
   const totalExpenses = amounts.reduce((sum, amount) => sum + amount, 0);
 

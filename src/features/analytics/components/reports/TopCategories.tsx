@@ -10,7 +10,8 @@ export default function TopCategories({ expenses }: TopCategoriesProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
       totals[expense.category] =
-        (totals[expense.category] ?? 0) + Number(expense.amount);
+        (totals[expense.category] ?? 0) +
+        Number(expense.baseCurrencyAmount ?? expense.amount);
 
       return totals;
     },

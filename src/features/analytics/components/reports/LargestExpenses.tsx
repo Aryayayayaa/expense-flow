@@ -8,7 +8,11 @@ type LargestExpensesProps = {
 
 export default function LargestExpenses({ expenses }: LargestExpensesProps) {
   const largestExpenses = [...expenses]
-    .sort((a, b) => Number(b.amount) - Number(a.amount))
+    .sort(
+      (a, b) =>
+        Number(b.baseCurrencyAmount ?? b.amount) -
+        Number(a.baseCurrencyAmount ?? a.amount),
+    )
     .slice(0, 5);
 
   if (largestExpenses.length === 0) {
@@ -57,7 +61,10 @@ export default function LargestExpenses({ expenses }: LargestExpensesProps) {
                   </td>
 
                   <td className="py-4 text-right font-semibold text-gray-900">
-                    ₹{Number(expense.amount).toFixed(2)}
+                    ₹
+                    {Number(
+                      expense.baseCurrencyAmount ?? expense.amount,
+                    ).toFixed(2)}
                   </td>
                 </tr>
               );

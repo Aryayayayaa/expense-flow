@@ -585,6 +585,7 @@ export async function deleteExpenseAsAdmin(
         originalExpenseId: expense.id,
         title: expense.title,
         amount: expense.amount,
+        currency: expense.currency,
         category: expense.category,
         expenseDate: expense.expenseDate,
 

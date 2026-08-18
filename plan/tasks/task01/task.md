@@ -186,33 +186,29 @@ Completed:
 - [x] Centralized supported currencies in `src/constants/currencies.ts`.
 - [x] Expense creation/editing displays the selected currency.
 - [x] Expense cards display the original transaction currency.
-- [x] Dashboard recent expenses display the original transaction currency.
-- [x] Approval page displays the original transaction currency.
-- [x] Reimbursement table displays the original transaction currency.
-- [x] Reimbursement history displays the original transaction currency.
-- [x] Analytics currency filter defaults to INR.
-- [x] Removed the `DEFAULT — All Currencies` Analytics option.
-- [x] Analytics filters by original transaction currency.
-- [x] Selecting USD only includes expenses originally recorded in USD.
-- [x] Selecting EUR only includes expenses originally recorded in EUR.
-- [x] Selecting GBP only includes expenses originally recorded in GBP.
-- [x] INR expenses are not converted into USD/EUR/GBP for Analytics filtering.
-- [x] Analytics category charts accept the selected currency.
-- [x] Analytics monthly charts accept the selected currency.
-- [x] Analytics yearly charts accept the selected currency.
-- [x] Analytics chart Y-axis formatting uses the selected currency.
-- [x] Analytics chart tooltip formatting uses the selected currency.
-- [x] Removed hard-coded INR symbols from affected Analytics charts.
-- [x] Reports category comparison chart receives the default INR currency.
-- [x] `npx tsc --noEmit` passes.
-
-Note:
-
-Reports currently does not have its own currency selector. Its existing category comparison chart therefore uses `INR` explicitly. Full Reports currency filtering remains outside the completed UI work and must be verified/implemented if retained in the final Task 01 scope.
+- [x] Dashboard recent expenses retain original transaction currency.
+- [x] My Expenses currency filtering works correctly.
+- [x] My Expenses displays the selected/original currency symbol correctly.
+- [x] Analytics includes a currency filter.
+- [x] Analytics defaults to INR.
+- [x] Removed the inappropriate `DEFAULT — All Currencies` Analytics option.
+- [x] Selecting a specific currency filters by the expense's original currency.
+- [x] Analytics charts display the correct symbol for the selected currency.
+- [x] Analytics values do not mix incompatible original currencies.
+- [x] Reports filtering works with the selected date/category filters.
+- [x] Reports do not incorrectly add amounts from different original currencies together.
+- [x] Reports display normalized values appropriately where base-currency aggregation is intended.
+- [x] Approval pending-expense displays use the original transaction currency.
+- [x] Approval history displays use the original transaction currency.
+- [x] Employee/HR expense-status displays use the original transaction currency.
+- [x] Reimbursement history/table displays use currency-aware formatting.
+- [x] Remaining hard-coded INR presentation in affected UI was removed.
+- [x] Existing INR expenses continue to display correctly.
+- [x] Mixed-currency UI behavior was reviewed and verified.
 
 ### Task 01.7 — Testing
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 Completed:
 
@@ -221,24 +217,20 @@ Completed:
 - [x] Multi-currency expense editing tested.
 - [x] Exchange-rate conversion tested.
 - [x] Dashboard normalized totals tested.
-- [x] TypeScript compilation tested.
-- [x] Production build previously tested.
-- [x] Existing tests previously passed.
-- [x] Approval currency display reviewed.
-- [x] Reimbursement currency display reviewed.
-- [x] Analytics currency filtering implementation reviewed.
-- [x] Analytics chart currency formatting implemented.
-
-Remaining:
-
-- [ ] Test Analytics filtering with INR, USD, EUR, and GBP expenses.
-- [ ] Test Reports currency behavior if Reports currency filtering remains in scope.
-- [ ] Test currency symbols across all affected UI.
-- [ ] Test dashboard recent expense original-currency display.
-- [ ] Test reimbursement currency displays.
-- [ ] Test mixed-currency datasets.
-- [ ] Verify that selecting a currency never converts expenses originally recorded in another currency.
-- [ ] Verify normalized INR dashboard totals against stored `baseCurrencyAmount` values.
+- [x] Analytics currency filtering tested.
+- [x] Analytics INR/USD/EUR/GBP behavior tested.
+- [x] Analytics chart currency symbols tested.
+- [x] Reports filtering tested.
+- [x] Reports mixed-currency behavior tested.
+- [x] Currency symbols across affected UI tested.
+- [x] Dashboard recent expense original-currency display tested.
+- [x] Approval currency displays tested.
+- [x] Reimbursement currency displays tested.
+- [x] Mixed-currency datasets tested.
+- [x] Verified that selecting a currency does not convert expenses originally recorded in another currency.
+- [x] Verified normalized INR dashboard totals against stored `baseCurrencyAmount` values.
+- [x] `npx tsc --noEmit` passes.
+- [x] Existing tests pass.
 
 ### Task 01.8 — Review and Validation
 

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { formatCurrency } from "@/utils/formatCurrency";
+
 import {
   getExpenseApprovalHistory,
   getExpenses,
@@ -52,6 +54,12 @@ export default async function ApprovalsPage({
     const serializedPendingExpenses = pendingExpenses.map((expense) => ({
       ...expense,
       amount: Number(expense.amount),
+      baseCurrencyAmount:
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null,
+      exchangeRate:
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
     }));
 
     return (
@@ -155,7 +163,7 @@ export default async function ApprovalsPage({
                           </td>
 
                           <td className="px-5 py-4 text-slate-700">
-                            ₹{Number(expense.amount).toFixed(2)}
+                            {formatCurrency(expense.amount, expense.currency)}
                           </td>
 
                           <td className="px-5 py-4">
@@ -328,7 +336,7 @@ export default async function ApprovalsPage({
                     </td>
 
                     <td className="px-5 py-4 text-slate-700">
-                      ₹{Number(expense.amount).toFixed(2)}
+                      {formatCurrency(expense.amount, expense.currency)}
                     </td>
 
                     <td className="px-5 py-4 text-slate-600">

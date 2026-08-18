@@ -389,13 +389,13 @@ export default function ExpensesPageClient({
       <div className="grid gap-4 md:grid-cols-3">
         <SummaryCard
           title="Total Expenses"
-          value={formatCurrency(totalExpenses)}
+          value={formatCurrency(totalExpenses, selectedCurrency)}
           icon={<Wallet size={20} />}
         />
 
         <SummaryCard
           title="This Month"
-          value={formatCurrency(thisMonthExpenses)}
+          value={formatCurrency(thisMonthExpenses, selectedCurrency)}
           icon={<Calendar size={20} />}
         />
 

@@ -10,7 +10,7 @@ export default function OverviewSummaryCards({
   expenses,
 }: OverviewSummaryCardsProps) {
   const totalExpenses = expenses.reduce((sum, expense) => {
-    return sum + Number(expense.amount);
+    return sum + Number(expense.baseCurrencyAmount ?? expense.amount);
   }, 0);
 
   const transactionCount = expenses.length;
@@ -20,7 +20,11 @@ export default function OverviewSummaryCards({
 
   const highestExpense =
     transactionCount > 0
-      ? Math.max(...expenses.map((expense) => Number(expense.amount)))
+      ? Math.max(
+          ...expenses.map((expense) =>
+            Number(expense.baseCurrencyAmount ?? expense.amount),
+          ),
+        )
       : 0;
 
   const cards = [

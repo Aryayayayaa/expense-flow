@@ -8,7 +8,8 @@ type ReportSummaryProps = {
 
 export default function ReportSummary({ expenses }: ReportSummaryProps) {
   const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + Number(expense.amount),
+    (sum, expense) =>
+      sum + Number(expense.baseCurrencyAmount ?? expense.amount),
     0,
   );
 
@@ -19,7 +20,11 @@ export default function ReportSummary({ expenses }: ReportSummaryProps) {
 
   const highestExpense =
     transactionCount > 0
-      ? Math.max(...expenses.map((expense) => Number(expense.amount)))
+      ? Math.max(
+          ...expenses.map((expense) =>
+            Number(expense.baseCurrencyAmount ?? expense.amount),
+          ),
+        )
       : 0;
 
   const summary = [

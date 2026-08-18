@@ -243,6 +243,7 @@ model DeletedExpense {
 
   title       String
   amount      Decimal   @db.Decimal(12, 2)
+  currency    String    @default("INR")
   category    String
   expenseDate DateTime?
 
