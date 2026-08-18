@@ -10,7 +10,7 @@ import YearFilter from "@/features/expenses/components/YearFilter";
 import MonthFilter from "@/features/expenses/components/MonthFilter";
 import DateFilter from "@/features/expenses/components/DateFilter";
 
-import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from "@/constants/currencies";
+import { SUPPORTED_CURRENCIES } from "@/constants/currencies";
 
 import CategoryPieChart from "./charts/CategoryPieChart";
 import MonthlyTrendChart from "./charts/MonthlyTrendChart";

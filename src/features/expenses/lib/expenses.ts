@@ -4,10 +4,32 @@ import { prisma } from "@/lib/prisma";
 
 import type { AdminModification } from "../types";
 
+function serializeExpenseAmounts<
+  T extends {
+    amount: Prisma.Decimal;
+    baseCurrencyAmount: Prisma.Decimal | null;
+    exchangeRate: Prisma.Decimal | null;
+  },
+>(expense: T) {
+  return {
+    ...expense,
+    amount: Number(expense.amount),
+    baseCurrencyAmount:
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : null,
+    exchangeRate:
+      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+  };
+}
+
 export type ReimbursementHistoryExpense = {
   id: number;
   title: string;
   amount: number;
+  currency: string;
+  baseCurrencyAmount: number | null;
+  exchangeRate: number | null;
   category: string;
   status: string;
   reimbursementStatus: ReimbursementStatus;
@@ -255,7 +277,7 @@ export async function deleteExpense(id: number, userId: number) {
  * visibility across all employees' expenses.
  */
 export async function getAllExpensesForAdmin() {
-  return prisma.expense.findMany({
+  const expenses = await prisma.expense.findMany({
     include: {
       user: {
         select: {
@@ -277,6 +299,17 @@ export async function getAllExpensesForAdmin() {
 
     orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
+
+  return expenses.map((expense) => ({
+    ...expense,
+    amount: Number(expense.amount),
+    baseCurrencyAmount:
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : null,
+    exchangeRate:
+      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+  }));
 }
 
 //Get expenses that are currently waiting for admin approval.
@@ -323,9 +356,7 @@ export async function getPendingExpensesForAdmin(adminId: number) {
 
   return expenses.map((expense) => ({
     ...expense,
-
     amount: Number(expense.amount),
-
     baseCurrencyAmount:
       expense.baseCurrencyAmount !== null
         ? Number(expense.baseCurrencyAmount)
@@ -386,7 +417,16 @@ export async function getExpenseApprovalHistory(
   ]);
 
   return {
-    expenses,
+    expenses: expenses.map((expense) => ({
+      ...expense,
+      amount: Number(expense.amount),
+      baseCurrencyAmount:
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null,
+      exchangeRate:
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+    })),
     total,
     page: safePage,
     pageSize: safePageSize,
@@ -679,6 +719,12 @@ export async function getApprovedExpensesForHR(hrId: number) {
   return expenses.map((expense) => ({
     ...expense,
     amount: Number(expense.amount),
+    baseCurrencyAmount:
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : null,
+    exchangeRate:
+      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
   }));
 }
 
@@ -754,6 +800,13 @@ export async function getReimbursementHistory(
         id: expense.id,
         title: expense.title,
         amount: Number(expense.amount),
+        currency: expense.currency,
+        baseCurrencyAmount:
+          expense.baseCurrencyAmount !== null
+            ? Number(expense.baseCurrencyAmount)
+            : null,
+        exchangeRate:
+          expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
         category: expense.category,
         status: expense.status,
         reimbursementStatus: expense.reimbursementStatus,
