@@ -2,10 +2,13 @@
 
 Status: IN PROGRESS
 
+- Task 01.3
+
 Completed:
 
 - Task 01.1 — Define currency and exchange-rate data model
 - Task 01.2 — Add currency selection to expense creation/editing
+- Task 01.3.1 - Server-side Exchange Rate Utility
 
 ## Objective
 
@@ -49,6 +52,8 @@ Add multi-currency expense support with live exchange-rate conversion to the app
 
 ### Task 01.1 Review
 
+Status: COMPLETED
+
 - [x] Added `currency` field to `Expense` with `INR` as the default.
 - [x] Added `baseCurrencyAmount` field for the converted base-currency value.
 - [x] Added `exchangeRate` field to preserve the rate used for conversion.
@@ -62,6 +67,8 @@ Add multi-currency expense support with live exchange-rate conversion to the app
 - [x] No existing expense data is deleted or modified by the migration.
 
 ### Task 01.2 Review
+
+Status: COMPLETED
 
 - [x] Added currency validation to the expense schema.
 - [x] Centralized supported currencies in `src/constants/currencies.ts`.
@@ -78,6 +85,24 @@ Lint review:
 
 `npm run lint` currently reports project-wide errors and warnings, including existing React Compiler/purity and `react-hooks/set-state-in-effect` issues in `AddExpenseForm.tsx`, `ProfileImageEditor.tsx`, and `ExpensesPageClient.tsx`, as well as unrelated issues in other files. No reported lint error is specific to the newly added currency functionality.
 
-## Completion
+### Task 01.3.1 — Server-side Exchange Rate Utility
 
-Status: IN PROGRESS
+Status: COMPLETED
+
+Implemented:
+
+- Created `src/features/expenses/lib/exchange-rates.ts`.
+- Added server-side Frankfurter exchange-rate lookup.
+- Added same-currency handling with a rate of `1`.
+- Added currency normalization and API-response validation.
+- Added exchange-rate date handling.
+- Added safe handling for invalid or failed API responses.
+
+Review:
+
+- [x] Server-side exchange-rate lookup implemented.
+- [x] Same-currency conversion handled.
+- [x] Invalid API responses rejected.
+- [x] Exchange-rate date captured.
+- [x] No client-side financial conversion.
+- [x] `npx tsc --noEmit` passes.
