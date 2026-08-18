@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import ThemeToggle from "./ThemeToggle";
 import LogoutButton from "@/features/auth/components/LogoutButton";
 import type { Role } from "@prisma/client";
 
@@ -176,8 +177,12 @@ export default function MobileSidebar({
           </div>
         </nav>
 
-        {/* Logout */}
+        {/* Theme + Logout */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 p-4">
+          <div className="mb-2">
+            <ThemeToggle />
+          </div>
+
           <LogoutButton />
         </div>
       </aside>

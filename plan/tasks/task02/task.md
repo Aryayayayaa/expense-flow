@@ -52,11 +52,11 @@ The component currently manages:
 
 ## Subtask 02.3 — Mobile Sidebar Integration
 
-- [ ] Import the same `ThemeToggle` component into `MobileSidebar.tsx`.
-- [ ] Render the theme toggle above the Logout button.
-- [ ] Reuse the same global theme state and persistence mechanism.
-- [ ] Ensure opening/closing the mobile drawer does not reset the theme.
-- [ ] Verify the toggle works correctly on mobile layouts.
+- [x] Import the same `ThemeToggle` component into `MobileSidebar.tsx`.
+- [x] Render the theme toggle above the Logout button.
+- [x] Reuse the same global theme state and persistence mechanism.
+- [x] Ensure opening/closing the mobile drawer does not reset the theme.
+- [x] Verify the toggle works correctly on mobile layouts.
 
 ---
 
