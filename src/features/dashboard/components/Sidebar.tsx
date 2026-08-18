@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import ThemeToggle from "./ThemeToggle";
 import LogoutButton from "@/features/auth/components/LogoutButton";
 import type { Role } from "@prisma/client";
 
@@ -113,8 +114,11 @@ export default function Sidebar({ userRole }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Logout */}
+      {/* Theme + Logout */}
       <div className="border-t border-slate-200 p-4">
+        <div className="mb-2">
+          <ThemeToggle />
+        </div>
         <LogoutButton />
       </div>
     </aside>

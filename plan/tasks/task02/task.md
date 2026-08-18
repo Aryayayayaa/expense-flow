@@ -41,12 +41,12 @@ The component currently manages:
 
 ## Subtask 02.2 — Desktop Sidebar Integration
 
-- [ ] Import `ThemeToggle` into `Sidebar.tsx`.
-- [ ] Render the theme toggle above the Logout button.
-- [ ] Ensure the toggle is visible for ADMIN, HR, and EMPLOYEE accounts.
-- [ ] Preserve the existing sidebar navigation.
-- [ ] Preserve the existing Logout functionality.
-- [ ] Verify the toggle works from dashboard pages.
+- [x] Import `ThemeToggle` into `Sidebar.tsx`.
+- [x] Render the theme toggle above the Logout button.
+- [x] Ensure the toggle is visible for ADMIN, HR, and EMPLOYEE accounts.
+- [x] Preserve the existing sidebar navigation.
+- [x] Preserve the existing Logout functionality.
+- [x] Verify the toggle works from dashboard pages.
 
 ---
 
