@@ -2,6 +2,10 @@
 
 Status: IN PROGRESS
 
+Completed:
+
+- Task 01.1 — Define currency and exchange-rate data model
+
 ## Objective
 
 Add multi-currency expense support with live exchange-rate conversion to the application's base currency.
@@ -19,7 +23,7 @@ Add multi-currency expense support with live exchange-rate conversion to the app
 
 ## Implementation Tasks
 
-- [ ] Task 01.1 — Define currency and exchange-rate data model
+- [x] Task 01.1 — Define currency and exchange-rate data model
 - [ ] Task 01.2 — Add currency selection to expense creation/editing
 - [ ] Task 01.3 — Integrate live exchange-rate API
 - [ ] Task 01.4 — Implement server-side currency conversion
