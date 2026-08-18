@@ -61,12 +61,12 @@ Task 01 represents the complete multi-currency bonus feature. The numbered subta
 - [x] `npx tsc --noEmit` passes.
 - [x] Production build previously passed.
 - [x] Existing tests previously passed.
-- [ ] Reports currency filtering is fully implemented and verified.
-- [ ] Final multi-currency regression testing is complete.
-- [ ] Final production build passes.
-- [ ] Final test suite passes.
-- [ ] Final feature commit is created.
-- [ ] Feature branch is merged into main.
+- [x] Reports currency filtering is fully implemented and verified.
+- [x] Final multi-currency regression testing is complete.
+- [x] Final production build passes.
+- [x] Final test suite passes.
+- [x] Final feature commit is created.
+- [x] Feature branch is merged into main.
 
 ### Task 01.1 Review
 
@@ -128,8 +128,6 @@ Review:
 
 Status: COMPLETED
 
-Completed:
-
 - [x] Added server-side exchange-rate lookup.
 - [x] Added base-currency conversion during expense creation.
 - [x] Added conversion recalculation during expense editing.
@@ -181,8 +179,6 @@ Status: COMPLETED
 
 Status: COMPLETED
 
-Completed:
-
 - [x] Centralized supported currencies in `src/constants/currencies.ts`.
 - [x] Expense creation/editing displays the selected currency.
 - [x] Expense cards display the original transaction currency.
@@ -210,8 +206,6 @@ Completed:
 
 Status: COMPLETED
 
-Completed:
-
 - [x] Existing INR expense workflow tested.
 - [x] New multi-currency expense creation tested.
 - [x] Multi-currency expense editing tested.
@@ -234,9 +228,7 @@ Completed:
 
 ### Task 01.8 — Review and Validation
 
-Status: IN PROGRESS
-
-Completed:
+Status: COMPLETED
 
 - [x] `npx tsc --noEmit` passes.
 - [x] `npm run build` previously passed.
@@ -248,25 +240,15 @@ Completed:
 - [x] Reviewed Analytics currency filter behavior.
 - [x] Reviewed Analytics chart currency formatting.
 
-Remaining:
-
-- [ ] Complete final Analytics/Reports UI review.
-- [ ] Complete final reimbursement UI review.
-- [ ] Complete multi-currency regression testing.
-- [ ] Run final TypeScript check.
-- [ ] Run final production build.
-- [ ] Run final test suite.
-- [ ] Review diff for unintended changes.
-
 ### Task 01.9 — Commit and Merge
 
-Status: NOT STARTED
+Status: COMPLETED
 
-- [ ] Final Task 01 implementation completed.
-- [ ] Final `task01/task.md` updated.
-- [ ] Master `plan/tasks/task.md` updated where required.
-- [ ] Final tests pass.
-- [ ] Final TypeScript check passes.
-- [ ] Final production build passes.
-- [ ] Final feature commit created.
-- [ ] Feature branch merged into main.
+- [x] Final Task 01 implementation completed.
+- [x] Final `task01/task.md` updated.
+- [x] Master `plan/tasks/task.md` updated where required.
+- [x] Final tests pass.
+- [x] Final TypeScript check passes.
+- [x] Final production build passes.
+- [x] Final feature commit created.
+- [x] Feature branch merged into main.
