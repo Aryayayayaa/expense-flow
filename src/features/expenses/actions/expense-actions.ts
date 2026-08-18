@@ -58,6 +58,7 @@ export async function createExpenseAction(
     const values = {
       title: capitalize(String(formData.get("title"))),
       amount: formData.get("amount"),
+      currency: String(formData.get("currency") ?? "INR").toUpperCase(),
       category,
       expenseDate,
     };
@@ -222,6 +223,7 @@ export async function updateExpenseAction(
     const values = {
       title: capitalize(String(formData.get("title"))),
       amount: formData.get("amount"),
+      currency: String(formData.get("currency") ?? "INR").toUpperCase(),
       category,
       expenseDate: formData.get("expenseDate"),
     };

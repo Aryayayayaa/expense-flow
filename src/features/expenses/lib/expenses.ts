@@ -154,6 +154,7 @@ export async function getExpense(id: number, userId: number) {
 export async function createExpense(data: {
   title: string;
   amount: number;
+  currency: string;
   category: string;
   expenseDate: Date;
   userId: number;
@@ -171,6 +172,7 @@ export async function updateExpense(
   data: Partial<{
     title: string;
     amount: number;
+    currency: string;
     category: string;
     expenseDate: Date;
   }>,
@@ -448,6 +450,7 @@ export async function updateExpenseAsAdmin(
   data: Partial<{
     title: string;
     amount: number;
+    currency: string;
     category: string;
     expenseDate: Date;
   }>,

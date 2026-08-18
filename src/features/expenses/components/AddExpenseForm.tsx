@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
 import {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "@/constants/currencies";
+
+import {
   createExpenseAction,
   updateExpenseAction,
   saveOcrReceiptAction,
@@ -41,7 +47,10 @@ export default function AddExpenseForm({
 
   const [selectedCategory, setSelectedCategory] = useState("");
   const [title, setTitle] = useState("");
+
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
+
   const [customCategory, setCustomCategory] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
 
@@ -70,6 +79,8 @@ export default function AddExpenseForm({
     setEditingExpense(null);
     formRef.current?.reset();
     setState(initialState);
+
+    setCurrency(DEFAULT_CURRENCY);
   }
 
   useEffect(() => {
@@ -93,6 +104,12 @@ export default function AddExpenseForm({
       setSelectedCategory("Other");
       setCustomCategory(editingExpense.category);
     }
+
+    setCurrency(
+      SUPPORTED_CURRENCIES.some((item) => item.code === editingExpense.currency)
+        ? (editingExpense.currency as CurrencyCode)
+        : DEFAULT_CURRENCY,
+    );
 
     const date = new Date(
       editingExpense.expenseDate ?? editingExpense.createdAt,
@@ -140,7 +157,6 @@ export default function AddExpenseForm({
 
   /*
    * Upload the original receipt and save its metadata.
-   *
    * This is deliberately kept separate from OCR extraction.
    * OCR can fail while the original receipt can still be saved.
    */
@@ -337,6 +353,31 @@ export default function AddExpenseForm({
 
           {state.errors?.amount && (
             <p className="text-sm text-red-500">{state.errors.amount[0]}</p>
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <label className="mb-1 block" htmlFor="expense-currency">
+            Currency
+          </label>
+
+          <select
+            id="expense-currency"
+            disabled={pending}
+            name="currency"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          >
+            {SUPPORTED_CURRENCIES.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.code} — {item.name} ({item.symbol})
+              </option>
+            ))}
+          </select>
+
+          {state.errors?.currency && (
+            <p className="text-sm text-red-500">{state.errors.currency[0]}</p>
           )}
         </div>
 

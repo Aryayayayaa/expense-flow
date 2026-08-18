@@ -5,6 +5,8 @@ export const expenseSchema = z.object({
 
   amount: z.coerce.number().positive("Amount must be greater than 0"),
 
+  currency: z.string().length(3, "Currency must be a 3-letter code"),
+
   category: z.string().min(1, "Category is required"),
 
   expenseDate: z.coerce
