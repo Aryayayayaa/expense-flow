@@ -80,7 +80,7 @@ export default function ProfileEditor({
             value={name}
             onChange={(event) => setName(event.target.value)}
             disabled={role === "EMPLOYEE" || role === "ADMIN"}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
           />
           {(role === "EMPLOYEE" || role === "ADMIN") && (
             <p className="mt-2 text-xs text-slate-500">
@@ -102,7 +102,7 @@ export default function ProfileEditor({
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function ProfileEditor({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Leave blank to keep current password"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
           />
         </div>
       </div>

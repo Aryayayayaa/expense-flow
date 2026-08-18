@@ -27,9 +27,11 @@ export default async function AnalyticsPage({
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold text-slate-900">Analysis</h1>
+      <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+        Analysis
+      </h1>
 
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
         Analyze your expenses across categories and time periods.
       </p>
 

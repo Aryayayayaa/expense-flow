@@ -96,7 +96,7 @@ export default function RoleVerificationRequest({
               setRequestedRole(event.target.value as "ADMIN" | "HR")
             }
             disabled={submitting}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 dark:text-slate-900"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="HR">HR</option>
@@ -119,7 +119,7 @@ export default function RoleVerificationRequest({
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
             }}
-            className="mt-3 block w-full text-sm"
+            className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-900"
           />
         </div>
 

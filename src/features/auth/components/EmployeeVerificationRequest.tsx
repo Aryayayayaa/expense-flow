@@ -204,12 +204,14 @@ export default function EmployeeVerificationRequest({
                 onChange={(event) => {
                   setFile(event.target.files?.[0] ?? null);
                 }}
-                className="mt-3 block w-full text-sm"
+                className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-900"
               />
             </div>
 
             {file && (
-              <p className="text-sm text-slate-600">Selected: {file.name}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-900">
+                Selected: {file.name}
+              </p>
             )}
 
             <button

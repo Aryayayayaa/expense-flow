@@ -384,6 +384,16 @@ export default function ExpensesPageClient({
 
   return (
     <>
+      <h2 className="text-3xl font-medium text-slate-500 dark:text-white">
+        My Expenses
+        <div>
+          <p className="mt-1 text-sm text-slate-500">
+            {filteredExpenses.length}{" "}
+            {filteredExpenses.length === 1 ? "expense" : "expenses"} found
+          </p>
+        </div>
+      </h2>
+
       {/* Summary cards */}
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -587,15 +597,6 @@ export default function ExpensesPageClient({
       {/* Expense count */}
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900">My Expenses</h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            {filteredExpenses.length}{" "}
-            {filteredExpenses.length === 1 ? "expense" : "expenses"} found
-          </p>
-        </div>
-
         <Link
           href="/expenses/new"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"

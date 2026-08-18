@@ -20,9 +20,11 @@ export default async function DashboardPage() {
   return (
     <>
       {/* Top Bar */}
-      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 lg:px-8">
+      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900 lg:px-8">
         <div className="hidden lg:block">
-          <p className="text-sm font-medium text-slate-500">Dashboard</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            Dashboard
+          </p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -34,12 +36,12 @@ export default async function DashboardPage() {
           <button
             type="button"
             aria-label="Help"
-            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <HelpIcon />
           </button>
 
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
             {data.user.name.charAt(0).toUpperCase()}
           </div>
         </div>
@@ -50,11 +52,11 @@ export default async function DashboardPage() {
         {/* Heading */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               Dashboard
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Welcome back, {data.user.name}
             </p>
           </div>
@@ -93,21 +95,21 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Expenses */}
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <div className="mt-8 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
             <div>
-              <h2 className="text-base font-semibold text-slate-900">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                 Recent Expenses
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Your latest expense activity
               </p>
             </div>
 
             <Link
               href="/expenses"
-              className="text-sm font-medium text-blue-600 transition hover:text-blue-700"
+              className="text-sm font-medium text-blue-600 transition hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               View All
             </Link>
@@ -115,15 +117,15 @@ export default async function DashboardPage() {
 
           {data.recentExpenses.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 <ExpenseIcon />
               </div>
 
-              <h3 className="mt-4 text-sm font-semibold text-slate-900">
+              <h3 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">
                 No expenses yet
               </h3>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Add your first expense to see it here.
               </p>
 
@@ -141,20 +143,20 @@ export default async function DashboardPage() {
               <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/70">
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <tr className="border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/70">
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Date
                       </th>
 
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Expense
                       </th>
 
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Category
                       </th>
 
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Amount
                       </th>
                     </tr>
@@ -164,27 +166,27 @@ export default async function DashboardPage() {
                     {data.recentExpenses.map((expense) => (
                       <tr
                         key={expense.id}
-                        className="border-b border-slate-100 last:border-0"
+                        className="border-b border-slate-100 last:border-0 dark:border-slate-800"
                       >
-                        <td className="px-5 py-4 text-sm text-slate-500">
+                        <td className="px-5 py-4 text-sm text-slate-500 dark:text-slate-400">
                           {formatDate(expense.date)}
                         </td>
 
-                        <td className="px-5 py-4 text-sm font-medium text-slate-900">
+                        <td className="px-5 py-4 text-sm font-medium text-slate-900 dark:text-white">
                           {expense.title}
                         </td>
 
-                        <td className="px-5 py-4 text-sm text-slate-500">
+                        <td className="px-5 py-4 text-sm text-slate-500 dark:text-slate-400">
                           {expense.category}
                         </td>
 
-                        <td className="px-5 py-4 text-sm font-semibold text-slate-900">
+                        <td className="px-5 py-4 text-sm font-semibold text-slate-900 dark:text-white">
                           <div>
                             {formatCurrency(expense.amount, expense.currency)}
                           </div>
 
                           {expense.currency !== "INR" && (
-                            <div className="mt-1 text-xs font-normal text-slate-500">
+                            <div className="mt-1 text-xs font-normal text-slate-500 dark:text-slate-400">
                               ≈{" "}
                               {formatCurrency(
                                 expense.baseCurrencyAmount,
@@ -200,27 +202,27 @@ export default async function DashboardPage() {
               </div>
 
               {/* Mobile */}
-              <div className="divide-y divide-slate-100 md:hidden">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
                 {data.recentExpenses.map((expense) => (
                   <div key={expense.id} className="space-y-3 px-5 py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">
                           {expense.title}
                         </p>
 
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                           {expense.category} · {formatDate(expense.date)}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
                           {formatCurrency(expense.amount, expense.currency)}
                         </p>
 
                         {expense.currency !== "INR" && (
-                          <p className="mt-1 text-xs font-normal text-slate-500">
+                          <p className="mt-1 text-xs font-normal text-slate-500 dark:text-slate-400">
                             ≈{" "}
                             {formatCurrency(expense.baseCurrencyAmount, "INR")}
                           </p>
@@ -236,7 +238,7 @@ export default async function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="mt-8">
-          <h2 className="text-base font-semibold text-slate-900">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
             Quick Actions
           </h2>
 
@@ -281,22 +283,26 @@ type StatCardProps = {
 
 function StatCard({ title, value, description, icon }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">{title}</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            {title}
+          </p>
 
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
             {value}
           </p>
         </div>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
           {icon}
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">{description}</p>
+      <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+        {description}
+      </p>
     </div>
   );
 }
@@ -316,17 +322,23 @@ function QuickAction({ href, title, description, icon }: QuickActionProps) {
   return (
     <Link
       href={href}
-      className="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-blue-200 hover:bg-blue-50/30"
+      className="group rounded-xl border border-slate-200 bg-white p-5 transition hover:border-blue-200 hover:bg-blue-50/30 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-800 dark:hover:bg-blue-950/30"
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
         {icon}
       </div>
 
-      <h3 className="mt-4 text-sm font-semibold text-slate-900">{title}</h3>
+      <h3 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">
+        {title}
+      </h3>
 
-      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+        {description}
+      </p>
 
-      <p className="mt-3 text-sm font-medium text-blue-600">Open →</p>
+      <p className="mt-3 text-sm font-medium text-blue-600 dark:text-blue-400">
+        Open →
+      </p>
     </Link>
   );
 }
@@ -390,24 +402,6 @@ function ExpenseIcon() {
       <path d="M14 2v4h4" />
       <path d="M9 13h6" />
       <path d="M9 17h4" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg
-      width="19"
-      height="19"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-      <path d="M10 21h4" />
     </svg>
   );
 }

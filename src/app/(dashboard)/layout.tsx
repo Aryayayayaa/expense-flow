@@ -31,7 +31,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <MobileSidebar
         userName={session?.user?.name}
         userRole={session?.user?.role}
@@ -41,7 +41,7 @@ export default async function DashboardLayout({
         <Sidebar userRole={session?.user?.role} />
 
         <div className="min-w-0 flex-1">
-          <header className="flex h-16 items-center justify-end border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
+          <header className="flex h-16 items-center justify-end border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
             <DashboardHeaderActions />
           </header>
 

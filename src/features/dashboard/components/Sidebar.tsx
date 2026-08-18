@@ -14,9 +14,9 @@ export default function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col">
+    <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col dark:border-slate-800 dark:bg-slate-900">
       {/* Logo */}
-      <div className="border-b border-slate-200 px-6 py-6">
+      <div className="border-b border-slate-200 px-6 py-6 dark:border-slate-800">
         <Link
           href="/dashboard"
           className="text-2xl font-semibold tracking-tight"
@@ -24,14 +24,14 @@ export default function Sidebar({ userRole }: SidebarProps) {
           Expense<span className="text-blue-600">Flow</span>
         </Link>
 
-        <p className="mt-1 text-xs font-medium text-slate-500">
+        <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
           Finance Management
         </p>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6">
-        <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
           Workspace
         </p>
 
@@ -115,7 +115,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       </nav>
 
       {/* Theme + Logout */}
-      <div className="border-t border-slate-200 p-4">
+      <div className="border-t border-slate-200 p-4 dark:border-slate-800">
         <div className="mb-2">
           <ThemeToggle />
         </div>
@@ -142,8 +142,8 @@ function SidebarLink({ href, label, icon, active = false }: SidebarLinkProps) {
       href={href}
       className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
         active
-          ? "bg-blue-50 text-blue-700"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
       }`}
     >
       {icon}

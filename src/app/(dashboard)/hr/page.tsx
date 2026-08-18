@@ -68,11 +68,11 @@ export default async function HrPage({
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
             HR Management
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Manage employee verification and process approved expense
             reimbursements.
           </p>
@@ -88,7 +88,7 @@ export default async function HrPage({
           <>
             <section>
               <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Employee Verification
                 </h2>
 
@@ -103,7 +103,7 @@ export default async function HrPage({
 
             <section className="mt-10">
               <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Employee Verification History
                 </h2>
 
@@ -128,7 +128,7 @@ export default async function HrPage({
 
             <section className="mt-10">
               <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Expense Reimbursements
                 </h2>
 
@@ -147,7 +147,7 @@ export default async function HrPage({
 
             <section className="mt-10">
               <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Reimbursement History
                 </h2>
 
@@ -168,7 +168,7 @@ export default async function HrPage({
           <>
             <section className="mt-10">
               <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Name Change Requests
                 </h2>
 
@@ -182,7 +182,7 @@ export default async function HrPage({
 
             <section className="mt-10">
               <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Name Change Request History
                 </h2>
 

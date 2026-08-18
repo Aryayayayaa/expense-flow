@@ -44,7 +44,9 @@ export default async function ProfilePage() {
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">Profile</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            Profile
+          </h1>
 
           <p className="mt-2 text-sm text-slate-500">
             View your account information and role.

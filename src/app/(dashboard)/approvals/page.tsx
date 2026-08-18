@@ -66,11 +66,11 @@ export default async function ApprovalsPage({
       <main className="p-6 sm:p-8 lg:p-10">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-semibold text-slate-900">
+            <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
               Expense Approvals
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Review employee expenses and track previous approval decisions.
             </p>
           </div>
@@ -78,7 +78,7 @@ export default async function ApprovalsPage({
           {/* Pending approvals */}
           <section>
             <div className="mb-4">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Pending Approvals
               </h2>
 
@@ -93,7 +93,7 @@ export default async function ApprovalsPage({
           {/* Approval history */}
           <section className="mt-10">
             <div className="mb-4">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Approval History
               </h2>
 
@@ -213,7 +213,7 @@ export default async function ApprovalsPage({
 
             <section className="mt-10">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Approval Delete History
                 </h2>
 
@@ -283,7 +283,7 @@ export default async function ApprovalsPage({
   return (
     <main className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-semibold text-slate-900">
+        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
           My Expense Status
         </h1>
 

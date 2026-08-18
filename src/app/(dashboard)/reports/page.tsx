@@ -31,9 +31,11 @@ export default async function ReportsPage({
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold text-slate-900">Reports</h1>
+      <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+        Reports
+      </h1>
 
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
         Review summaries and detailed insights from your expenses.
       </p>
 

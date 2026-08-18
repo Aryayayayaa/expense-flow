@@ -13,7 +13,7 @@ export default function ReportsPageClient({ scope }: ReportsPageClientProps) {
     <div className="max-w-xs">
       <label
         htmlFor="report-scope"
-        className="mb-1 block text-xs font-medium text-gray-600"
+        className="mt-2 text-md text-slate-500 dark:text-slate-400"
       >
         Expense Scope
       </label>

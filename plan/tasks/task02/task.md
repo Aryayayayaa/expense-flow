@@ -62,59 +62,59 @@ The component currently manages:
 
 ## Subtask 02.4 — Global Theme Styling
 
-- [ ] Add global dark-mode CSS variables/styles.
-- [ ] Ensure the application background changes correctly in dark mode.
-- [ ] Ensure global foreground/text colors remain readable.
-- [ ] Apply appropriate dark-mode styling to shared dashboard UI.
-- [ ] Add required Tailwind `dark:` utility classes to shared components.
-- [ ] Preserve the existing light-mode appearance.
-- [ ] Ensure the selected theme applies globally rather than only to the sidebar.
+- [x] Add global dark-mode CSS variables/styles.
+- [x] Ensure the application background changes correctly in dark mode.
+- [x] Ensure global foreground/text colors remain readable.
+- [x] Apply appropriate dark-mode styling to shared dashboard UI.
+- [x] Add required Tailwind `dark:` utility classes to shared components.
+- [x] Preserve the existing light-mode appearance.
+- [x] Ensure the selected theme applies globally rather than only to the sidebar.
 
 ---
 
 ## Subtask 02.5 — Cross-Role and Cross-Page Verification
 
-- [ ] Verify using an EMPLOYEE account.
-- [ ] Verify using an HR account.
-- [ ] Verify using an ADMIN account.
-- [ ] Verify the toggle appears on the desktop sidebar.
-- [ ] Verify the toggle appears on the mobile sidebar.
-- [ ] Verify the toggle appears directly above Logout.
-- [ ] Verify switching from light → dark.
-- [ ] Verify switching from dark → light.
-- [ ] Verify theme persistence after page refresh.
-- [ ] Verify theme persistence during page navigation.
-- [ ] Verify theme persistence across dashboard routes.
-- [ ] Verify authentication and Logout remain unaffected.
-- [ ] Verify navigation remains unaffected.
+- [x] Verify using an EMPLOYEE account.
+- [x] Verify using an HR account.
+- [x] Verify using an ADMIN account.
+- [x] Verify the toggle appears on the desktop sidebar.
+- [x] Verify the toggle appears on the mobile sidebar.
+- [x] Verify the toggle appears directly above Logout.
+- [x] Verify switching from light → dark.
+- [x] Verify switching from dark → light.
+- [x] Verify theme persistence after page refresh.
+- [x] Verify theme persistence during page navigation.
+- [x] Verify theme persistence across dashboard routes.
+- [x] Verify authentication and Logout remain unaffected.
+- [x] Verify navigation remains unaffected.
 
 ---
 
 ## Subtask 02.6 — Validation
 
-- [ ] Run `npx tsc --noEmit`.
-- [ ] Run `npm run build`.
-- [ ] Confirm zero TypeScript errors.
-- [ ] Confirm production build succeeds.
-- [ ] Confirm no hydration errors.
-- [ ] Confirm no existing functionality is broken.
+- [x] Run `npx tsc --noEmit`.
+- [x] Run `npm run build`.
+- [x] Confirm zero TypeScript errors.
+- [x] Confirm production build succeeds.
+- [x] Confirm no hydration errors.
+- [x] Confirm no existing functionality is broken.
 
 ---
 
 ## Task 02 Completion Criteria
 
-- [ ] Global light/dark theme toggle is implemented.
-- [ ] Theme state is persisted across page refreshes.
-- [ ] Desktop sidebar contains the toggle above Logout.
-- [ ] Mobile sidebar contains the toggle above Logout.
-- [ ] Toggle is available to ADMIN, HR, and EMPLOYEE accounts.
-- [ ] Theme applies globally across dashboard pages.
-- [ ] Light mode remains visually/functionally correct.
-- [ ] Dark mode is visually/functionally usable.
-- [ ] Cross-page navigation preserves the selected theme.
-- [ ] `npx tsc --noEmit` passes.
-- [ ] `npm run build` passes.
-- [ ] Git commit is created for the completed Task 02 implementation.
+- [x] Global light/dark theme toggle is implemented.
+- [x] Theme state is persisted across page refreshes.
+- [x] Desktop sidebar contains the toggle above Logout.
+- [x] Mobile sidebar contains the toggle above Logout.
+- [x] Toggle is available to ADMIN, HR, and EMPLOYEE accounts.
+- [x] Theme applies globally across dashboard pages.
+- [x] Light mode remains visually/functionally correct.
+- [x ] Dark mode is visually/functionally usable.
+- [x] Cross-page navigation preserves the selected theme.
+- [x] `npx tsc --noEmit` passes.
+- [x] `npm run build` passes.
+- [x] Git commit is created for the completed Task 02 implementation.
 
 ---
 
@@ -124,4 +124,4 @@ The component currently manages:
 
 ## Status
 
-**IN PROGRESS**
+**COMPLETED**

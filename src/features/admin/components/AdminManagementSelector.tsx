@@ -54,7 +54,9 @@ export default function AdminManagementSelector({
       {view === "users" && (
         <section>
           <div className="mb-5">
-            <h2 className="text-xl font-semibold text-slate-900">Users</h2>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Users
+            </h2>
 
             <p className="mt-1 text-sm text-slate-500">
               View all registered users and their current roles.
@@ -68,7 +70,7 @@ export default function AdminManagementSelector({
       {view === "reimbursements" && (
         <section>
           <div className="mb-5">
-            <h2 className="text-xl font-semibold text-slate-900">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Reimbursement History
             </h2>
 
