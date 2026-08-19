@@ -73,7 +73,7 @@ The control must have an accessible label/title such as:
 
 `Profile`
 
-Status: STARTING NEXT
+Status: COMPLETED
 
 ---
 
@@ -90,7 +90,7 @@ The following existing behavior must not regress:
 
 No unnecessary changes should be made to the notification implementation.
 
-Status: NOT STARTED
+Status: COMPLETED
 
 ---
 
@@ -100,17 +100,17 @@ Review all three header icons together.
 
 Verify:
 
-- [ ] Bell remains interactive.
-- [ ] Question-mark icon navigates to the Help/About page.
-- [ ] Profile/avatar navigates to `/profile`.
-- [ ] All header controls have accessible labels.
-- [ ] Keyboard interaction works.
-- [ ] Hover/focus states are visually clear.
-- [ ] Navigation does not require JavaScript unnecessarily when a normal Next.js link is sufficient.
-- [ ] Existing header styling remains consistent.
-- [ ] Light and dark themes remain visually compatible.
+- [x] Bell remains interactive.
+- [x] Question-mark icon navigates to the Help/About page.
+- [x] Profile/avatar navigates to `/profile`.
+- [x] All header controls have accessible labels.
+- [x] Keyboard interaction works.
+- [x] Hover/focus states are visually clear.
+- [x] Navigation does not require JavaScript unnecessarily when a normal Next.js link is sufficient.
+- [x] Existing header styling remains consistent.
+- [x] Light and dark themes remain visually compatible.
 
-Status: NOT STARTED
+Status: COMPLETED
 
 ---
 
@@ -124,15 +124,17 @@ Test the header interactions for:
 
 Test:
 
-- [ ] Notification bell.
-- [ ] Help/question-mark navigation.
-- [ ] Profile navigation.
-- [ ] Keyboard accessibility.
-- [ ] Light theme.
-- [ ] Dark theme.
-- [ ] Direct navigation to the Help/About page.
-- [ ] Direct navigation to `/profile`.
-- [ ] No regression in existing notification behavior.
+- [x] Notification bell.
+- [x] Help/question-mark navigation.
+- [x] Profile navigation.
+- [x] Keyboard accessibility.
+- [x] Light theme.
+- [x] Dark theme.
+- [x] Direct navigation to the Help/About page.
+- [x] Direct navigation to `/profile`.
+- [x] No regression in existing notification behavior.
+
+Status: COMPLETED
 
 Run:
 
