@@ -2,6 +2,13 @@
 
 import { useMemo, useState } from "react";
 
+import {
+  ApprovalStatusFilter,
+  ReimbursementStatusFilter,
+  type ExpenseApprovalStatus,
+  type ExpenseReimbursementStatus,
+} from "@/features/expenses/components/StatusFilters";
+
 import CategoryFilter from "@/features/expenses/components/CategoryFilter";
 import YearFilter from "@/features/expenses/components/YearFilter";
 import MonthFilter from "@/features/expenses/components/MonthFilter";
@@ -28,6 +35,12 @@ export default function ReportsFilters({ expenses }: ReportsFiltersProps) {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+
+  const [approvalStatus, setApprovalStatus] =
+    useState<ExpenseApprovalStatus>("ALL");
+
+  const [reimbursementStatus, setReimbursementStatus] =
+    useState<ExpenseReimbursementStatus>("ALL");
 
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -144,6 +157,13 @@ export default function ReportsFilters({ expenses }: ReportsFiltersProps) {
       const matchesCategory =
         selectedCategory === "" || expense.category === selectedCategory;
 
+      const matchesApprovalStatus =
+        approvalStatus === "ALL" || expense.status === approvalStatus;
+
+      const matchesReimbursementStatus =
+        reimbursementStatus === "ALL" ||
+        expense.reimbursementStatus === reimbursementStatus;
+
       const matchesYear =
         selectedYear === "" ||
         expenseDate.getFullYear() === Number(selectedYear);
@@ -239,11 +259,20 @@ export default function ReportsFilters({ expenses }: ReportsFiltersProps) {
           matchesDate = true;
       }
 
-      return matchesCategory && matchesYear && matchesMonth && matchesDate;
+      return (
+        matchesCategory &&
+        matchesApprovalStatus &&
+        matchesReimbursementStatus &&
+        matchesYear &&
+        matchesMonth &&
+        matchesDate
+      );
     });
   }, [
     expenses,
     selectedCategory,
+    approvalStatus,
+    reimbursementStatus,
     selectedYear,
     selectedMonth,
     dateFilter,
@@ -262,6 +291,16 @@ export default function ReportsFilters({ expenses }: ReportsFiltersProps) {
         </h2>
 
         <div className="flex flex-col gap-4 lg:flex-row">
+          <ApprovalStatusFilter
+            value={approvalStatus}
+            onChange={setApprovalStatus}
+          />
+
+          <ReimbursementStatusFilter
+            value={reimbursementStatus}
+            onChange={setReimbursementStatus}
+          />
+
           <CategoryFilter
             value={selectedCategory}
             onChange={setSelectedCategory}

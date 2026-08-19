@@ -167,7 +167,7 @@ page.
 
 ## Task 05.4 — Reports Status Filtering
 
-Status: NEXT
+Status: COMPLETED
 
 ### Objective
 
@@ -176,32 +176,32 @@ page.
 
 ### Requirements
 
-- [ ] Add Approval Status filter.
-- [ ] Add Reimbursement Status filter.
-- [ ] Default both filters to All.
-- [ ] Preserve existing currency filtering.
-- [ ] Preserve existing category filtering.
-- [ ] Preserve existing date filtering.
-- [ ] Preserve existing report sorting.
-- [ ] Ensure report records reflect the selected statuses.
-- [ ] Ensure report totals reflect the filtered dataset.
-- [ ] Ensure generated/exported report data reflects the selected filters,
+- [x] Add Approval Status filter.
+- [x] Add Reimbursement Status filter.
+- [x] Default both filters to All.
+- [x] Preserve existing currency filtering.
+- [x] Preserve existing category filtering.
+- [x] Preserve existing date filtering.
+- [x] Preserve existing report sorting.
+- [x] Ensure report records reflect the selected statuses.
+- [x] Ensure report totals reflect the filtered dataset.
+- [x] Ensure generated/exported report data reflects the selected filters,
       where applicable.
 
 ### Validation
 
-- [ ] Test each Approval Status.
-- [ ] Test each Reimbursement Status.
-- [ ] Test both status filters together.
-- [ ] Test status + existing report filters.
-- [ ] Test report totals.
-- [ ] Test report output/export behavior, where applicable.
+- [x] Test each Approval Status.
+- [x] Test each Reimbursement Status.
+- [x] Test both status filters together.
+- [x] Test status + existing report filters.
+- [x] Test report totals.
+- [x] Test report output/export behavior, where applicable.
 
 ---
 
 ## Task 05.5 — Approvals Page Status Filtering
 
-Status: NOT STARTED
+Status: NEXT
 
 Add Expense Approval Status and Reimbursement Status filtering to the Approvals page.
 
