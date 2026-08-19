@@ -1,6 +1,6 @@
 # Project Task Tracker
 
-## Project Roadmap
+## Project Roadmap (Modified)
 
 The project roadmap has been intentionally reduced to the following features.
 
@@ -78,9 +78,21 @@ Task-specific implementation and progress will be tracked in:
 
 ### Task 04 — Icons Client Interactive
 
-Status: NOT STARTED
+Status: IN PROGRESS
 
-### Task 05 — Expense Status Filtering
+dentify the shared dashboard/header component responsible for rendering:
+
+- Notification bell
+- Help/question-mark icon
+- User profile/avatar icon
+
+Confirm which icons are already client interactive and which require navigation.
+
+### Task 05 — Responsiveness
+
+Status: IN PROGRESS
+
+### Task 06 — Expense Status Filtering
 
 Status: NOT STARTED
 
@@ -101,7 +113,7 @@ Scope:
 
 Task-specific implementation and progress will be tracked in:
 
-`plan/tasks/task04/task.md`
+`plan/tasks/task06/task.md`
 
 ## Documentation Structure
 
@@ -111,6 +123,8 @@ Each major task has its own task directory:
 - `plan/tasks/task02/task.md`
 - `plan/tasks/task03/task.md`
 - `plan/tasks/task04/task.md`
+- `plan/tasks/task05/task.md`
+- `plan/tasks/task06/task.md`
 
 The master tracker records the overall roadmap and high-level status.
 

@@ -33,17 +33,23 @@ export default async function DashboardPage() {
             unreadCount={unreadNotificationCount}
           />
 
-          <button
-            type="button"
-            aria-label="Help"
+          <Link
+            href="/help"
+            aria-label="Help and application information"
+            title="Help and application information"
             className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <HelpIcon />
-          </button>
+          </Link>
 
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+          <Link
+            href="/profile"
+            aria-label="Profile"
+            title="Profile"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 transition hover:ring-2 hover:ring-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:hover:ring-blue-700"
+          >
             {data.user.name.charAt(0).toUpperCase()}
-          </div>
+          </Link>
         </div>
       </header>
 
