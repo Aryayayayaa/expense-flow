@@ -55,7 +55,7 @@ The page should follow the application's existing layout and visual design.
 
 The question-mark icon must have an accessible label/title describing its purpose.
 
-Status: NOT STARTED
+Status: COMPLETED
 
 ---
 
@@ -73,7 +73,7 @@ The control must have an accessible label/title such as:
 
 `Profile`
 
-Status: NOT STARTED
+Status: STARTING NEXT
 
 ---
 
