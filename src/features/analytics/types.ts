@@ -6,6 +6,10 @@ export type AnalyticsExpense = {
   amount: number;
   currency: string;
 
+  //status filtering variables
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  reimbursementStatus: "PENDING" | "REIMBURSED" | "REJECTED";
+
   // Normalized application base-currency value.
   baseCurrencyAmount: number | null;
   exchangeRate: number | null;

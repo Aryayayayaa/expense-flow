@@ -11,6 +11,13 @@ import MonthFilter from "@/features/expenses/components/MonthFilter";
 import DateFilter from "@/features/expenses/components/DateFilter";
 
 import {
+  ApprovalStatusFilter,
+  ReimbursementStatusFilter,
+  type ExpenseApprovalStatus,
+  type ExpenseReimbursementStatus,
+} from "@/features/expenses/components/StatusFilters";
+
+import {
   DEFAULT_CURRENCY,
   SUPPORTED_CURRENCIES,
   type CurrencyCode,
@@ -50,6 +57,12 @@ export default function AnalyticsPageClient({
 
   const [selectedCurrency, setSelectedCurrency] =
     useState<CurrencyCode>(DEFAULT_CURRENCY);
+
+  const [approvalStatus, setApprovalStatus] =
+    useState<ExpenseApprovalStatus>("ALL");
+
+  const [reimbursementStatus, setReimbursementStatus] =
+    useState<ExpenseReimbursementStatus>("ALL");
 
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -162,9 +175,16 @@ export default function AnalyticsPageClient({
     const matchesCategory =
       selectedCategory === "" || expense.category === selectedCategory;
 
-    // Currency filter.
+    // Currency filter
     const matchesCurrency = expense.currency === selectedCurrency;
 
+    //Adding Status Filters Check.
+    const matchesApprovalStatus =
+      approvalStatus === "ALL" || expense.status === approvalStatus;
+
+    const matchesReimbursementStatus =
+      reimbursementStatus === "ALL" ||
+      expense.reimbursementStatus === reimbursementStatus;
     // Year filter
     const matchesYear =
       selectedYear === "" || expenseDate.getFullYear() === Number(selectedYear);
@@ -260,6 +280,8 @@ export default function AnalyticsPageClient({
     return (
       matchesCategory &&
       matchesCurrency &&
+      matchesApprovalStatus &&
+      matchesReimbursementStatus &&
       matchesYear &&
       matchesMonth &&
       matchesDate
@@ -296,7 +318,7 @@ export default function AnalyticsPageClient({
           </div>
         )}
 
-        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols- mt-4">
           <div className="min-w-0 w-full">
             <select
               value={selectedCurrency}
@@ -312,6 +334,16 @@ export default function AnalyticsPageClient({
               ))}
             </select>
           </div>
+
+          <ApprovalStatusFilter
+            value={approvalStatus}
+            onChange={setApprovalStatus}
+          />
+
+          <ReimbursementStatusFilter
+            value={reimbursementStatus}
+            onChange={setReimbursementStatus}
+          />
 
           <div className="min-w-0 w-full">
             <CategoryFilter

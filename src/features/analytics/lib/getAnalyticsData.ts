@@ -69,6 +69,10 @@ export async function getAnalyticsData(
     exchangeRateAt: expense.exchangeRateAt,
 
     category: expense.category,
+
+    status: expense.status,
+    reimbursementStatus: expense.reimbursementStatus,
+
     expenseDate: expense.expenseDate,
     billProofUrl: expense.billProofUrl,
     billProofPath: expense.billProofPath,
