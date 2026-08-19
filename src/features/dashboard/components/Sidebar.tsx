@@ -31,7 +31,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6">
-        <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+        <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-400">
           Workspace
         </p>
 

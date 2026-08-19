@@ -28,12 +28,12 @@ export default function MobileSidebar({
   return (
     <>
       {/* Mobile Header */}
-      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 md:hidden">
+      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 dark:border-slate-800 dark:bg-slate-900 md:hidden">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open navigation menu"
-          className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+          className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <MenuIcon />
         </button>
@@ -45,7 +45,7 @@ export default function MobileSidebar({
           Expense<span className="text-blue-600">Flow</span>
         </Link>
 
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
           {userInitial}
         </div>
       </header>
@@ -62,12 +62,12 @@ export default function MobileSidebar({
 
       {/* Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-900 md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-5">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-5 dark:border-slate-800">
           <div>
             <Link
               href="/dashboard"
@@ -77,7 +77,7 @@ export default function MobileSidebar({
               Expense<span className="text-blue-600">Flow</span>
             </Link>
 
-            <p className="mt-1 text-xs font-medium text-slate-500">
+            <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
               Finance Management
             </p>
           </div>
@@ -86,7 +86,7 @@ export default function MobileSidebar({
             type="button"
             onClick={closeMenu}
             aria-label="Close navigation menu"
-            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+            className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             <CloseIcon />
           </button>
@@ -94,7 +94,7 @@ export default function MobileSidebar({
 
         {/* Navigation */}
         <nav className="px-4 py-6">
-          <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide dark:text-slate-400">
             Workspace
           </p>
 
@@ -178,7 +178,7 @@ export default function MobileSidebar({
         </nav>
 
         {/* Theme + Logout */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 p-4">
+        <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 p-4 dark:border-slate-800">
           <div className="mb-2">
             <ThemeToggle />
           </div>
@@ -206,7 +206,7 @@ function MobileNavLink({ href, label, icon, onClick }: MobileNavLinkProps) {
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
     >
       {icon}
       {label}
