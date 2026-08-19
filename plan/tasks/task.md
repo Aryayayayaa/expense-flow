@@ -78,7 +78,7 @@ Task-specific implementation and progress will be tracked in:
 
 ### Task 04 — Icons Client Interactive
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 dentify the shared dashboard/header component responsible for rendering:
 
@@ -88,13 +88,9 @@ dentify the shared dashboard/header component responsible for rendering:
 
 Confirm which icons are already client interactive and which require navigation.
 
-### Task 05 — Responsiveness
+### Task 05 — Expense Status Filtering
 
 Status: IN PROGRESS
-
-### Task 06 — Expense Status Filtering
-
-Status: NOT STARTED
 
 Allow users to filter their expenses by approval and reimbursement status.
 
