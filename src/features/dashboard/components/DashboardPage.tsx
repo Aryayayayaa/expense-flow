@@ -42,9 +42,14 @@ export default async function DashboardPage() {
             <HelpIcon />
           </Link>
 
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+          <Link
+            href="/profile"
+            aria-label="Profile"
+            title="Profile"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700 transition hover:ring-2 hover:ring-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:hover:ring-blue-700"
+          >
             {data.user.name.charAt(0).toUpperCase()}
-          </div>
+          </Link>
         </div>
       </header>
 
