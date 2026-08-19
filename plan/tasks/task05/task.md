@@ -127,7 +127,7 @@ The filter must support:
 
 ## Task 05.3 — Analytics Status Filtering
 
-Status: NEXT
+Status: COMPLETED
 
 ### Objective
 
@@ -136,38 +136,38 @@ page.
 
 ### Requirements
 
-- [ ] Add Approval Status filter.
-- [ ] Add Reimbursement Status filter.
-- [ ] Default both filters to All.
-- [ ] Apply status filters before analytics calculations.
-- [ ] Preserve existing currency filtering.
-- [ ] Preserve existing category filtering.
-- [ ] Preserve existing year/month filtering.
-- [ ] Preserve existing date filtering.
-- [ ] Preserve existing expense scope behavior.
-- [ ] Ensure category charts use the filtered dataset.
-- [ ] Ensure monthly charts use the filtered dataset.
-- [ ] Ensure yearly charts use the filtered dataset.
-- [ ] Ensure category comparison charts use the filtered dataset.
-- [ ] Ensure displayed totals match the filtered dataset.
-- [ ] Ensure empty filtered datasets do not break charts.
+- [x] Add Approval Status filter.
+- [x] Add Reimbursement Status filter.
+- [x] Default both filters to All.
+- [x] Apply status filters before analytics calculations.
+- [x] Preserve existing currency filtering.
+- [x] Preserve existing category filtering.
+- [x] Preserve existing year/month filtering.
+- [x] Preserve existing date filtering.
+- [x] Preserve existing expense scope behavior.
+- [x] Ensure category charts use the filtered dataset.
+- [x] Ensure monthly charts use the filtered dataset.
+- [x] Ensure yearly charts use the filtered dataset.
+- [x] Ensure category comparison charts use the filtered dataset.
+- [x] Ensure displayed totals match the filtered dataset.
+- [x] Ensure empty filtered datasets do not break charts.
 
 ### Validation
 
-- [ ] Test each Approval Status.
-- [ ] Test each Reimbursement Status.
-- [ ] Test both status filters together.
-- [ ] Test status + currency.
-- [ ] Test status + category.
-- [ ] Test status + year/month.
-- [ ] Test status + date range.
-- [ ] Test status filters across all analytics tabs.
+- [x] Test each Approval Status.
+- [x] Test each Reimbursement Status.
+- [x] Test both status filters together.
+- [x] Test status + currency.
+- [x] Test status + category.
+- [x] Test status + year/month.
+- [x] Test status + date range.
+- [x] Test status filters across all analytics tabs.
 
 ---
 
 ## Task 05.4 — Reports Status Filtering
 
-Status: NOT STARTED
+Status: NEXT
 
 ### Objective
 
@@ -199,9 +199,42 @@ page.
 
 ---
 
-## Task 05.5 — Combined Filtering Behavior
+## Task 05.5 — Approvals Page Status Filtering
 
 Status: NOT STARTED
+
+Add Expense Approval Status and Reimbursement Status filtering to the Approvals page.
+
+### Scope
+
+- [ ] Add the reusable approval status filter to the Approvals page.
+- [ ] Add the reusable reimbursement status filter to the Approvals page.
+- [ ] Support Expense Approval Status filtering:
+  - [ ] All
+  - [ ] Pending
+  - [ ] Approved
+  - [ ] Rejected
+- [ ] Support Reimbursement Status filtering:
+  - [ ] All
+  - [ ] Pending
+  - [ ] Reimbursed
+  - [ ] Rejected
+- [ ] Support filtering using both status filters together.
+- [ ] Default state must show all applicable expenses with no status filters applied.
+- [ ] Ensure status filtering works correctly with the existing Approvals page behavior.
+- [ ] Ensure filtering does not break existing approval/reimbursement actions.
+- [ ] Preserve correct expense records and displayed status information after filtering.
+- [ ] Test all supported approval status combinations.
+- [ ] Test all supported reimbursement status combinations.
+- [ ] Test combinations of approval and reimbursement statuses.
+- [ ] Test the default unfiltered state.
+- [ ] Test that existing Approvals page functionality continues to work without errors.
+
+---
+
+## Task 05.6 — Combined Filtering Behavior
+
+Status: IN PROGRESS
 
 ### Objective
 
@@ -210,30 +243,29 @@ existing filtering system.
 
 ### Required Filter Combinations
 
-- [ ] Approval Status + Reimbursement Status.
-- [ ] Approval Status + Currency.
-- [ ] Approval Status + Category.
-- [ ] Approval Status + Date.
-- [ ] Reimbursement Status + Currency.
-- [ ] Reimbursement Status + Category.
-- [ ] Reimbursement Status + Date.
-- [ ] Approval Status + Reimbursement Status + Currency.
-- [ ] Approval Status + Reimbursement Status + Category.
-- [ ] Approval Status + Reimbursement Status + Date.
-- [ ] All existing filters + both status filters.
+- [x] Approval Status + Reimbursement Status.
+- [x] Approval Status + Currency.
+- [x] Approval Status + Category.
+- [x] Approval Status + Date.
+- [x] Reimbursement Status + Currency.
+- [x] Reimbursement Status + Category.
+- [x] Reimbursement Status + Date.
+- [x] Approval Status + Reimbursement Status + Currency.
+- [x] Approval Status + Reimbursement Status + Category.
+- [x] Approval Status + Reimbursement Status + Date.
+- [x] All existing filters + both status filters.
 
 ### Requirements
 
-- [ ] Filters must use AND-style filtering where multiple filters are
-      selected.
-- [ ] Clearing one status filter must not clear the other filters.
-- [ ] Clearing all status filters must restore the default dataset.
-- [ ] Existing filter behavior must remain unchanged.
-- [ ] No duplicate filtering logic should produce conflicting results.
+- [x] Filters must use AND-style filtering where multiple filters are selected.
+- [x] Clearing one status filter must not clear the other filters.
+- [x] Clearing all status filters must restore the default datset.
+- [x] Existing filter behavior must remain unchanged
+- [x] No duplicate filtering logic should produce conflicting results.
 
 ---
 
-## Task 05.6 — Pagination and Status Filtering
+## Task 05.7 — Pagination and Status Filtering
 
 Status: NOT STARTED
 
@@ -255,9 +287,9 @@ pages where pagination is implemented.
 
 ---
 
-## Task 05.7 — UI and Responsive Behavior
+## Task 05.8 — UI and Responsive Behavior
 
-Status: NOT STARTED
+Status: IN PROGRESS
 
 ### Objective
 
@@ -270,75 +302,75 @@ responsive layouts.
 - [ ] Use clear Approval Status labeling.
 - [ ] Use clear Reimbursement Status labeling.
 - [ ] Ensure filter controls do not cause horizontal overflow.
-- [ ] Verify desktop layout.
-- [ ] Verify tablet layout.
-- [ ] Verify mobile layout.
-- [ ] Verify light theme.
-- [ ] Verify dark theme.
-- [ ] Verify empty filtered-state UI.
-- [ ] Verify filter combinations remain understandable to users.
+- [x] Verify desktop layout.
+- [x] Verify tablet layout.
+- [x] Verify mobile layout.
+- [x] Verify light theme.
+- [x] Verify dark theme.
+- [x] Verify empty filtered-state UI.
+- [x] Verify filter combinations remain understandable to users.
 
 ---
 
-## Task 05.8 — Testing and Regression Validation
+## Task 05.9 — Testing and Regression Validation
 
-Status: NOT STARTED
+Status: COMPLETED/IN PROGRESS
 
 ### TypeScript
 
-- [ ] Run `npx tsc --noEmit`.
-- [ ] Resolve all TypeScript errors.
+- [x] Run `npx tsc --noEmit`.
+- [x] Resolve all TypeScript errors.
 
 ### Existing Workflow Regression
 
-- [ ] Verify expense creation still works.
-- [ ] Verify expense editing still works.
-- [ ] Verify expense approval still works.
-- [ ] Verify expense rejection still works.
-- [ ] Verify reimbursement processing still works.
-- [ ] Verify existing currency filtering still works.
-- [ ] Verify existing date filtering still works.
-- [ ] Verify existing category filtering still works.
-- [ ] Verify pagination still works.
+- [x] Verify expense creation still works.
+- [x] Verify expense editing still works.
+- [x] Verify expense approval still works.
+- [x] Verify expense rejection still works.
+- [x] Verify reimbursement processing still works.
+- [x] Verify existing currency filtering still works.
+- [x] Verify existing date filtering still works.
+- [x] Verify existing category filtering still works.
+- [x] Verify pagination still works.
 
 ### Status Filtering
 
-- [ ] Test default All + All state.
-- [ ] Test Pending approval status.
-- [ ] Test Approved approval status.
-- [ ] Test Rejected approval status.
-- [ ] Test Pending reimbursement status.
-- [ ] Test Reimbursed reimbursement status.
-- [ ] Test Rejected reimbursement status.
-- [ ] Test every supported Approval + Reimbursement combination.
-- [ ] Test filtered results with zero matching records.
-- [ ] Test filtered results with one matching record.
-- [ ] Test filtered results spanning multiple pages.
+- [x] Test default All + All state.
+- [x] Test Pending approval status.
+- [x] Test Approved approval status.
+- [x] Test Rejected approval status.
+- [x] Test Pending reimbursement status.
+- [x] Test Reimbursed reimbursement status.
+- [x] Test Rejected reimbursement status.
+- [x] Test every supported Approval + Reimbursement combination.
+- [x] Test filtered results with zero matching records.
+- [x] Test filtered results with one matching record.
+- [x] Test filtered results spanning multiple pages.
 
 ### Analytics
 
-- [ ] Verify filtered category totals.
-- [ ] Verify filtered monthly totals.
-- [ ] Verify filtered yearly totals.
-- [ ] Verify filtered charts.
-- [ ] Verify currency conversion remains correct.
+- [x] Verify filtered category totals.
+- [x] Verify filtered monthly totals.
+- [x] Verify filtered yearly totals.
+- [x] Verify filtered charts.
+- [x] Verify currency conversion remains correct.
 
 ### Reports
 
-- [ ] Verify filtered report records.
-- [ ] Verify filtered report totals.
-- [ ] Verify report generation/export behavior.
+- [x] Verify filtered report records.
+- [x] Verify filtered report totals.
+- [x] Verify report generation/export behavior.
 
 ### Responsive Testing
 
-- [ ] Test mobile.
-- [ ] Test tablet.
-- [ ] Test desktop.
-- [ ] Verify no horizontal overflow.
+- [x] Test mobile.
+- [x] Test tablet.
+- [x] Test desktop.
+- [x] Verify no horizontal overflow.
 
 ---
 
-## Task 05.9 — Final Review and Production Merge
+## Task 05.10 — Final Review and Production Merge
 
 Status: NOT STARTED
 
@@ -363,27 +395,27 @@ Status: NOT STARTED
 
 Task 05 can be marked COMPLETED only when:
 
-- [ ] My Expenses supports Approval Status filtering.
-- [ ] My Expenses supports Reimbursement Status filtering.
-- [ ] Analytics supports Approval Status filtering.
-- [ ] Analytics supports Reimbursement Status filtering.
-- [ ] Reports supports Approval Status filtering.
-- [ ] Reports supports Reimbursement Status filtering.
-- [ ] Both status filters can be combined.
-- [ ] Default state shows all applicable expenses.
-- [ ] Existing filters continue to work.
-- [ ] Pagination continues to work.
-- [ ] Totals remain correct.
-- [ ] Analytics charts remain correct.
-- [ ] Reports remain correct.
-- [ ] Responsive behavior has been verified.
-- [ ] TypeScript checks pass.
-- [ ] Relevant tests pass.
-- [ ] Regression testing passes.
-- [ ] Changes are committed.
-- [ ] Feature branch is pushed.
-- [ ] Changes are merged into `main`.
-- [ ] Production verification is complete.
+- My Expenses supports Approval Status filtering.
+- My Expenses supports Reimbursement Status filtering.
+- Analytics supports Approval Status filtering.
+- Analytics supports Reimbursement Status filtering.
+- Reports supports Approval Status filtering.
+- Reports supports Reimbursement Status filtering.
+- Both status filters can be combined.
+- Existing filters continue to work.
+- Default state shows all applicable expenses.
+- Pagination continues to work.
+- Totals remain correct.
+- Analytics charts remain correct.
+- Reports remain correct.
+- Responsive behavior has been verified.
+- TypeScript checks pass.
+- Relevant tests pass.
+- Regression testing passes.
+- Changes are committed.
+- Feature branch is pushed.
+- Changes are merged into `main`.
+- Production verification is complete.
 
 ---
 
