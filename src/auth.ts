@@ -53,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
+  //jwt = json web token
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

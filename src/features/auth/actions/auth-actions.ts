@@ -24,9 +24,10 @@ export async function registerUserAction(
     password: formData.get("password"),
   };
 
-  // Validating the input
+  // Validating the input ising safeParse to avoid runtime errors
   const result = registerSchema.safeParse(values);
 
+  // when validation fails: converts resulting errors into a cleaner format using .flatten()
   if (!result.success) {
     return {
       success: false,
@@ -48,6 +49,7 @@ export async function registerUserAction(
   }
 
   // Hash password
+  //10 = 2^10 = 1024 = number of rounds of hashing
   const hashedPassword = await bcrypt.hash(result.data.password, 10);
 
   // Save user
