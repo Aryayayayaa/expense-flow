@@ -78,7 +78,15 @@ Task-specific implementation and progress will be tracked in:
 
 ### Task 04 — Icons Client Interactive
 
-Status: NOT STARTED
+Status: IN PROGRESS
+
+dentify the shared dashboard/header component responsible for rendering:
+
+- Notification bell
+- Help/question-mark icon
+- User profile/avatar icon
+
+Confirm which icons are already client interactive and which require navigation.
 
 ### Task 05 — Responsiveness
 

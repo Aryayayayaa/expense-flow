@@ -32,7 +32,7 @@ Confirm which icons are already client interactive and which require navigation.
 
 Do not unnecessarily rewrite the existing notification functionality.
 
-Status: NOT STARTED
+Status: COMPLETED
 
 ---
 
