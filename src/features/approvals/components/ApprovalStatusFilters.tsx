@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   ApprovalStatusFilter,
@@ -19,24 +19,32 @@ export default function ApprovalStatusFilters({
   reimbursementStatus,
 }: ApprovalStatusFiltersProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   function updateFilters(
     nextApprovalStatus: ExpenseApprovalStatus,
     nextReimbursementStatus: ExpenseReimbursementStatus,
   ) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
 
-    if (nextApprovalStatus !== "ALL") {
+    params.delete("page");
+
+    if (nextApprovalStatus === "ALL") {
+      params.delete("approvalStatus");
+    } else {
       params.set("approvalStatus", nextApprovalStatus);
     }
 
-    if (nextReimbursementStatus !== "ALL") {
+    if (nextReimbursementStatus === "ALL") {
+      params.delete("reimbursementStatus");
+    } else {
       params.set("reimbursementStatus", nextReimbursementStatus);
     }
 
     const queryString = params.toString();
 
-    router.push(queryString ? `/approvals?${queryString}` : "/approvals");
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   }
 
   return (
