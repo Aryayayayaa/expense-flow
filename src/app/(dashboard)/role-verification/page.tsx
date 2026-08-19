@@ -2,9 +2,16 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { getAllRoleRequests } from "@/features/auth/lib/role-requests";
+import Pagination from "@/components/common/Pagination";
 import RoleVerificationTable from "@/features/auth/components/RoleVerificationTable";
 
-export default async function RoleVerificationPage() {
+export default async function RoleVerificationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+}) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -14,8 +21,16 @@ export default async function RoleVerificationPage() {
   if (session.user.role !== "ADMIN" && session.user.role !== "HR") {
     redirect("/dashboard");
   }
+  const params = await searchParams;
 
-  const requests = await getAllRoleRequests();
+  const requestedPage = Number(params.page ?? "1");
+
+  const page =
+    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const pageSize = 10;
+
+  const requestResult = await getAllRoleRequests(page, pageSize);
 
   const canReview = session.user.role === "HR";
 
@@ -34,7 +49,15 @@ export default async function RoleVerificationPage() {
           </p>
         </div>
 
-        <RoleVerificationTable requests={requests} canReview={canReview} />
+        <RoleVerificationTable
+          requests={requestResult.requests}
+          canReview={canReview}
+        />
+
+        <Pagination
+          page={requestResult.page}
+          totalPages={requestResult.totalPages}
+        />
       </div>
     </main>
   );

@@ -60,33 +60,33 @@ Implement consistent, production-ready pagination across the high-volume adminis
 
 ---
 
-## Task 03.5 — Role Verification Pagination(NEXT)
+## Task 03.5 — Role Verification Pagination(COMPLETED)
 
-- [ ] Implement pagination for Role Verification records.
-- [ ] Paginate the relevant role-verification dataset.
-- [ ] Preserve existing verification actions and authorization.
-- [ ] Preserve existing sorting/filtering behavior.
-- [ ] Ensure page navigation does not lose required query parameters.
-- [ ] Handle empty datasets and invalid/out-of-range pages.
-- [ ] Validate responsive pagination behavior.
+- [x] Implement pagination for Role Verification records.
+- [x] Paginate the relevant role-verification dataset.
+- [x] Preserve existing verification actions and authorization.
+- [x] Preserve existing sorting/filtering behavior.
+- [x] Ensure page navigation does not lose required query parameters.
+- [x] Handle empty datasets and invalid/out-of-range pages.
+- [x] Validate responsive pagination behavior.
 
 ---
 
-## Task 03.6 — Cross-Page Validation & Regression Testing
+## Task 03.6 — Cross-Page Validation & Regression Testing (COMPLETED)
 
-- [ ] Verify pagination behavior across My Expenses.
-- [ ] Verify pagination behavior across Approvals.
-- [ ] Verify pagination behavior across HR.
-- [ ] Verify pagination behavior across Role Verification.
-- [ ] Verify Previous / Next controls.
-- [ ] Verify first-page and last-page behavior.
-- [ ] Verify invalid/out-of-range page handling.
-- [ ] Verify empty-state behavior.
-- [ ] Verify pagination with existing filters.
-- [ ] Verify pagination with existing sorting/order.
-- [ ] Verify role-based authorization remains intact.
-- [ ] Verify responsive behavior on desktop and mobile.
-- [ ] Run `npx tsc --noEmit`.
-- [ ] Run the production build.
-- [ ] Perform manual UI validation for all supported account roles.
-- [ ] Confirm no regressions in existing expense, approval, HR, or role-verification workflows.
+- [x] Verify pagination behavior across My Expenses.
+- [x] Verify pagination behavior across Approvals.
+- [x] Verify pagination behavior across HR.
+- [x] Verify pagination behavior across Role Verification.
+- [x] Verify Previous / Next controls.
+- [x] Verify first-page and last-page behavior.
+- [x] Verify invalid/out-of-range page handling.
+- [x] Verify empty-state behavior.
+- [x] Verify pagination with existing filters.
+- [x] Verify pagination with existing sorting/order.
+- [x] Verify role-based authorization remains intact.
+- [x] Verify responsive behavior on desktop and mobile.
+- [x] Run `npx tsc --noEmit`.
+- [x] Run the production build.
+- [x] Perform manual UI validation for all supported account roles.
+- [x] Confirm no regressions in existing expense, approval, HR, or role-verification workflows.

@@ -59,7 +59,7 @@ Task-specific implementation and progress will be tracked in:
 
 ### Task 03 — Pagination
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 Add pagination where expense/history datasets can become large.
 
@@ -76,7 +76,11 @@ Task-specific implementation and progress will be tracked in:
 
 `plan/tasks/task03/task.md`
 
-### Task 04 — Expense Status Filtering
+### Task 04 — Icons Client Interactive
+
+Status: NOT STARTED
+
+### Task 05 — Expense Status Filtering
 
 Status: NOT STARTED
 

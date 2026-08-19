@@ -32,22 +32,44 @@ export async function getPendingRoleRequests() {
   });
 }
 
-export async function getAllRoleRequests() {
-  return prisma.roleVerificationRequest.findMany({
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
+export async function getAllRoleRequests(
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+
+  const [requests, total] = await prisma.$transaction([
+    prisma.roleVerificationRequest.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
+
+    prisma.roleVerificationRequest.count(),
+  ]);
+
+  return {
+    requests,
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.ceil(total / safePageSize),
+  };
 }
 
 export async function getRoleRequestsForUser(userId: number) {
