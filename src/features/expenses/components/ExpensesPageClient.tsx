@@ -13,6 +13,10 @@ import CategoryFilter from "./CategoryFilter";
 import YearFilter from "./YearFilter";
 import MonthFilter from "./MonthFilter";
 import DateFilter from "./DateFilter";
+import StatusFilters, {
+  type ExpenseApprovalStatus,
+  type ExpenseReimbursementStatus,
+} from "./StatusFilters";
 
 import { SerializedExpense } from "../types";
 
@@ -80,6 +84,12 @@ export default function ExpensesPageClient({
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+
+  const [approvalStatus, setApprovalStatus] =
+    useState<ExpenseApprovalStatus>("ALL");
+
+  const [reimbursementStatus, setReimbursementStatus] =
+    useState<ExpenseReimbursementStatus>("ALL");
 
   const [selectedCurrency, setSelectedCurrency] =
     useState<CurrencyCode>(DEFAULT_CURRENCY);
@@ -216,6 +226,15 @@ export default function ExpensesPageClient({
       /* Currency */
       const matchesCurrency = expense.currency === selectedCurrency;
 
+      /* Expense Approval Status */
+      const matchesApprovalStatus =
+        approvalStatus === "ALL" || expense.status === approvalStatus;
+
+      /* Reimbursement Status */
+      const matchesReimbursementStatus =
+        reimbursementStatus === "ALL" ||
+        expense.reimbursementStatus === reimbursementStatus;
+
       /* Year */
       const matchesYear =
         selectedYear === "" ||
@@ -318,6 +337,8 @@ export default function ExpensesPageClient({
       return (
         matchesCategory &&
         matchesCurrency &&
+        matchesApprovalStatus &&
+        matchesReimbursementStatus &&
         matchesYear &&
         matchesMonth &&
         matchesDate
@@ -327,6 +348,8 @@ export default function ExpensesPageClient({
     expenses,
     selectedCategory,
     selectedCurrency,
+    approvalStatus,
+    reimbursementStatus,
     selectedYear,
     selectedMonth,
     dateFilter,
@@ -375,6 +398,8 @@ export default function ExpensesPageClient({
     setSelectedYear("");
     setSelectedMonth("");
     setDateFilter("all");
+    setApprovalStatus("ALL");
+    setReimbursementStatus("ALL");
     setCustomStartDate("");
     setCustomEndDate("");
   }
@@ -384,7 +409,9 @@ export default function ExpensesPageClient({
     selectedCategory !== "" ||
     selectedYear !== "" ||
     selectedMonth !== "" ||
-    dateFilter !== "all";
+    dateFilter !== "all" ||
+    approvalStatus !== "ALL" ||
+    reimbursementStatus !== "ALL";
 
   /* ---------------------------------------------------------------------- */
   /* UI                                                                      */
@@ -544,7 +571,7 @@ export default function ExpensesPageClient({
             )}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <div className="flex min-w-[180px] flex-col gap-1">
               <select
                 id="expense-currency-filter"
@@ -561,6 +588,13 @@ export default function ExpensesPageClient({
                 ))}
               </select>
             </div>
+
+            <StatusFilters
+              approvalStatus={approvalStatus}
+              reimbursementStatus={reimbursementStatus}
+              onApprovalStatusChange={setApprovalStatus}
+              onReimbursementStatusChange={setReimbursementStatus}
+            />
 
             <CategoryFilter
               value={selectedCategory}

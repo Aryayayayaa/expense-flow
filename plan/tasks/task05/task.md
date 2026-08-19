@@ -72,7 +72,7 @@ functions, and filtering implementations before making changes.
 
 ## Task 05.2 — My Expenses Status Filtering
 
-Status: NEXT
+Status: COMPLETED
 
 ### Objective
 
@@ -83,51 +83,51 @@ page.
 
 The filter must support:
 
-- [ ] All
-- [ ] Pending
-- [ ] Approved
-- [ ] Rejected
+- [x] All
+- [x] Pending
+- [x] Approved
+- [x] Rejected
 
 ### Reimbursement Status
 
 The filter must support:
 
-- [ ] All
-- [ ] Pending
-- [ ] Reimbursed
-- [ ] Rejected
+- [x] All
+- [x] Pending
+- [x] Reimbursed
+- [x] Rejected
 
 ### Requirements
 
-- [ ] Default Approval Status is All.
-- [ ] Default Reimbursement Status is All.
-- [ ] Existing expense records remain unchanged.
-- [ ] Filtering updates the displayed expense records.
-- [ ] Approval and reimbursement filters can be used together.
-- [ ] Existing currency filtering continues to work.
-- [ ] Existing category filtering continues to work.
-- [ ] Existing year/month/date filtering continues to work.
-- [ ] Pagination continues to work with status filtering.
-- [ ] Filtered totals remain correct.
-- [ ] Empty filtered results display an appropriate empty state.
+- [x] Default Approval Status is All.
+- [x] Default Reimbursement Status is All.
+- [x] Existing expense records remain unchanged.
+- [x] Filtering updates the displayed expense records.
+- [x] Approval and reimbursement filters can be used together.
+- [x] Existing currency filtering continues to work.
+- [x] Existing category filtering continues to work.
+- [x] Existing year/month/date filtering continues to work.
+- [x ] Pagination continues to work with status filtering.
+- [x] Filtered totals remain correct.
+- [x] Empty filtered results display an appropriate empty state.
 
 ### Validation
 
-- [ ] Test Approval Status = Pending.
-- [ ] Test Approval Status = Approved.
-- [ ] Test Approval Status = Rejected.
-- [ ] Test Reimbursement Status = Pending.
-- [ ] Test Reimbursement Status = Reimbursed.
-- [ ] Test Reimbursement Status = Rejected.
-- [ ] Test both filters together.
-- [ ] Test All + All.
-- [ ] Test status filters combined with existing filters.
+- [x] Test Approval Status = Pending.
+- [x] Test Approval Status = Approved.
+- [x] Test Approval Status = Rejected.
+- [x] Test Reimbursement Status = Pending.
+- [x] Test Reimbursement Status = Reimbursed.
+- [x] Test Reimbursement Status = Rejected.
+- [x] Test both filters together.
+- [x] Test All + All.
+- [x] Test status filters combined with existing filters.
 
 ---
 
 ## Task 05.3 — Analytics Status Filtering
 
-Status: NOT STARTED
+Status: NEXT
 
 ### Objective
 
