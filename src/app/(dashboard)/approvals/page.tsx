@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -11,6 +10,7 @@ import {
   getExpenseDeletionHistoryForAdmin,
 } from "@/features/expenses/lib/expenses";
 
+import Pagination from "@/components/common/Pagination";
 import ApprovalList from "@/features/approvals/components/ApprovalList";
 import ApprovalDeleteHistory from "@/features/approvals/components/ApprovalDeleteHistory";
 
@@ -225,47 +225,7 @@ export default async function ApprovalsPage({
 
               <ApprovalDeleteHistory expenses={deletionHistory.expenses} />
             </section>
-
-            {/* Pagination */}
-            {history.totalPages > 1 && (
-              <div className="mt-5 flex items-center justify-between">
-                <p className="text-sm text-slate-500">
-                  Page {history.page} of {history.totalPages}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  {history.page > 1 ? (
-                    <Link
-                      href={`/approvals?page=${history.page - 1}`}
-                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                      Previous
-                    </Link>
-                  ) : (
-                    <span className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400">
-                      Previous
-                    </span>
-                  )}
-
-                  <span className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">
-                    {history.page}
-                  </span>
-
-                  {history.page < history.totalPages ? (
-                    <Link
-                      href={`/approvals?page=${history.page + 1}`}
-                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                      Next
-                    </Link>
-                  ) : (
-                    <span className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-400">
-                      Next
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+            <Pagination page={history.page} totalPages={history.totalPages} />
           </section>
         </div>
       </main>
@@ -277,7 +237,16 @@ export default async function ApprovalsPage({
    * They cannot approve expenses.
    * They only see the status of their own expenses.
    */
-  const expenseResult = await getExpenses(userId);
+  const params = await searchParams;
+
+  const requestedPage = Number(params.page ?? "1");
+
+  const page =
+    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const pageSize = 10;
+
+  const expenseResult = await getExpenses(userId, page, pageSize);
   const expenses = expenseResult.expenses;
 
   return (
@@ -382,6 +351,11 @@ export default async function ApprovalsPage({
           </div>
         )}
       </div>
+
+      <Pagination
+        page={expenseResult.page}
+        totalPages={expenseResult.totalPages}
+      />
     </main>
   );
 }

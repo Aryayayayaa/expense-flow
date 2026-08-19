@@ -33,21 +33,21 @@ Implement consistent, production-ready pagination across the high-volume adminis
 
 ---
 
-## Task 03.3 — Approvals Pagination(NEXT)
+## Task 03.3 — Approvals Pagination(COMPLETED)
 
-- [ ] Implement pagination for the Approvals page.
-- [ ] Paginate pending approval records where applicable.
-- [ ] Preserve approval history pagination behavior where already present.
-- [ ] Preserve expense currency and amount formatting.
-- [ ] Preserve approval/rejection actions.
-- [ ] Preserve authorization so users only access records permitted by their role.
-- [ ] Ensure pagination state is reflected in the URL.
-- [ ] Handle empty and out-of-range pages correctly.
-- [ ] Validate pagination for Admin and non-Admin account views.
+- [x] Implement pagination for the Approvals page.
+- [x] Paginate pending approval records where applicable.
+- [x] Preserve approval history pagination behavior where already present.
+- [x] Preserve expense currency and amount formatting.
+- [x] Preserve approval/rejection actions.
+- [x] Preserve authorization so users only access records permitted by their role.
+- [x] Ensure pagination state is reflected in the URL.
+- [x] Handle empty and out-of-range pages correctly.
+- [x] Validate pagination for Admin and non-Admin account views.
 
 ---
 
-## Task 03.4 — HR Pagination
+## Task 03.4 — HR Pagination(NEXT)
 
 - [ ] Implement pagination for HR-managed records.
 - [ ] Paginate the relevant HR employee/expense dataset.
