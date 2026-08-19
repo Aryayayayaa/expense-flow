@@ -24,11 +24,11 @@ export default function DateFilter({
   disablePresets = false,
 }: DateFilterProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 w-full flex-col gap-3">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-12 rounded-lg border border-gray-300 bg-white px-4 text-gray-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 text-gray-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
       >
         <option value="all">All Time</option>
 
@@ -62,7 +62,6 @@ export default function DateFilter({
 
         <option value="custom">Custom Range</option>
       </select>
-      <br className="h-10" />
 
       {value === "custom" && (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-800 shadow-sm h-40">

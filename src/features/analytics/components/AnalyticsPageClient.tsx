@@ -296,15 +296,14 @@ export default function AnalyticsPageClient({
           </div>
         )}
 
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <br />
-          <div className="flex min-w-[180px] flex-col gap-1">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="min-w-0 w-full">
             <select
               value={selectedCurrency}
               onChange={(event) =>
                 setSelectedCurrency(event.target.value as CurrencyCode)
               }
-              className="h-12 rounded-lg border border-gray-300 bg-white px-4 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-800"
+              className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 text-gray-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
             >
               {SUPPORTED_CURRENCIES.map((currency) => (
                 <option key={currency.code} value={currency.code}>
@@ -314,35 +313,43 @@ export default function AnalyticsPageClient({
             </select>
           </div>
 
-          <CategoryFilter
-            value={selectedCategory}
-            onChange={setSelectedCategory}
-            categories={categories}
-          />
+          <div className="min-w-0 w-full">
+            <CategoryFilter
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              categories={categories}
+            />
+          </div>
 
-          <YearFilter
-            value={selectedYear}
-            years={years}
-            onChange={setSelectedYear}
-          />
+          <div className="min-w-0 w-full">
+            <YearFilter
+              value={selectedYear}
+              years={years}
+              onChange={setSelectedYear}
+            />
+          </div>
 
-          <MonthFilter
-            value={selectedMonth}
-            selectedYear={selectedYear}
-            onChange={setSelectedMonth}
-          />
+          <div className="min-w-0 w-full">
+            <MonthFilter
+              value={selectedMonth}
+              selectedYear={selectedYear}
+              onChange={setSelectedMonth}
+            />
+          </div>
 
-          <DateFilter
-            value={dateFilter}
-            onChange={setDateFilter}
-            startDate={customStartDate}
-            endDate={customEndDate}
-            onStartDateChange={setCustomStartDate}
-            onEndDateChange={setCustomEndDate}
-            minDate={customMinDate}
-            maxDate={customMaxDate}
-            disablePresets={disableDatePresets}
-          />
+          <div className="min-w-0 w-full">
+            <DateFilter
+              value={dateFilter}
+              onChange={setDateFilter}
+              startDate={customStartDate}
+              endDate={customEndDate}
+              onStartDateChange={setCustomStartDate}
+              onEndDateChange={setCustomEndDate}
+              minDate={customMinDate}
+              maxDate={customMaxDate}
+              disablePresets={disableDatePresets}
+            />
+          </div>
         </div>
       </div>
 

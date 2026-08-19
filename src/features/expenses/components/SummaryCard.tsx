@@ -8,15 +8,22 @@ type SummaryCardProps = {
 
 export default function SummaryCard({ title, value, icon }: SummaryCardProps) {
   return (
-    <div className="rounded-xl border bg-white p-6 shadow-sm">
-      <div className="flex items-center gap-2 text-gray-500">
-        {icon}
-        <span className="text-3xl font-large text-black font-bold pb-3">
-          {title}
-        </span>
-      </div>
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400">
+            {title}
+          </p>
 
-      <p className="mt-4 text-3xl text-gray-700 font-bold p-3 mt-4">{value}</p>
+          <p className="mt-2 break-words text-2xl font-bold text-slate-900 dark:text-white sm:text-md">
+            {value}
+          </p>
+        </div>
+
+        <div className="shrink-0 rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }

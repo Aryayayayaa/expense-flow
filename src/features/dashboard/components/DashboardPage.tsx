@@ -77,7 +77,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Summary */}
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total Expenses"
             value={formatCurrency(data.summary.totalSpent, "INR")}
@@ -291,12 +291,12 @@ function StatCard({ title, value, description, icon }: StatCardProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {title}
           </p>
 
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white truncate text-2xl font-semibold sm:text-3xl">
             {value}
           </p>
         </div>
