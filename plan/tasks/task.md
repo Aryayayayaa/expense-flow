@@ -109,7 +109,7 @@ Scope:
 
 Task-specific implementation and progress will be tracked in:
 
-`plan/tasks/task06/task.md`
+`plan/tasks/task05/task.md`
 
 ## Documentation Structure
 

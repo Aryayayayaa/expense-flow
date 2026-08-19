@@ -41,7 +41,7 @@ existing functionality.
 
 ## Task 05.1 — Inspect Existing Status Architecture
 
-Status: STARTING
+Status: COMPLETED
 
 ### Objective
 
@@ -50,29 +50,29 @@ functions, and filtering implementations before making changes.
 
 ### Checklist
 
-- [ ] Inspect the Expense approval status field.
-- [ ] Inspect the Expense reimbursement status field.
-- [ ] Inspect existing serialized expense types.
-- [ ] Inspect My Expenses filtering implementation.
-- [ ] Inspect Analytics filtering implementation.
-- [ ] Inspect Reports filtering implementation.
-- [ ] Identify existing pagination behavior.
-- [ ] Identify reusable filter components.
-- [ ] Identify whether status filtering should be performed client-side,
+- [x] Inspect the Expense approval status field.
+- [x] Inspect the Expense reimbursement status field.
+- [x] Inspect existing serialized expense types.
+- [x] Inspect My Expenses filtering implementation.
+- [x] Inspect Analytics filtering implementation.
+- [x] Inspect Reports filtering implementation.
+- [x] Identify existing pagination behavior.
+- [x] Identify reusable filter components.
+- [x] Identify whether status filtering should be performed client-side,
       server-side, or through a combination of both.
-- [ ] Confirm that existing filtering behavior can be preserved.
+- [x] Confirm that existing filtering behavior can be preserved.
 
 ### Validation
 
-- [ ] No code changes made unnecessarily.
-- [ ] Existing status values confirmed.
-- [ ] Existing filtering architecture documented.
+- [x] No code changes made unnecessarily.
+- [x] Existing status values confirmed.
+- [x] Existing filtering architecture documented.
 
 ---
 
 ## Task 05.2 — My Expenses Status Filtering
 
-Status: NOT STARTED
+Status: NEXT
 
 ### Objective
 
