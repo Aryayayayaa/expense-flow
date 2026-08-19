@@ -201,40 +201,40 @@ page.
 
 ## Task 05.5 — Approvals Page Status Filtering
 
-Status: NEXT
+Status: COMPLETED
 
 Add Expense Approval Status and Reimbursement Status filtering to the Approvals page.
 
 ### Scope
 
-- [ ] Add the reusable approval status filter to the Approvals page.
-- [ ] Add the reusable reimbursement status filter to the Approvals page.
-- [ ] Support Expense Approval Status filtering:
-  - [ ] All
-  - [ ] Pending
-  - [ ] Approved
-  - [ ] Rejected
-- [ ] Support Reimbursement Status filtering:
-  - [ ] All
-  - [ ] Pending
-  - [ ] Reimbursed
-  - [ ] Rejected
-- [ ] Support filtering using both status filters together.
-- [ ] Default state must show all applicable expenses with no status filters applied.
-- [ ] Ensure status filtering works correctly with the existing Approvals page behavior.
-- [ ] Ensure filtering does not break existing approval/reimbursement actions.
-- [ ] Preserve correct expense records and displayed status information after filtering.
-- [ ] Test all supported approval status combinations.
-- [ ] Test all supported reimbursement status combinations.
-- [ ] Test combinations of approval and reimbursement statuses.
-- [ ] Test the default unfiltered state.
-- [ ] Test that existing Approvals page functionality continues to work without errors.
+- [x] Add the reusable approval status filter to the Approvals page.
+- [x] Add the reusable reimbursement status filter to the Approvals pag.
+- [x] Support Expense Approval Status filtering:
+  - [x] All
+  - [x] Pending
+  - [x] Approved
+  - [x] Rejected
+- [x] Support Reimbursement Status filtering:
+  - [x] All
+  - [x] Pending
+  - [x] Reimbursed
+  - [x] Rejected
+- [x] Support filtering using both status filters together.
+- [x] Default state must show all applicable expenses with no status filters applied.
+- [x] Ensure status filtering works correctly with the existing Approvals page behavior.
+- [x] Ensure filtering does not break existing approval/reimbursement actions.
+- [x] Preserve correct expense records and displayed status information after filtering.
+- [x] Test all supported approval status combinations.
+- [x] Test all supported reimbursement status combinations.
+- [x] Test combinations of approval and reimbursement statuses.
+- [x] Test the default unfiltered state.
+- [x] Test that existing Approvals page functionality continues to work without errors.
 
 ---
 
 ## Task 05.6 — Combined Filtering Behavior
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 ### Objective
 

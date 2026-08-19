@@ -13,7 +13,9 @@ import CategoryFilter from "./CategoryFilter";
 import YearFilter from "./YearFilter";
 import MonthFilter from "./MonthFilter";
 import DateFilter from "./DateFilter";
-import StatusFilters, {
+import {
+  ApprovalStatusFilter,
+  ReimbursementStatusFilter,
   type ExpenseApprovalStatus,
   type ExpenseReimbursementStatus,
 } from "./StatusFilters";
@@ -589,11 +591,14 @@ export default function ExpensesPageClient({
               </select>
             </div>
 
-            <StatusFilters
-              approvalStatus={approvalStatus}
-              reimbursementStatus={reimbursementStatus}
-              onApprovalStatusChange={setApprovalStatus}
-              onReimbursementStatusChange={setReimbursementStatus}
+            <ApprovalStatusFilter
+              value={approvalStatus}
+              onChange={setApprovalStatus}
+            />
+
+            <ReimbursementStatusFilter
+              value={reimbursementStatus}
+              onChange={setReimbursementStatus}
             />
 
             <CategoryFilter
