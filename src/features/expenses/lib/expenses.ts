@@ -1,4 +1,4 @@
-import { Prisma, ReimbursementStatus } from "@prisma/client";
+import { ExpenseStatus, Prisma, ReimbursementStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -69,12 +69,26 @@ export async function getExpenses(
   userId: number,
   page: number = 1,
   pageSize: number = 10,
+  approvalStatus: ExpenseStatus | "ALL" = "ALL",
+  reimbursementStatus: ReimbursementStatus | "ALL" = "ALL",
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
 
   const where: Prisma.ExpenseWhereInput = {
     userId,
+
+    ...(approvalStatus !== "ALL"
+      ? {
+          status: approvalStatus,
+        }
+      : {}),
+
+    ...(reimbursementStatus !== "ALL"
+      ? {
+          reimbursementStatus,
+        }
+      : {}),
   };
 
   const [expenses, total] = await prisma.$transaction([
@@ -339,13 +353,21 @@ export async function getAllExpensesForAdmin() {
 
 //Get expenses that are currently waiting for admin approval.
 
-export async function getPendingExpensesForAdmin(adminId: number) {
+export async function getPendingExpensesForAdmin(
+  adminId: number,
+  reimbursementStatus: "ALL" | ReimbursementStatus = "ALL",
+) {
   const expenses = await prisma.expense.findMany({
     where: {
       status: "PENDING",
+
       userId: {
         not: adminId,
       },
+
+      ...(reimbursementStatus !== "ALL" && {
+        reimbursementStatus,
+      }),
     },
 
     include: {
@@ -395,6 +417,8 @@ export async function getPendingExpensesForAdmin(adminId: number) {
 export async function getExpenseApprovalHistory(
   page: number = 1,
   pageSize: number = 10,
+  approvalStatus: "ALL" | "PENDING" | "APPROVED" | "REJECTED" = "ALL",
+  reimbursementStatus: "ALL" | ReimbursementStatus = "ALL",
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
@@ -403,6 +427,18 @@ export async function getExpenseApprovalHistory(
     decidedAt: {
       not: null,
     },
+
+    ...(approvalStatus !== "ALL"
+      ? {
+          status: approvalStatus,
+        }
+      : {}),
+
+    ...(reimbursementStatus !== "ALL"
+      ? {
+          reimbursementStatus,
+        }
+      : {}),
   };
 
   const [expenses, total] = await prisma.$transaction([

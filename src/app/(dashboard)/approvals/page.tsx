@@ -10,6 +10,13 @@ import {
   getExpenseDeletionHistoryForAdmin,
 } from "@/features/expenses/lib/expenses";
 
+import type {
+  ExpenseApprovalStatus,
+  ExpenseReimbursementStatus,
+} from "@/features/expenses/components/StatusFilters";
+
+import ApprovalStatusFilters from "@/features/approvals/components/ApprovalStatusFilters";
+
 import Pagination from "@/components/common/Pagination";
 import ApprovalList from "@/features/approvals/components/ApprovalList";
 import ApprovalDeleteHistory from "@/features/approvals/components/ApprovalDeleteHistory";
@@ -17,6 +24,8 @@ import ApprovalDeleteHistory from "@/features/approvals/components/ApprovalDelet
 type ApprovalsPageProps = {
   searchParams: Promise<{
     page?: string;
+    approvalStatus?: string;
+    reimbursementStatus?: string;
   }>;
 };
 
@@ -45,9 +54,28 @@ export default async function ApprovalsPage({
     const historyPage =
       Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
+    const approvalStatus: ExpenseApprovalStatus =
+      params.approvalStatus === "PENDING" ||
+      params.approvalStatus === "APPROVED" ||
+      params.approvalStatus === "REJECTED"
+        ? params.approvalStatus
+        : "ALL";
+
+    const reimbursementStatus: ExpenseReimbursementStatus =
+      params.reimbursementStatus === "PENDING" ||
+      params.reimbursementStatus === "REIMBURSED" ||
+      params.reimbursementStatus === "REJECTED"
+        ? params.reimbursementStatus
+        : "ALL";
+
     const [pendingExpenses, history, deletionHistory] = await Promise.all([
       getPendingExpensesForAdmin(userId),
-      getExpenseApprovalHistory(historyPage, 10),
+      getExpenseApprovalHistory(
+        historyPage,
+        10,
+        approvalStatus,
+        reimbursementStatus,
+      ),
       getExpenseDeletionHistoryForAdmin(),
     ]);
 
@@ -102,6 +130,25 @@ export default async function ApprovalsPage({
               </p>
             </div>
 
+            {/* Approval history filters */}
+            <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Filter Approval History
+                </h3>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Filter approval history by approval and reimbursement status.
+                </p>
+              </div>
+
+              <ApprovalStatusFilters
+                approvalStatus={approvalStatus}
+                reimbursementStatus={reimbursementStatus}
+              />
+            </div>
+
+            {/* Approval history table */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               {history.expenses.length === 0 ? (
                 <div className="p-8 text-center text-sm text-slate-500">
@@ -211,6 +258,7 @@ export default async function ApprovalsPage({
               )}
             </div>
 
+            {/* Approval delete history */}
             <section className="mt-10">
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -225,6 +273,7 @@ export default async function ApprovalsPage({
 
               <ApprovalDeleteHistory expenses={deletionHistory.expenses} />
             </section>
+
             <Pagination page={history.page} totalPages={history.totalPages} />
           </section>
         </div>
@@ -239,6 +288,20 @@ export default async function ApprovalsPage({
    */
   const params = await searchParams;
 
+  const approvalStatus: ExpenseApprovalStatus =
+    params.approvalStatus === "PENDING" ||
+    params.approvalStatus === "APPROVED" ||
+    params.approvalStatus === "REJECTED"
+      ? params.approvalStatus
+      : "ALL";
+
+  const reimbursementStatus: ExpenseReimbursementStatus =
+    params.reimbursementStatus === "PENDING" ||
+    params.reimbursementStatus === "REIMBURSED" ||
+    params.reimbursementStatus === "REJECTED"
+      ? params.reimbursementStatus
+      : "ALL";
+
   const requestedPage = Number(params.page ?? "1");
 
   const page =
@@ -246,7 +309,14 @@ export default async function ApprovalsPage({
 
   const pageSize = 10;
 
-  const expenseResult = await getExpenses(userId, page, pageSize);
+  const expenseResult = await getExpenses(
+    userId,
+    page,
+    pageSize,
+    approvalStatus,
+    reimbursementStatus,
+  );
+
   const expenses = expenseResult.expenses;
 
   return (
@@ -259,6 +329,24 @@ export default async function ApprovalsPage({
         <p className="mt-1 text-sm text-slate-500">
           Track the approval status of your submitted expenses.
         </p>
+      </div>
+
+      {/* Employee / HR filters */}
+      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-slate-900">
+            Filter Expense Status
+          </h2>
+
+          <p className="mt-1 text-xs text-slate-500">
+            Filter your expenses by approval and reimbursement status.
+          </p>
+        </div>
+
+        <ApprovalStatusFilters
+          approvalStatus={approvalStatus}
+          reimbursementStatus={reimbursementStatus}
+        />
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

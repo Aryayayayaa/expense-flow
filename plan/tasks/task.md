@@ -109,7 +109,7 @@ Scope:
 
 Task-specific implementation and progress will be tracked in:
 
-`plan/tasks/task06/task.md`
+`plan/tasks/task05/task.md`
 
 ## Documentation Structure
 
@@ -120,7 +120,6 @@ Each major task has its own task directory:
 - `plan/tasks/task03/task.md`
 - `plan/tasks/task04/task.md`
 - `plan/tasks/task05/task.md`
-- `plan/tasks/task06/task.md`
 
 The master tracker records the overall roadmap and high-level status.
 
