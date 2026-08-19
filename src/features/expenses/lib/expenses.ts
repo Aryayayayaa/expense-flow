@@ -709,49 +709,74 @@ export async function getDeletedExpensesForUser(userId: number) {
  * ReimbursementStatus:
  *   PENDING -> REIMBURSED / REJECTED
  */
-export async function getApprovedExpensesForHR(hrId: number) {
-  const expenses = await prisma.expense.findMany({
-    where: {
-      status: "APPROVED",
+export async function getApprovedExpensesForHR(
+  hrId: number,
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
 
-      reimbursementStatus: "PENDING",
+  const where: Prisma.ExpenseWhereInput = {
+    status: "APPROVED",
 
-      userId: {
-        not: hrId,
-      },
+    reimbursementStatus: "PENDING",
+
+    userId: {
+      not: hrId,
     },
+  };
 
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
+  const [expenses, total] = await prisma.$transaction([
+    prisma.expense.findMany({
+      where,
+
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+
+        decidedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
       },
 
-      decidedBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
+      orderBy: [{ decidedAt: "asc" }, { createdAt: "asc" }],
 
-    orderBy: [{ decidedAt: "asc" }, { createdAt: "asc" }],
-  });
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
 
-  return expenses.map((expense) => ({
-    ...expense,
-    amount: Number(expense.amount),
-    baseCurrencyAmount:
-      expense.baseCurrencyAmount !== null
-        ? Number(expense.baseCurrencyAmount)
-        : null,
-    exchangeRate:
-      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
-  }));
+    prisma.expense.count({
+      where,
+    }),
+  ]);
+
+  return {
+    expenses: expenses.map((expense) => ({
+      ...expense,
+      amount: Number(expense.amount),
+      baseCurrencyAmount:
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null,
+      exchangeRate:
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+    })),
+
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.ceil(total / safePageSize),
+  };
 }
 
 /* -------------------------------------------------------------------------- */

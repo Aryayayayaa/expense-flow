@@ -7,6 +7,8 @@ import {
   getPendingEmployeeVerificationRequests,
 } from "@/features/auth/lib/employee-verification";
 
+import Pagination from "@/components/common/Pagination";
+
 import EmployeeVerificationTable from "@/features/auth/components/EmployeeVerificationTable";
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
 import HrManagementSelector from "@/features/auth/components/HrManagementSelector";
@@ -27,7 +29,11 @@ import NameChangeRequestTable from "@/features/auth/components/NameChangeRequest
 export default async function HrPage({
   searchParams,
 }: {
-  searchParams: Promise<{ section?: string }>;
+  searchParams: Promise<{
+    section?: string;
+    reimbursementPage?: string;
+    reimbursementHistoryPage?: string;
+  }>;
 }) {
   const session = await auth();
 
@@ -40,6 +46,26 @@ export default async function HrPage({
   }
 
   const params = await searchParams;
+
+  const requestedReimbursementPage = Number(params.reimbursementPage ?? "1");
+
+  const reimbursementPage =
+    Number.isInteger(requestedReimbursementPage) &&
+    requestedReimbursementPage > 0
+      ? requestedReimbursementPage
+      : 1;
+
+  const requestedReimbursementHistoryPage = Number(
+    params.reimbursementHistoryPage ?? "1",
+  );
+
+  const reimbursementHistoryPage =
+    Number.isInteger(requestedReimbursementHistoryPage) &&
+    requestedReimbursementHistoryPage > 0
+      ? requestedReimbursementHistoryPage
+      : 1;
+
+  const pageSize = 10;
 
   const section =
     params.section === "reimbursement" || params.section === "name-change"
@@ -58,8 +84,8 @@ export default async function HrPage({
   ] = await Promise.all([
     getPendingEmployeeVerificationRequests(),
     getEmployeeVerificationHistory(),
-    getApprovedExpensesForHR(hrId),
-    getReimbursementHistory(),
+    getApprovedExpensesForHR(hrId, reimbursementPage, pageSize),
+    getReimbursementHistory(reimbursementHistoryPage, pageSize),
     getPendingNameChangeRequests(),
     getNameChangeRequestHistory(),
   ]);
@@ -138,7 +164,13 @@ export default async function HrPage({
                 </p>
               </div>
 
-              <ReimbursementTable expenses={approvedExpenses} />
+              <ReimbursementTable expenses={approvedExpenses.expenses} />
+
+              <Pagination
+                page={approvedExpenses.page}
+                totalPages={approvedExpenses.totalPages}
+                paramName="reimbursementPage"
+              />
             </section>
 
             {/* ---------------------------------------------------------------- */}
@@ -159,6 +191,12 @@ export default async function HrPage({
 
               <ReimbursementHistoryTable
                 expenses={reimbursementHistory.expenses}
+              />
+
+              <Pagination
+                page={reimbursementHistory.page}
+                totalPages={reimbursementHistory.totalPages}
+                paramName="reimbursementHistoryPage"
               />
             </section>
           </>

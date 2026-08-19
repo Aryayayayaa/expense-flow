@@ -47,20 +47,20 @@ Implement consistent, production-ready pagination across the high-volume adminis
 
 ---
 
-## Task 03.4 — HR Pagination(NEXT)
+## Task 03.4 — HR Pagination(COMPLETED)
 
-- [ ] Implement pagination for HR-managed records.
-- [ ] Paginate the relevant HR employee/expense dataset.
-- [ ] Preserve existing HR filters and sorting.
-- [ ] Preserve existing role-based authorization.
-- [ ] Ensure actions continue to target the correct employee/expense record.
-- [ ] Preserve pagination state when navigating between pages.
-- [ ] Handle empty datasets and invalid/out-of-range pages.
-- [ ] Validate responsive pagination behavior.
+- [x] Implement pagination for HR-managed records.
+- [x] Paginate the relevant HR employee/expense dataset.
+- [x] Preserve existing HR filters and sorting.
+- [x] Preserve existing role-based authorization.
+- [x] Ensure actions continue to target the correct employee/expense record.
+- [x] Preserve pagination state when navigating between pages.
+- [x] Handle empty datasets and invalid/out-of-range pages.
+- [x] Validate responsive pagination behavior.
 
 ---
 
-## Task 03.5 — Role Verification Pagination
+## Task 03.5 — Role Verification Pagination(NEXT)
 
 - [ ] Implement pagination for Role Verification records.
 - [ ] Paginate the relevant role-verification dataset.

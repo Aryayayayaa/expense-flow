@@ -7,19 +7,28 @@ import { usePathname, useSearchParams } from "next/navigation";
 type PaginationProps = {
   page: number;
   totalPages: number;
+  paramName?: string;
 };
 
-export default function Pagination({ page, totalPages }: PaginationProps) {
+export default function Pagination({
+  page,
+  totalPages,
+  paramName = "page",
+}: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  if (totalPages <= 1) {
+    return null;
+  }
 
   function createPageUrl(nextPage: number) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (nextPage <= 1) {
-      params.delete("page");
+      params.delete(paramName);
     } else {
-      params.set("page", String(nextPage));
+      params.set(paramName, String(nextPage));
     }
 
     const queryString = params.toString();
