@@ -274,11 +274,11 @@ export default async function ApprovalsPage({
 
   /*
    * EMPLOYEE / HR
-   *
    * They cannot approve expenses.
    * They only see the status of their own expenses.
    */
-  const expenses = await getExpenses(userId);
+  const expenseResult = await getExpenses(userId);
+  const expenses = expenseResult.expenses;
 
   return (
     <main className="p-6">

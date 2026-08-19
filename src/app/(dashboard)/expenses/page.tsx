@@ -16,12 +16,12 @@ export default async function ExpensesPage() {
 
   const userId = Number(session.user.id);
 
-  const [expenses, deletedExpenses] = await Promise.all([
+  const [expenseResult, deletedExpenses] = await Promise.all([
     getExpenses(userId),
     getDeletedExpensesForUser(userId),
   ]);
 
-  const serializedExpenses = expenses.map((expense) => ({
+  const serializedExpenses = expenseResult.expenses.map((expense) => ({
     ...expense,
     amount: Number(expense.amount),
   }));

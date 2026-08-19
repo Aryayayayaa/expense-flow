@@ -6,7 +6,7 @@ The project roadmap has been intentionally reduced to the following features.
 
 ### Task 01 — Multi-currency Support
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 Implement the complete multi-currency bonus feature, including:
 
@@ -41,7 +41,7 @@ Current subtask status:
 
 ### Task 02 — Light/Dark Theme Toggle
 
-Status: NOT STARTED
+Status: COMPLETED
 
 Implement a light/dark theme toggle for the application.
 
@@ -59,7 +59,7 @@ Task-specific implementation and progress will be tracked in:
 
 ### Task 03 — Pagination
 
-Status: NOT STARTED
+Status: IN PROGRESS
 
 Add pagination where expense/history datasets can become large.
 
@@ -98,42 +98,6 @@ Scope:
 Task-specific implementation and progress will be tracked in:
 
 `plan/tasks/task04/task.md`
-
-## Completed
-
-- Task 00 — Planning & Specification Setup — COMPLETED
-  - Created the project planning/specification structure.
-  - Established the AI-assisted implementation workflow.
-  - Defined specification, task tracking, implementation, testing, and review requirements.
-
-## Not Started / Removed from Current Roadmap
-
-The following previously proposed features are intentionally not part of the current roadmap:
-
-- CSV Export
-- PDF Reports
-- Budget / Policy Limitations
-- Real-time Notifications
-- Responsive UI as a standalone feature
-- Application Architecture / File Walkthrough
-- External API / Service Audit
-- Interactive Top Bar Controls
-
-These features may be reconsidered in a future roadmap revision, but should not be implemented as part of the current feature plan.
-
-## Workflow
-
-Each task must follow:
-
-1. Specification
-2. Architecture inspection
-3. Implementation
-4. Testing
-5. Review
-6. Update task-specific documentation
-7. Update this master tracker
-8. Update the overall specification when required
-9. Proceed to the next task only after completion
 
 ## Documentation Structure
 

@@ -65,107 +65,132 @@ export type ReimbursementHistoryExpense = {
   } | null;
 };
 
-export async function getExpenses(userId: number) {
-  const expenses = await prisma.expense.findMany({
-    where: {
-      userId,
-    },
+export async function getExpenses(
+  userId: number,
+  page: number = 1,
+  pageSize: number = 10,
+) {
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
 
-    include: {
-      decidedBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-        },
-      },
+  const where: Prisma.ExpenseWhereInput = {
+    userId,
+  };
 
-      reimbursementBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-        },
-      },
+  const [expenses, total] = await prisma.$transaction([
+    prisma.expense.findMany({
+      where,
 
-      auditLogs: {
-        where: {
-          action: "UPDATED",
-          actor: {
-            role: "ADMIN",
+      include: {
+        decidedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
           },
         },
 
-        include: {
-          actor: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
+        reimbursementBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+
+        auditLogs: {
+          where: {
+            action: "UPDATED",
+            actor: {
+              role: "ADMIN",
             },
           },
-        },
 
-        orderBy: {
-          createdAt: "desc",
-        },
+          include: {
+            actor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
 
-        take: 1,
+          orderBy: {
+            createdAt: "desc",
+          },
+
+          take: 1,
+        },
       },
-    },
 
-    orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
-  });
+      orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
 
-  return expenses.map((expense) => {
-    const latestAdminModification = expense.auditLogs[0];
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
 
-    let adminModification: AdminModification | null = null;
+    prisma.expense.count({
+      where,
+    }),
+  ]);
 
-    if (latestAdminModification?.actor) {
-      const metadata = latestAdminModification.metadata;
+  return {
+    expenses: expenses.map((expense) => {
+      const latestAdminModification = expense.auditLogs[0];
 
-      let changes: AdminModification["changes"] = {};
+      let adminModification: AdminModification | null = null;
 
-      if (
-        metadata &&
-        typeof metadata === "object" &&
-        !Array.isArray(metadata) &&
-        "changes" in metadata
-      ) {
-        const metadataChanges = metadata.changes;
+      if (latestAdminModification?.actor) {
+        const metadata = latestAdminModification.metadata;
+
+        let changes: AdminModification["changes"] = {};
 
         if (
-          metadataChanges &&
-          typeof metadataChanges === "object" &&
-          !Array.isArray(metadataChanges)
+          metadata &&
+          typeof metadata === "object" &&
+          !Array.isArray(metadata) &&
+          "changes" in metadata
         ) {
-          changes = metadataChanges as AdminModification["changes"];
+          const metadataChanges = metadata.changes;
+
+          if (
+            metadataChanges &&
+            typeof metadataChanges === "object" &&
+            !Array.isArray(metadataChanges)
+          ) {
+            changes = metadataChanges as AdminModification["changes"];
+          }
         }
+
+        adminModification = {
+          admin: latestAdminModification.actor,
+          modifiedAt: latestAdminModification.createdAt,
+          changes,
+        };
       }
 
-      adminModification = {
-        admin: latestAdminModification.actor,
-        modifiedAt: latestAdminModification.createdAt,
-        changes,
+      return {
+        ...expense,
+        amount: Number(expense.amount),
+        baseCurrencyAmount:
+          expense.baseCurrencyAmount !== null
+            ? Number(expense.baseCurrencyAmount)
+            : null,
+        exchangeRate:
+          expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+        adminModification,
       };
-    }
+    }),
 
-    return {
-      ...expense,
-      amount: Number(expense.amount),
-      baseCurrencyAmount:
-        expense.baseCurrencyAmount !== null
-          ? Number(expense.baseCurrencyAmount)
-          : null,
-      exchangeRate:
-        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
-      adminModification,
-    };
-  });
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.ceil(total / safePageSize),
+  };
 }
 
 export async function getExpense(id: number, userId: number) {

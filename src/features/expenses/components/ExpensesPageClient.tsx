@@ -538,20 +538,13 @@ export default function ExpensesPageClient({
 
           <div className="grid gap-4 lg:grid-cols-5">
             <div className="flex min-w-[180px] flex-col gap-1">
-              <label
-                className="text-xs font-medium text-slate-600"
-                htmlFor="expense-currency-filter"
-              >
-                Currency
-              </label>
-
               <select
                 id="expense-currency-filter"
                 value={selectedCurrency}
                 onChange={(event) =>
                   setSelectedCurrency(event.target.value as CurrencyCode)
                 }
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500"
+                className="h-12 rounded-lg border border-gray-300 bg-white px-4 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-800"
               >
                 {SUPPORTED_CURRENCIES.map((currency) => (
                   <option key={currency.code} value={currency.code}>

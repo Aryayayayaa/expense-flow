@@ -10,7 +10,8 @@ export async function getDashboardData() {
 
   const userId = Number(session.user.id);
 
-  const expenses = await getExpenses(userId);
+  const expenseResult = await getExpenses(userId);
+  const expenses = expenseResult.expenses;
 
   const now = new Date();
 

@@ -297,17 +297,14 @@ export default function AnalyticsPageClient({
         )}
 
         <div className="flex flex-col gap-4 lg:flex-row">
+          <br />
           <div className="flex min-w-[180px] flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">
-              Currency
-            </label>
-
             <select
               value={selectedCurrency}
               onChange={(event) =>
                 setSelectedCurrency(event.target.value as CurrencyCode)
               }
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+              className="h-12 rounded-lg border border-gray-300 bg-white px-4 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-800"
             >
               {SUPPORTED_CURRENCIES.map((currency) => (
                 <option key={currency.code} value={currency.code}>
