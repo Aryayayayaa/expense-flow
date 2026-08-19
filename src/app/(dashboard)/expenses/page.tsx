@@ -7,7 +7,15 @@ import {
 
 import { auth } from "@/auth";
 
-export default async function ExpensesPage() {
+type ExpensesPageProps = {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+};
+
+export default async function ExpensesPage({
+  searchParams,
+}: ExpensesPageProps) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -16,8 +24,17 @@ export default async function ExpensesPage() {
 
   const userId = Number(session.user.id);
 
+  const params = await searchParams;
+
+  const requestedPage = Number(params.page ?? "1");
+
+  const page =
+    Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const pageSize = 10;
+
   const [expenseResult, deletedExpenses] = await Promise.all([
-    getExpenses(userId),
+    getExpenses(userId, page, pageSize),
     getDeletedExpensesForUser(userId),
   ]);
 
@@ -36,6 +53,12 @@ export default async function ExpensesPage() {
       <ExpensesPageClient
         expenses={serializedExpenses}
         deletedExpenses={serializedDeletedExpenses}
+        pagination={{
+          page: expenseResult.page,
+          pageSize: expenseResult.pageSize,
+          total: expenseResult.total,
+          totalPages: expenseResult.totalPages,
+        }}
       />
     </main>
   );

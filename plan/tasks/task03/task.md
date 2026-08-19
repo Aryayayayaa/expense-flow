@@ -6,7 +6,7 @@ Implement consistent, production-ready pagination across the high-volume adminis
 
 ---
 
-## Task 03.1 — Pagination Architecture & Shared Behavior
+## Task 03.1 — Pagination Architecture & Shared Behavior (COMPLETED)
 
 - [x] Define the pagination strategy and page-size behavior.
 - [x] Establish a consistent `page` query parameter convention.
@@ -20,20 +20,20 @@ Implement consistent, production-ready pagination across the high-volume adminis
 
 ---
 
-## Task 03.2 — My Expenses Pagination
+## Task 03.2 — My Expenses Pagination (COMPLETED)
 
-- [ ] Implement pagination for the My Expenses page.
-- [ ] Paginate the authenticated user's expense records.
-- [ ] Preserve existing expense ordering.
-- [ ] Preserve existing expense status and reimbursement information.
-- [ ] Ensure expense actions continue to operate on the correct record.
-- [ ] Ensure page navigation preserves relevant query parameters.
-- [ ] Handle empty datasets and pages with no results.
-- [ ] Validate pagination for Employee, HR, and Admin accounts where applicable.
+- [x] Implement pagination for the My Expenses page.
+- [x] Paginate the authenticated user's expense records.
+- [x] Preserve existing expense ordering.
+- [x] Preserve existing expense status and reimbursement information.
+- [x] Ensure expense actions continue to operate on the correct record.
+- [x] Ensure page navigation preserves relevant query parameters.
+- [x] Handle empty datasets and pages with no results.
+- [x] Validate pagination for Employee, HR, and Admin accounts where applicable.
 
 ---
 
-## Task 03.3 — Approvals Pagination
+## Task 03.3 — Approvals Pagination(NEXT)
 
 - [ ] Implement pagination for the Approvals page.
 - [ ] Paginate pending approval records where applicable.

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Wallet, Calendar, Folder, X, Plus, AlertTriangle } from "lucide-react";
+import Pagination from "@/components/common/Pagination";
 
 import ExpenseList from "./ExpenseList";
 import AddExpenseForm from "./AddExpenseForm";
@@ -55,11 +56,18 @@ type DeletedExpense = {
 type ExpensesPageClientProps = {
   expenses: SerializedExpense[];
   deletedExpenses: DeletedExpense[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 export default function ExpensesPageClient({
   expenses,
   deletedExpenses,
+  pagination,
 }: ExpensesPageClientProps) {
   const [editingExpense, setEditingExpense] =
     useState<SerializedExpense | null>(null);
@@ -627,6 +635,8 @@ export default function ExpensesPageClient({
           </div>
         </div>
       )}
+
+      <Pagination page={pagination.page} totalPages={pagination.totalPages} />
     </>
   );
 }
