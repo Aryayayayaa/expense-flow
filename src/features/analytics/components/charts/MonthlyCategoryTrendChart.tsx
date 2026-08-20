@@ -14,6 +14,7 @@ import {
 import { AnalyticsExpense } from "../../types";
 
 import { formatCurrency } from "@/utils/formatCurrency";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type MonthlyCategoryTrendChartProps = {
   expenses: AnalyticsExpense[];
@@ -84,7 +85,8 @@ export default function MonthlyCategoryTrendChart({
     const monthData = monthlyData.get(key)!;
 
     monthData[category] =
-      Number(monthData[category] ?? 0) + Number(expense.amount);
+      Number(monthData[category] ?? 0) +
+      getReportExpenseAmount(expense, currency);
   });
 
   const chartData = Array.from(monthlyData.values()).sort((a, b) => {

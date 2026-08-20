@@ -10,6 +10,7 @@ import {
 } from "recharts";
 
 import { AnalyticsExpense } from "../../types";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type CategoryPieChartProps = {
   expenses: AnalyticsExpense[];
@@ -33,8 +34,9 @@ export default function CategoryPieChart({
 }: CategoryPieChartProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
-      totals[expense.category] =
-        (totals[expense.category] ?? 0) + Number(expense.amount);
+      const amount = getReportExpenseAmount(expense, currency);
+
+      totals[expense.category] = (totals[expense.category] ?? 0) + amount;
 
       return totals;
     },

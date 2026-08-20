@@ -1,17 +1,23 @@
 "use client";
 
 import { AnalyticsExpense } from "../../types";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 type TopCategoriesProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
-export default function TopCategories({ expenses }: TopCategoriesProps) {
+export default function TopCategories({
+  expenses,
+  currency,
+}: TopCategoriesProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
-      totals[expense.category] =
-        (totals[expense.category] ?? 0) +
-        Number(expense.baseCurrencyAmount ?? expense.amount);
+      const amount = getReportExpenseAmount(expense, currency);
+
+      totals[expense.category] = (totals[expense.category] ?? 0) + amount;
 
       return totals;
     },
@@ -58,7 +64,7 @@ export default function TopCategories({ expenses }: TopCategoriesProps) {
                 </span>
 
                 <span className="text-sm font-semibold text-gray-900">
-                  ₹{item.amount.toFixed(2)}
+                  {formatCurrency(item.amount, currency)}
                 </span>
               </div>
 

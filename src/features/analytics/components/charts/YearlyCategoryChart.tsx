@@ -13,6 +13,7 @@ import {
 
 import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type YearlyCategoryChartProps = {
   expenses: AnalyticsExpense[];
@@ -61,7 +62,8 @@ export default function YearlyCategoryChart({
     const yearData = yearlyData.get(year)!;
 
     yearData[category] =
-      Number(yearData[category] ?? 0) + Number(expense.amount);
+      Number(yearData[category] ?? 0) +
+      getReportExpenseAmount(expense, currency);
   });
 
   const chartData = Array.from(yearlyData.values()).sort(

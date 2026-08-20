@@ -5,23 +5,14 @@ import { useRouter } from "next/navigation";
 
 import AnalyticsTabs from "./AnalyticsTabs";
 
-import CategoryFilter from "@/features/expenses/components/CategoryFilter";
-import YearFilter from "@/features/expenses/components/YearFilter";
-import MonthFilter from "@/features/expenses/components/MonthFilter";
-import DateFilter from "@/features/expenses/components/DateFilter";
+import Filters from "@/components/common/Filters";
+
+import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
 
 import {
-  ApprovalStatusFilter,
-  ReimbursementStatusFilter,
   type ExpenseApprovalStatus,
   type ExpenseReimbursementStatus,
 } from "@/features/expenses/components/StatusFilters";
-
-import {
-  DEFAULT_CURRENCY,
-  SUPPORTED_CURRENCIES,
-  type CurrencyCode,
-} from "@/constants/currencies";
 
 import CategoryPieChart from "./charts/CategoryPieChart";
 import MonthlyTrendChart from "./charts/MonthlyTrendChart";
@@ -50,13 +41,17 @@ export default function AnalyticsPageClient({
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("categories");
+
   const [selectedCategory, setSelectedCategory] = useState("");
+
   const [selectedYear, setSelectedYear] = useState("");
+
   const [selectedMonth, setSelectedMonth] = useState("");
+
   const [dateFilter, setDateFilter] = useState("all");
 
   const [selectedCurrency, setSelectedCurrency] =
-    useState<CurrencyCode>(DEFAULT_CURRENCY);
+    useState<CurrencyFilter>(ALL_CURRENCIES);
 
   const [approvalStatus, setApprovalStatus] =
     useState<ExpenseApprovalStatus>("ALL");
@@ -65,7 +60,12 @@ export default function AnalyticsPageClient({
     useState<ExpenseReimbursementStatus>("ALL");
 
   const [customStartDate, setCustomStartDate] = useState("");
+
   const [customEndDate, setCustomEndDate] = useState("");
+
+  /* ---------------------------------------------------------------------- */
+  /* Filter data                                                            */
+  /* ---------------------------------------------------------------------- */
 
   const currentDate = new Date();
 
@@ -89,12 +89,14 @@ export default function AnalyticsPageClient({
   ].sort((a, b) => b - a);
 
   const isYearSelected = selectedYear !== "";
+
   const selectedYearNumber = Number(selectedYear);
 
   const isCurrentYearSelected =
     isYearSelected && selectedYearNumber === currentYear;
 
   const isMonthSelected = selectedMonth !== "";
+
   const selectedMonthNumber = Number(selectedMonth);
 
   const earliestExpenseDate = expenses.reduce<Date | null>(
@@ -141,60 +143,59 @@ export default function AnalyticsPageClient({
   } else if (isYearSelected) {
     customMinDate = `${selectedYearNumber}-01-01`;
 
-    if (isCurrentYearSelected) {
-      customMaxDate = todayString;
-    } else {
-      customMaxDate = `${selectedYearNumber}-12-31`;
-    }
+    customMaxDate = isCurrentYearSelected
+      ? todayString
+      : `${selectedYearNumber}-12-31`;
   } else if (isMonthSelected) {
-    const currentYearForMonthRange = currentYear;
-
     const lastDayOfSelectedMonth = new Date(
-      currentYearForMonthRange,
+      currentYear,
       selectedMonthNumber,
       0,
     ).getDate();
 
-    customMinDate = `${currentYearForMonthRange}-${String(
-      selectedMonthNumber,
-    ).padStart(2, "0")}-01`;
+    customMinDate = `${currentYear}-${String(selectedMonthNumber).padStart(
+      2,
+      "0",
+    )}-01`;
 
-    customMaxDate = `${currentYearForMonthRange}-${String(
-      selectedMonthNumber,
-    ).padStart(2, "0")}-${String(lastDayOfSelectedMonth).padStart(2, "0")}`;
+    customMaxDate = `${currentYear}-${String(selectedMonthNumber).padStart(
+      2,
+      "0",
+    )}-${String(lastDayOfSelectedMonth).padStart(2, "0")}`;
 
     if (selectedMonthNumber === currentMonth) {
       customMaxDate = todayString;
     }
   }
 
+  /* ---------------------------------------------------------------------- */
+  /* Filter expenses                                                        */
+  /* ---------------------------------------------------------------------- */
+
   const filteredExpenses = expenses.filter((expense) => {
     const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-    // Category filter
     const matchesCategory =
       selectedCategory === "" || expense.category === selectedCategory;
 
-    // Currency filter
-    const matchesCurrency = expense.currency === selectedCurrency;
+    const matchesCurrency =
+      selectedCurrency === ALL_CURRENCIES ||
+      expense.currency === selectedCurrency;
 
-    //Adding Status Filters Check.
     const matchesApprovalStatus =
       approvalStatus === "ALL" || expense.status === approvalStatus;
 
     const matchesReimbursementStatus =
       reimbursementStatus === "ALL" ||
       expense.reimbursementStatus === reimbursementStatus;
-    // Year filter
+
     const matchesYear =
       selectedYear === "" || expenseDate.getFullYear() === Number(selectedYear);
 
-    // Month filter
     const matchesMonth =
       selectedMonth === "" ||
       expenseDate.getMonth() + 1 === Number(selectedMonth);
 
-    // Date filter
     let matchesDate = true;
 
     const now = new Date();
@@ -206,15 +207,19 @@ export default function AnalyticsPageClient({
     );
 
     const startOfTomorrow = new Date(startOfToday);
+
     startOfTomorrow.setDate(startOfToday.getDate() + 1);
 
     const startOfYesterday = new Date(startOfToday);
+
     startOfYesterday.setDate(startOfToday.getDate() - 1);
 
     const startOfLast7Days = new Date(startOfToday);
+
     startOfLast7Days.setDate(startOfToday.getDate() - 6);
 
     const startOfLast30Days = new Date(startOfToday);
+
     startOfLast30Days.setDate(startOfToday.getDate() - 29);
 
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -266,6 +271,7 @@ export default function AnalyticsPageClient({
       case "custom":
         if (customStartDate && customEndDate) {
           const start = new Date(`${customStartDate}T00:00:00`);
+
           const end = new Date(`${customEndDate}T23:59:59`);
 
           matchesDate = expenseDate >= start && expenseDate <= end;
@@ -291,99 +297,104 @@ export default function AnalyticsPageClient({
   const disableDatePresets =
     isMonthSelected || (isYearSelected && !isCurrentYearSelected);
 
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? "INR" : selectedCurrency;
+
+  /* ---------------------------------------------------------------------- */
+  /* Clear filters                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  function clearFilters() {
+    setSelectedCurrency(ALL_CURRENCIES);
+
+    setSelectedCategory("");
+    setSelectedYear("");
+    setSelectedMonth("");
+    setDateFilter("all");
+
+    setApprovalStatus("ALL");
+    setReimbursementStatus("ALL");
+
+    setCustomStartDate("");
+    setCustomEndDate("");
+  }
+
+  const hasActiveFilters =
+    selectedCurrency !== ALL_CURRENCIES ||
+    selectedCategory !== "" ||
+    selectedYear !== "" ||
+    selectedMonth !== "" ||
+    dateFilter !== "all" ||
+    approvalStatus !== "ALL" ||
+    reimbursementStatus !== "ALL";
+
+  /* ---------------------------------------------------------------------- */
+  /* UI                                                                     */
+  /* ---------------------------------------------------------------------- */
+
   return (
     <div>
-      <div className="mb-6 rounded-lg border bg-gray-50 p-4">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700">
-          Filter Analytics
-        </h2>
+      {/* Expense Scope */}
 
-        {(role === "ADMIN" || role === "HR") && (
-          <div className="flex min-w-[180px] flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">
-              Expense Scope
-            </label>
+      {(role === "ADMIN" || role === "HR") && (
+        <div className="mb-6 max-w-xs">
+          <label
+            htmlFor="analytics-scope"
+            className="text-sm font-medium text-slate-600"
+          >
+            Expense Scope
+          </label>
 
-            <select
-              value={scope}
-              onChange={(event) => {
-                router.push(`/analytics?scope=${event.target.value}`);
-              }}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
-            >
-              <option value="OWN">OWN</option>
-              <option value="ALL">ALL</option>
-              <option value="EMPLOYEES">EMPLOYEES</option>
-            </select>
-          </div>
-        )}
+          <select
+            id="analytics-scope"
+            value={scope}
+            onChange={(event) => {
+              router.push(`/analytics?scope=${event.target.value}`);
+            }}
+            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+          >
+            <option value="OWN">OWN</option>
 
-        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols- mt-4">
-          <div className="min-w-0 w-full">
-            <select
-              value={selectedCurrency}
-              onChange={(event) =>
-                setSelectedCurrency(event.target.value as CurrencyCode)
-              }
-              className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 text-gray-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            >
-              {SUPPORTED_CURRENCIES.map((currency) => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.code} — {currency.name} ({currency.symbol})
-                </option>
-              ))}
-            </select>
-          </div>
+            <option value="ALL">ALL</option>
 
-          <ApprovalStatusFilter
-            value={approvalStatus}
-            onChange={setApprovalStatus}
-          />
-
-          <ReimbursementStatusFilter
-            value={reimbursementStatus}
-            onChange={setReimbursementStatus}
-          />
-
-          <div className="min-w-0 w-full">
-            <CategoryFilter
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              categories={categories}
-            />
-          </div>
-
-          <div className="min-w-0 w-full">
-            <YearFilter
-              value={selectedYear}
-              years={years}
-              onChange={setSelectedYear}
-            />
-          </div>
-
-          <div className="min-w-0 w-full">
-            <MonthFilter
-              value={selectedMonth}
-              selectedYear={selectedYear}
-              onChange={setSelectedMonth}
-            />
-          </div>
-
-          <div className="min-w-0 w-full">
-            <DateFilter
-              value={dateFilter}
-              onChange={setDateFilter}
-              startDate={customStartDate}
-              endDate={customEndDate}
-              onStartDateChange={setCustomStartDate}
-              onEndDateChange={setCustomEndDate}
-              minDate={customMinDate}
-              maxDate={customMaxDate}
-              disablePresets={disableDatePresets}
-            />
-          </div>
+            <option value="EMPLOYEES">EMPLOYEES</option>
+          </select>
         </div>
-      </div>
+      )}
+
+      {/* Common Filters */}
+
+      <Filters
+        title="Filter Analytics"
+        description="Filter analytics by currency, status, category, and date."
+        selectedCurrency={selectedCurrency}
+        onCurrencyChange={setSelectedCurrency}
+        approvalStatus={approvalStatus}
+        onApprovalStatusChange={setApprovalStatus}
+        reimbursementStatus={reimbursementStatus}
+        onReimbursementStatusChange={setReimbursementStatus}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        categories={categories}
+        selectedYear={selectedYear}
+        onYearChange={setSelectedYear}
+        years={years}
+        selectedMonth={selectedMonth}
+        onMonthChange={setSelectedMonth}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        onCustomStartDateChange={setCustomStartDate}
+        onCustomEndDateChange={setCustomEndDate}
+        minDate={customMinDate}
+        maxDate={customMaxDate}
+        disableDatePresets={disableDatePresets}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={clearFilters}
+      />
+
+      {/* Analytics Tabs */}
 
       <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
 
@@ -401,7 +412,7 @@ export default function AnalyticsPageClient({
             <div className="mt-6">
               <CategoryPieChart
                 expenses={filteredExpenses}
-                currency={selectedCurrency}
+                currency={reportCurrency}
               />
             </div>
 
@@ -417,7 +428,7 @@ export default function AnalyticsPageClient({
               <div className="mt-6">
                 <CategoryComparisonChart
                   expenses={filteredExpenses}
-                  currency={selectedCurrency}
+                  currency={reportCurrency}
                 />
               </div>
             </div>
@@ -441,7 +452,7 @@ export default function AnalyticsPageClient({
 
               <MonthlyTrendChart
                 expenses={filteredExpenses}
-                currency={selectedCurrency}
+                currency={reportCurrency}
               />
             </div>
 
@@ -456,7 +467,7 @@ export default function AnalyticsPageClient({
 
               <MonthlyCategoryTrendChart
                 expenses={filteredExpenses}
-                currency={selectedCurrency}
+                currency={reportCurrency}
               />
             </div>
           </div>
@@ -479,7 +490,7 @@ export default function AnalyticsPageClient({
 
               <YearlyTrendChart
                 expenses={filteredExpenses}
-                currency={selectedCurrency}
+                currency={reportCurrency}
               />
             </div>
 
@@ -494,7 +505,7 @@ export default function AnalyticsPageClient({
 
               <YearlyCategoryChart
                 expenses={filteredExpenses}
-                currency={selectedCurrency}
+                currency={reportCurrency}
               />
             </div>
           </div>

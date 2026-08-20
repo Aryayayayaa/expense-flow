@@ -12,6 +12,7 @@ import {
 } from "recharts";
 
 import { AnalyticsExpense } from "../../types";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type CategoryComparisonChartProps = {
   expenses: AnalyticsExpense[];
@@ -19,14 +20,14 @@ type CategoryComparisonChartProps = {
 };
 
 const CATEGORY_COLORS = [
-  "#3b82f6", // blue
-  "#22c55e", // green
-  "#f59e0b", // amber
-  "#ef4444", // red
-  "#8b5cf6", // purple
-  "#ec4899", // pink
-  "#14b8a6", // teal
-  "#f97316", // orange
+  "#3b82f6",
+  "#22c55e",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
 ];
 
 export default function CategoryComparisonChart({
@@ -35,8 +36,9 @@ export default function CategoryComparisonChart({
 }: CategoryComparisonChartProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
-      totals[expense.category] =
-        (totals[expense.category] ?? 0) + Number(expense.amount);
+      const amount = getReportExpenseAmount(expense, currency);
+
+      totals[expense.category] = (totals[expense.category] ?? 0) + amount;
 
       return totals;
     },

@@ -13,6 +13,7 @@ import {
 import { AnalyticsExpense } from "../../types";
 
 import { formatCurrency } from "@/utils/formatCurrency";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type YearlyTrendChartProps = {
   expenses: AnalyticsExpense[];
@@ -28,14 +29,16 @@ export default function YearlyTrendChart({
       const date = expense.expenseDate ?? expense.createdAt;
       const year = date.getFullYear();
 
+      const amount = getReportExpenseAmount(expense, currency);
+
       const existingYear = acc.find((item) => item.year === year);
 
       if (existingYear) {
-        existingYear.total += Number(expense.amount);
+        existingYear.total += amount;
       } else {
         acc.push({
           year,
-          total: Number(expense.amount),
+          total: amount,
         });
       }
 

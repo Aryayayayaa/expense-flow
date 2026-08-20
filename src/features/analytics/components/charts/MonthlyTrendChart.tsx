@@ -13,6 +13,7 @@ import {
 import { AnalyticsExpense } from "../../types";
 
 import { formatCurrency } from "@/utils/formatCurrency";
+import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type MonthlyTrendChartProps = {
   expenses: AnalyticsExpense[];
@@ -50,7 +51,10 @@ export default function MonthlyTrendChart({
 
     const currentTotal = monthlyTotals.get(key) ?? 0;
 
-    monthlyTotals.set(key, currentTotal + Number(expense.amount));
+    monthlyTotals.set(
+      key,
+      currentTotal + getReportExpenseAmount(expense, currency),
+    );
   });
 
   const chartData = Array.from(monthlyTotals.entries())

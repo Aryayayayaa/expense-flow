@@ -1,15 +1,25 @@
 "use client";
 
 import { AnalyticsExpense } from "../../types";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 type ReportSummaryProps = {
   expenses: AnalyticsExpense[];
+  currency: string;
 };
 
-export default function ReportSummary({ expenses }: ReportSummaryProps) {
+export default function ReportSummary({
+  expenses,
+  currency,
+}: ReportSummaryProps) {
   const totalExpenses = expenses.reduce(
     (sum, expense) =>
-      sum + Number(expense.baseCurrencyAmount ?? expense.amount),
+      sum +
+      Number(
+        currency === "INR"
+          ? (expense.baseCurrencyAmount ?? expense.amount)
+          : expense.amount,
+      ),
     0,
   );
 
@@ -22,7 +32,11 @@ export default function ReportSummary({ expenses }: ReportSummaryProps) {
     transactionCount > 0
       ? Math.max(
           ...expenses.map((expense) =>
-            Number(expense.baseCurrencyAmount ?? expense.amount),
+            Number(
+              currency === "INR"
+                ? (expense.baseCurrencyAmount ?? expense.amount)
+                : expense.amount,
+            ),
           ),
         )
       : 0;
@@ -30,7 +44,7 @@ export default function ReportSummary({ expenses }: ReportSummaryProps) {
   const summary = [
     {
       label: "Total Expenses",
-      value: `₹${totalExpenses.toFixed(2)}`,
+      value: formatCurrency(totalExpenses, currency),
     },
     {
       label: "Transactions",
@@ -38,11 +52,11 @@ export default function ReportSummary({ expenses }: ReportSummaryProps) {
     },
     {
       label: "Average Expense",
-      value: `₹${averageExpense.toFixed(2)}`,
+      value: formatCurrency(averageExpense, currency),
     },
     {
       label: "Highest Expense",
-      value: `₹${highestExpense.toFixed(2)}`,
+      value: formatCurrency(highestExpense, currency),
     },
   ];
 

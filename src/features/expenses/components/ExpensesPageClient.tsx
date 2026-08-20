@@ -3,30 +3,22 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Wallet, Calendar, Folder, X, Plus, AlertTriangle } from "lucide-react";
+
 import Pagination from "@/components/common/Pagination";
+import Filters from "@/components/common/Filters";
 
 import ExpenseList from "./ExpenseList";
 import AddExpenseForm from "./AddExpenseForm";
 import SummaryCard from "./SummaryCard";
 
-import CategoryFilter from "./CategoryFilter";
-import YearFilter from "./YearFilter";
-import MonthFilter from "./MonthFilter";
-import DateFilter from "./DateFilter";
 import {
-  ApprovalStatusFilter,
-  ReimbursementStatusFilter,
   type ExpenseApprovalStatus,
   type ExpenseReimbursementStatus,
 } from "./StatusFilters";
 
 import { SerializedExpense } from "../types";
 
-import {
-  DEFAULT_CURRENCY,
-  SUPPORTED_CURRENCIES,
-  type CurrencyCode,
-} from "@/constants/currencies";
+import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
@@ -94,13 +86,13 @@ export default function ExpensesPageClient({
     useState<ExpenseReimbursementStatus>("ALL");
 
   const [selectedCurrency, setSelectedCurrency] =
-    useState<CurrencyCode>(DEFAULT_CURRENCY);
+    useState<CurrencyFilter>(ALL_CURRENCIES);
 
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
 
   /* ---------------------------------------------------------------------- */
-  /* Filter data                                                             */
+  /* Filter data                                                            */
   /* ---------------------------------------------------------------------- */
 
   const categories = useMemo(
@@ -158,7 +150,7 @@ export default function ExpensesPageClient({
     isYearSelected && selectedYearNumber === currentYear;
 
   /* ---------------------------------------------------------------------- */
-  /* Custom date range                                                       */
+  /* Custom date range                                                      */
   /* ---------------------------------------------------------------------- */
 
   let customMinDate = minDate;
@@ -214,42 +206,39 @@ export default function ExpensesPageClient({
   }
 
   /* ---------------------------------------------------------------------- */
-  /* Filter expenses                                                         */
+  /* Filter expenses                                                        */
   /* ---------------------------------------------------------------------- */
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((expense) => {
       const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-      /* Category */
       const matchesCategory =
         selectedCategory === "" || expense.category === selectedCategory;
 
-      /* Currency */
-      const matchesCurrency = expense.currency === selectedCurrency;
+      const matchesCurrency =
+        selectedCurrency === ALL_CURRENCIES ||
+        expense.currency === selectedCurrency;
 
-      /* Expense Approval Status */
       const matchesApprovalStatus =
         approvalStatus === "ALL" || expense.status === approvalStatus;
 
-      /* Reimbursement Status */
       const matchesReimbursementStatus =
         reimbursementStatus === "ALL" ||
         expense.reimbursementStatus === reimbursementStatus;
 
-      /* Year */
       const matchesYear =
         selectedYear === "" ||
         expenseDate.getFullYear() === Number(selectedYear);
 
-      /* Month */
       const matchesMonth =
         selectedMonth === "" ||
         expenseDate.getMonth() + 1 === Number(selectedMonth);
 
-      /* Date */
       let matchesDate = true;
+
       const now = new Date();
+
       const startOfToday = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -359,13 +348,24 @@ export default function ExpensesPageClient({
     customEndDate,
   ]);
 
+  /* ---------------------------------------------------------------------- */
+  /* Display amount                                                         */
+  /* ---------------------------------------------------------------------- */
+
   function getDisplayAmount(expense: SerializedExpense) {
+    if (selectedCurrency === ALL_CURRENCIES) {
+      return Number(expense.baseCurrencyAmount ?? expense.amount);
+    }
+
     return Number(expense.amount);
   }
 
   /* ---------------------------------------------------------------------- */
   /* Summary                                                                */
   /* ---------------------------------------------------------------------- */
+
+  const summaryCurrency =
+    selectedCurrency === ALL_CURRENCIES ? "INR" : selectedCurrency;
 
   const totalExpenses = filteredExpenses.reduce(
     (sum, expense) => sum + getDisplayAmount(expense),
@@ -391,11 +391,11 @@ export default function ExpensesPageClient({
     isMonthSelected || (isYearSelected && !isCurrentYearSelected);
 
   /* ---------------------------------------------------------------------- */
-  /* Clear filters                                                           */
+  /* Clear filters                                                          */
   /* ---------------------------------------------------------------------- */
 
   function clearFilters() {
-    setSelectedCurrency(DEFAULT_CURRENCY);
+    setSelectedCurrency(ALL_CURRENCIES);
     setSelectedCategory("");
     setSelectedYear("");
     setSelectedMonth("");
@@ -407,7 +407,7 @@ export default function ExpensesPageClient({
   }
 
   const hasActiveFilters =
-    selectedCurrency !== DEFAULT_CURRENCY ||
+    selectedCurrency !== ALL_CURRENCIES ||
     selectedCategory !== "" ||
     selectedYear !== "" ||
     selectedMonth !== "" ||
@@ -416,7 +416,7 @@ export default function ExpensesPageClient({
     reimbursementStatus !== "ALL";
 
   /* ---------------------------------------------------------------------- */
-  /* UI                                                                      */
+  /* UI                                                                     */
   /* ---------------------------------------------------------------------- */
 
   return (
@@ -436,13 +436,13 @@ export default function ExpensesPageClient({
       <div className="grid gap-4 md:grid-cols-3">
         <SummaryCard
           title="Total Expenses"
-          value={formatCurrency(totalExpenses, selectedCurrency)}
+          value={formatCurrency(totalExpenses, summaryCurrency)}
           icon={<Wallet size={20} />}
         />
 
         <SummaryCard
           title="This Month"
-          value={formatCurrency(thisMonthExpenses, selectedCurrency)}
+          value={formatCurrency(thisMonthExpenses, summaryCurrency)}
           icon={<Calendar size={20} />}
         />
 
@@ -546,93 +546,35 @@ export default function ExpensesPageClient({
         </section>
       )}
 
-      {/* Filters */}
+      {/* Common filters */}
 
-      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-5">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900">
-                Filter Expenses
-              </h2>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Filter your expenses by category and date.
-              </p>
-            </div>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
-              >
-                <X size={15} />
-                Clear filters
-              </button>
-            )}
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <div className="flex min-w-[180px] flex-col gap-1">
-              <select
-                id="expense-currency-filter"
-                value={selectedCurrency}
-                onChange={(event) =>
-                  setSelectedCurrency(event.target.value as CurrencyCode)
-                }
-                className="h-12 rounded-lg border border-gray-300 bg-white px-4 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-gray-800"
-              >
-                {SUPPORTED_CURRENCIES.map((currency) => (
-                  <option key={currency.code} value={currency.code}>
-                    {currency.code} — {currency.name} ({currency.symbol})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <ApprovalStatusFilter
-              value={approvalStatus}
-              onChange={setApprovalStatus}
-            />
-
-            <ReimbursementStatusFilter
-              value={reimbursementStatus}
-              onChange={setReimbursementStatus}
-            />
-
-            <CategoryFilter
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              categories={categories}
-            />
-
-            <YearFilter
-              value={selectedYear}
-              years={years}
-              onChange={setSelectedYear}
-            />
-
-            <MonthFilter
-              value={selectedMonth}
-              selectedYear={selectedYear}
-              onChange={setSelectedMonth}
-            />
-
-            <DateFilter
-              value={dateFilter}
-              onChange={setDateFilter}
-              startDate={customStartDate}
-              endDate={customEndDate}
-              onStartDateChange={setCustomStartDate}
-              onEndDateChange={setCustomEndDate}
-              minDate={customMinDate}
-              maxDate={customMaxDate}
-              disablePresets={disableDatePresets}
-            />
-          </div>
-        </div>
-      </div>
+      <Filters
+        selectedCurrency={selectedCurrency}
+        onCurrencyChange={setSelectedCurrency}
+        approvalStatus={approvalStatus}
+        onApprovalStatusChange={setApprovalStatus}
+        reimbursementStatus={reimbursementStatus}
+        onReimbursementStatusChange={setReimbursementStatus}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        categories={categories}
+        selectedYear={selectedYear}
+        onYearChange={setSelectedYear}
+        years={years}
+        selectedMonth={selectedMonth}
+        onMonthChange={setSelectedMonth}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        onCustomStartDateChange={setCustomStartDate}
+        onCustomEndDateChange={setCustomEndDate}
+        minDate={customMinDate}
+        maxDate={customMaxDate}
+        disableDatePresets={disableDatePresets}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={clearFilters}
+      />
 
       {/* Expense count */}
 

@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 import { getAnalyticsData } from "@/features/analytics/lib/getAnalyticsData";
 
 import ReportsPageClient from "@/features/reports/components/ReportsPageClient";
-import ReportsFilters from "@/features/reports/components/ReportsFilters";
 
 export default async function ReportsPage({
   searchParams,
@@ -39,14 +38,12 @@ export default async function ReportsPage({
         Review summaries and detailed insights from your expenses.
       </p>
 
-      {canChooseScope && (
-        <div className="mt-6">
-          <ReportsPageClient scope={scope} />
-        </div>
-      )}
-
       <div className="mt-6">
-        <ReportsFilters expenses={expenses} />
+        <ReportsPageClient
+          scope={scope}
+          expenses={expenses}
+          canChooseScope={canChooseScope}
+        />
       </div>
     </div>
   );
