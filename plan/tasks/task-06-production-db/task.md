@@ -1,341 +1,247 @@
-# Task 06 — Database Persistence & Production Database Integration
+# Task 06 — Production Database Connectivity & Performance
 
-## Status: STARTING
+## Status:IN PROGRESS
+
+## Branch
+
+feature/task-06-production-db
 
 ## Objective
 
-Investigate and resolve the issue where a newly created expense appears to complete successfully from the application's perspective, but the expense is not persisted or displayed afterward.
+Verify and stabilize the application's Prisma/PostgreSQL database connectivity across
+localhost and the production Vercel deployment, and investigate the latency observed
+during expense creation.
 
-The issue is currently reproducible in both:
+The original issue reported was that newly created expenses were not appearing in
+"My Expenses", Prisma Studio, or the production database.
 
-- Localhost development environment
-- Production/Vercel environment
+Initial investigation shows that expense creation is currently working correctly in
+both localhost and the deployed Vercel application. Therefore, the focus of this task
+has shifted from fixing a broken database connection to:
 
-The primary goal is to identify why `createExpenseAction` returns a successful HTTP response while the newly created expense is not appearing in:
-
-- My Expenses page
-- Prisma Studio / local database
-- The expected database records
-
-After resolving the local persistence issue, verify that the production application is correctly connected to the intended production database and that new expenses are persisted there as well.
-
----
-
-## Current Evidence
-
-When creating a new expense locally, the Next.js terminal reports:
-
-    GET /expenses/new 200 in 77ms
-    POST /expenses/new 200 in 52ms
-      └─ ƒ createExpenseAction(null, {}) in 9ms
-
-However:
-
-- The newly created expense does not appear on the My Expenses page.
-- The newly created expense does not appear in the local Prisma database.
-- The same general persistence problem is also observed in the deployed application.
-
-Therefore, HTTP 200 alone must not be considered proof that the database operation succeeded.
+- verifying the complete database connection flow
+- confirming the local environment uses the intended PostgreSQL database
+- confirming the production Vercel environment uses the intended Neon PostgreSQL database
+- verifying Prisma is correctly configured for both environments
+- identifying unnecessary or slow operations during expense creation
+- reducing avoidable latency where possible
+- ensuring the production database configuration is reliable and suitable for deployment
 
 ---
 
-## Subtasks
+# Subtasks
 
-### 1. Inspect Expense Creation Flow
+## Subtask 06.1 — Verify Expense Creation → Prisma → Database Flow
 
-[ ] Inspect the complete expense creation flow from the UI form to the server action.
+### STATUS: IN PROGRESS
 
-[ ] Identify where the form submits the expense data.
+[x] Inspect the complete expense creation flow.
 
-[ ] Inspect `createExpenseAction`.
+[x] Verify form submission reaches `createExpenseAction`.
 
-[ ] Verify the values received by `createExpenseAction`.
+[x] Verify `expenseSchema.safeParse()` succeeds for valid expense data.
 
-[ ] Verify validation/parsing of the submitted expense data.
+[x] Verify `getExchangeRate()` completes successfully.
 
-[ ] Verify authentication/session handling during expense creation.
+[x] Verify `createExpense()` is reached.
 
-[ ] Verify that the Prisma `create` operation is actually executed.
+[x] Verify `prisma.expense.create()` successfully creates the database record.
 
-[ ] Verify that the Prisma `create` operation is awaited.
+[x] Verify the created expense appears on `/expenses`.
 
-[ ] Verify that any errors from the database operation are properly surfaced.
+[x] Verify the created expense appears in Prisma/Neon.
 
-[ ] Verify the return value/state produced by `createExpenseAction`.
+### Current finding
 
----
+Expense creation has been successfully verified on:
 
-### 2. Inspect Prisma Expense Model
+- localhost
+- Vercel production
 
-[ ] Inspect the Prisma schema for the `Expense` model.
+The Prisma log confirms that `prisma.expense.create()` is being reached.
 
-[ ] Verify all required fields.
+### Result
 
-[ ] Verify relationships between `Expense` and `User`.
-
-[ ] Verify currency-related fields.
-
-[ ] Verify approval-related fields.
-
-[ ] Verify reimbursement-related fields.
-
-[ ] Verify expense date/time fields.
-
-[ ] Verify `baseCurrencyAmount` and related conversion fields if applicable.
-
-[ ] Verify that the fields submitted by the form match the Prisma model.
+The original "expense is not being saved" issue is currently not reproducible.
 
 ---
 
-### 3. Inspect Database Configuration
+## Subtask 06.2 — Verify Database Environment Configuration
 
-[ ] Inspect Prisma client configuration.
+### STATUS: STARTING NEXT
 
-[ ] Inspect `DATABASE_URL` usage.
+[x] Verify `.env` contains the required local `DATABASE_URL`.
 
-[ ] Inspect `DIRECT_URL` usage if present.
+[x] Verify `.env.local` does not unintentionally override or omit required database configuration.
 
-[ ] Determine which database is used by localhost.
+[ ] Verify which environment variables are loaded by the local Next.js application.
 
-[ ] Determine which database is used by the deployed application.
+[ ] Verify Vercel production has the correct `DATABASE_URL` configured.
 
-[ ] Verify that Prisma is connecting to the expected database.
+[ ] Verify the production `DATABASE_URL` points to the intended Neon PostgreSQL database.
 
-[ ] Verify that Prisma migrations/schema are synchronized with the database.
+[ ] Verify local and production environments are intentionally connected to the correct databases.
 
-[ ] Verify that the local database contains the expected tables.
+[ ] Verify Prisma is not accidentally connecting to an unintended database.
 
-[ ] Verify that the production database contains the expected tables.
+### Current finding
 
----
+Local `.env` contains:
 
-### 4. Investigate Local Database Persistence
+- `DATABASE_URL`
+- `AUTH_SECRET`
 
-[ ] Reproduce the issue on localhost.
+Local `.env.local` does not currently contain `DATABASE_URL`.
 
-[ ] Create a test expense with known values.
-
-[ ] Verify the server action receives the submitted values.
-
-[ ] Verify whether Prisma executes the `Expense.create` operation.
-
-[ ] Verify whether the database transaction succeeds.
-
-[ ] Verify whether the record exists directly in the database.
-
-[ ] Verify whether the record exists through Prisma.
-
-[ ] Verify whether the My Expenses query can retrieve the newly created record.
-
-[ ] Determine whether the problem is:
-
-- [ ] Form submission
-- [ ] Server action
-- [ ] Validation
-- [ ] Prisma operation
-- [ ] Database connection
-- [ ] Transaction/rollback
-- [ ] Authentication/user relationship
-- [ ] Query/filtering
-- [ ] Cache/revalidation
-- [ ] Serialization
-- [ ] Other
+Production database configuration still needs to be verified through Vercel environment settings.
 
 ---
 
-### 5. Investigate My Expenses Retrieval
+## Subtask 06.3 — Investigate Expense Creation Latency
 
-[ ] Inspect the server-side function used to retrieve expenses.
+[ ] Measure the time taken by `createExpenseAction`.
 
-[ ] Verify that newly created expenses are queried correctly.
+[ ] Identify how much time is spent in authentication.
 
-[ ] Verify user filtering.
+[ ] Identify how much time is spent in exchange-rate retrieval.
 
-[ ] Verify pagination.
+[ ] Identify how much time is spent in Prisma expense creation.
 
-[ ] Verify currency filtering.
+[ ] Identify how much time is spent creating the expense audit log.
 
-[ ] Verify approval/reimbursement filtering.
+[ ] Identify how much time is spent querying Admin/HR reviewers.
 
-[ ] Verify date filtering.
+[ ] Identify how much time is spent creating notifications.
 
-[ ] Verify Next.js cache/revalidation behavior.
+[ ] Determine whether `createNotification()` performs additional database queries.
 
-[ ] Verify that a successfully inserted expense is immediately visible after creation.
+[ ] Determine whether multiple sequential database operations can be optimized.
 
----
-
-### 6. Fix Local Persistence
-
-[ ] Implement the minimal required fix.
-
-[ ] Ensure successful expense creation results in a persisted database record.
-
-[ ] Ensure failed database operations return an appropriate error state.
-
-[ ] Ensure the user receives meaningful feedback when creation fails.
-
-[ ] Ensure the newly created expense appears on My Expenses.
-
-[ ] Ensure the record appears in Prisma/database inspection.
+[ ] Determine whether the production latency is caused by Neon database/network latency,
+cold starts, external API calls, or application logic.
 
 ---
 
-### 7. Verify Local Environment
+## Subtask 06.4 — Prisma / Neon Connection Performance
 
-[ ] Restart the development server after configuration changes.
+[ ] Inspect the Prisma client configuration.
 
-[ ] Run Prisma generation if required.
+[ ] Verify the Prisma client is reused appropriately during local development.
 
-[ ] Run required Prisma migrations if required.
+[ ] Determine whether the production deployment creates unnecessary Prisma connections.
 
-[ ] Verify local database connectivity.
+[ ] Verify Neon connection/pooling configuration.
 
-[ ] Create multiple test expenses.
+[ ] Determine whether the production connection string uses an appropriate pooled endpoint.
 
-[ ] Verify persistence after page refresh.
+[ ] Check whether Prisma/Neon connection establishment contributes significantly to request latency.
 
-[ ] Verify persistence after restarting the development server.
-
----
-
-### 8. Verify Production Database Configuration
-
-[ ] Inspect Vercel environment variables.
-
-[ ] Verify production `DATABASE_URL`.
-
-[ ] Verify production `DIRECT_URL` if applicable.
-
-[ ] Verify the production database provider.
-
-[ ] Verify that production Prisma schema/migrations are synchronized.
-
-[ ] Verify that the deployed application is connected to the intended production database.
-
-[ ] Verify that creating an expense on production persists the record.
-
-[ ] Verify that the persisted production expense appears on the production My Expenses page.
+[ ] Apply only necessary Prisma/Neon configuration changes.
 
 ---
 
-### 9. Verify Prisma / Database Consistency
+## Subtask 06.5 — Production Verification
 
-[ ] Verify Prisma Client is generated from the current schema.
+[ ] Deploy the updated implementation to Vercel.
 
-[ ] Verify database migrations are applied correctly.
+[ ] Create a new expense in production.
 
-[ ] Verify no schema drift exists.
+[ ] Confirm the request succeeds.
 
-[ ] Verify local Prisma Studio shows the expected data.
+[ ] Confirm the expense appears in "My Expenses".
 
-[ ] Verify production database inspection shows the expected data.
+[ ] Confirm the expense appears in the production Neon database.
 
-[ ] Verify no accidental connection to an old/incorrect database exists.
+[ ] Confirm the expense audit log is created.
 
----
+[ ] Confirm required notifications are created.
 
-### 10. Regression Testing
+[ ] Measure the final request/action duration.
 
-[ ] Create an INR expense.
-
-[ ] Create a non-INR expense.
-
-[ ] Verify expense title persistence.
-
-[ ] Verify amount persistence.
-
-[ ] Verify currency persistence.
-
-[ ] Verify category persistence.
-
-[ ] Verify expense date persistence.
-
-[ ] Verify receipt-related fields if applicable.
-
-[ ] Verify approval status initialization.
-
-[ ] Verify reimbursement status initialization.
-
-[ ] Verify expense appears on My Expenses.
-
-[ ] Verify expense appears in Analytics.
-
-[ ] Verify expense appears in Reports.
-
-[ ] Verify existing expenses remain unaffected.
-
-[ ] Verify editing an expense still works.
-
-[ ] Verify deleting an expense still works.
+[ ] Verify no regression was introduced in localhost.
 
 ---
 
-## Acceptance Criteria
+## Subtask 06.6 — Final Validation
 
-[ ] A newly created expense is actually persisted in the database.
+[ ] Test expense creation using INR.
 
-[ ] The newly created expense appears on the My Expenses page.
+[ ] Test expense creation using a non-INR currency.
 
-[ ] The database record contains the expected submitted values.
+[ ] Test expense creation with OCR receipt.
 
-[ ] Localhost and database inspection show consistent data.
+[ ] Test expense creation without OCR receipt.
 
-[ ] Production/Vercel and the production database show consistent data.
+[ ] Test expense creation after restarting the local development server.
 
-[ ] Prisma is connected to the intended database in each environment.
+[ ] Test production expense creation.
 
-[ ] Database schema and Prisma schema are synchronized.
+[ ] Confirm Prisma/Neon data consistency.
 
-[ ] Failed database operations are no longer silently presented as successful.
+[ ] Confirm no unexpected errors appear in the Vercel logs.
 
-[ ] Existing expense functionality continues to work.
-
-[ ] No unrelated functionality is changed.
+[ ] Confirm acceptable expense creation latency.
 
 ---
 
-## Files / Areas Expected To Be Inspected
+# Files Inspected
 
-The following areas should be inspected before implementing the fix:
-
-- Expense creation form/component
-- Expense server actions
-- Expense Prisma/database functions
-- Prisma schema
-- Prisma client configuration
-- Expense retrieval functions
-- My Expenses page/components
-- Authentication/session handling
-- Database environment configuration
-- Prisma migrations
-- Next.js cache/revalidation logic
-- Vercel production environment configuration
+- `src/features/expenses/components/AddExpenseForm.tsx`
+- `src/features/expenses/actions/expense-actions.ts`
+- `src/app/expenses/new/page.tsx`
+- `src/features/expenses/schemas/expense-schema.ts`
+- `src/features/expenses/components/NewExpensePageClient.tsx`
+- `src/features/expenses/lib/exchange-rates.ts`
+- `src/features/expenses/lib/expenses.ts`
+- `src/app/expenses/page.tsx`
+- `src/features/expenses/components/ExpensesPageClient.tsx`
+- `prisma/schema.prisma`
+- `src/lib/prisma.ts`
 
 ---
 
-## Completion Notes
+# Current Investigation Result
 
-Document the root cause here after investigation.
+The database write operation is functioning.
 
-### Root Cause
+Observed local request:
 
-[ ] To be determined
+GET `/expenses/new` → 200
 
-### Fix Implemented
+Prisma log confirms:
 
-[ ] To be documented
+`Saving to Prisma: {...}`
 
-### Verification
+POST `/expenses/new` → 200
 
-[ ] Localhost verified
+`createExpenseAction(null, {})` completed successfully.
 
-[ ] Local database verified
+The created expense was subsequently visible on `/expenses` and in the database.
 
-[ ] Production application verified
+Production Vercel expense creation was also successfully verified.
 
-[ ] Production database verified
+Therefore, the remaining issue for Task 06 is primarily database/environment
+verification and performance investigation rather than repairing a currently broken
+database write.
 
-### Regression Testing
+---
 
-[ ] Completed
+# Completion Criteria
+
+Task 06 can be marked complete only when:
+
+[ ] Local Prisma/PostgreSQL configuration is verified.
+
+[ ] Production Vercel → Prisma → Neon configuration is verified.
+
+[ ] Expense creation is verified locally and in production.
+
+[ ] The source of expense creation latency has been identified.
+
+[ ] Any unnecessary latency has been reduced where technically appropriate.
+
+[ ] Production database connectivity is stable.
+
+[ ] Final production testing succeeds.
+
+[ ] No database-related regression remains.
