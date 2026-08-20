@@ -34,6 +34,13 @@ export async function createExpenseAction(
   formData: FormData,
 ): Promise<ExpenseActionState> {
   try {
+    const actionStart = performance.now();
+
+    const sessionStart = performance.now();
+
+    console.log(
+      `[Expense Performance] expense create action: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+    );
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -133,6 +140,10 @@ export async function createExpenseAction(
     );
 
     revalidatePath("/expenses");
+
+    console.log(
+      `[Expense Performance] total: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+    );
 
     return {
       success: true,

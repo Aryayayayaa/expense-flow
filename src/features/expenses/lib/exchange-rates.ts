@@ -30,7 +30,13 @@ export async function getExchangeRate(
       rateDate: new Date(),
     };
   }
+  const actionStart = performance.now();
 
+  const sessionStart = performance.now();
+
+  console.log(
+    `[Expense Performance] exchange rate: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+  );
   const response = await fetch(
     `${FRANKFURTER_API_URL}/rate/${encodeURIComponent(base)}/${encodeURIComponent(quote)}`,
     {

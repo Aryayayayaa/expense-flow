@@ -99,6 +99,8 @@ Production database configuration still needs to be verified through Vercel envi
 
 ## Subtask 06.3 — Investigate Expense Creation Latency
 
+### STATUS: IN PROGRESS
+
 [ ] Measure the time taken by `createExpenseAction`.
 
 [ ] Identify how much time is spent in authentication.

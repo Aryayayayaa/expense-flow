@@ -20,6 +20,13 @@ export async function createNotification({
   metadata,
 }: CreateNotificationInput) {
   try {
+    const actionStart = performance.now();
+
+    const sessionStart = performance.now();
+
+    console.log(
+      `[Expense Performance] create notif: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+    );
     return await prisma.notification.create({
       data: {
         userId,
