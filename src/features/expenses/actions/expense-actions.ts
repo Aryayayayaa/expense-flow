@@ -13,11 +13,13 @@ import {
   updateExpense,
   updateExpenseAsAdmin,
 } from "@/features/expenses/lib/expenses";
+
 import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 
 import { expenseSchema } from "../schemas/expense-schema";
 
 import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
+
 import {
   createNotification,
   createNotifications,
@@ -138,46 +140,70 @@ export async function createExpenseAction(
     );
 
     /* ------------------------------------------------------------------ */
-    /* Create audit log                                                   */
+    /* Audit + reviewer lookup                                            */
     /* ------------------------------------------------------------------ */
+    /*
+     * These operations are independent after the expense has been
+     * successfully created, so there is no reason to wait for one
+     * before starting the other.
+     */
 
     const auditStart = performance.now();
-
-    await createExpenseAuditLog({
-      expenseId: expense.id,
-      actorId: Number(session.user.id),
-      action: "CREATED",
-    });
-
-    console.log(
-      `[Expense Performance] audit log: ${(performance.now() - auditStart).toFixed(2)}ms`,
-    );
-
-    /* ------------------------------------------------------------------ */
-    /* Find reviewers                                                     */
-    /* ------------------------------------------------------------------ */
-
     const reviewersStart = performance.now();
 
-    const reviewers = await prisma.user.findMany({
-      where: {
-        role: {
-          in: ["ADMIN", "HR"],
-        },
-      },
+    const [auditResult, reviewers] = await Promise.all([
+      createExpenseAuditLog({
+        expenseId: expense.id,
+        actorId: Number(session.user.id),
+        action: "CREATED",
+      }).then((result) => {
+        console.log(
+          `[Expense Performance] audit log: ${(performance.now() - auditStart).toFixed(2)}ms`,
+        );
 
-      select: {
-        id: true,
-      },
-    });
+        return result;
+      }),
 
-    console.log(
-      `[Expense Performance] reviewer lookup: ${(performance.now() - reviewersStart).toFixed(2)}ms`,
-    );
+      prisma.user
+        .findMany({
+          where: {
+            role: {
+              in: ["ADMIN", "HR"],
+            },
+          },
+
+          select: {
+            id: true,
+          },
+        })
+        .then((result) => {
+          console.log(
+            `[Expense Performance] reviewer lookup: ${(performance.now() - reviewersStart).toFixed(2)}ms`,
+          );
+
+          return result;
+        }),
+    ]);
+
+    /*
+     * Explicitly reference the audit result so the operation remains
+     * part of the awaited Promise.all above.
+     */
+    void auditResult;
 
     /* ------------------------------------------------------------------ */
     /* Create notifications                                               */
     /* ------------------------------------------------------------------ */
+    /*
+     * There is currently one ADMIN and one HR reviewer.
+     *
+     * Previously each notification was inserted separately with
+     * Promise.all(), which still means Prisma performs multiple
+     * database operations.
+     *
+     * createMany() sends all reviewer notifications as one database
+     * operation.
+     */
 
     const notificationsStart = performance.now();
 
@@ -274,8 +300,6 @@ export async function saveOcrReceiptAction(
       };
     }
 
-    // OCR receipt is immutable.
-    // Never overwrite an existing OCR receipt.
     if (expense.ocrReceiptUrl || expense.ocrReceiptPath) {
       return {
         success: false,
@@ -367,16 +391,9 @@ export async function updateExpenseAction(
 
     let existingExpense;
 
-    // ADMIN: Admins can edit any user's PENDING expense.
-
     if (role === "ADMIN") {
       existingExpense = await getExpenseForAdmin(id);
     } else {
-      /*
-       * EMPLOYEE / HR
-       *
-       * They can only edit their own expense.
-       */
       existingExpense = await getExpense(id, userId);
     }
 
@@ -465,13 +482,6 @@ export async function updateExpenseAction(
         },
       });
 
-      /*
-       * Notify the expense owner when an Admin or HR modifies
-       * the expense.
-       *
-       * Employees editing their own expense do not need to
-       * receive a notification about their own modification.
-       */
       if (
         (role === "ADMIN" || role === "HR") &&
         existingExpense.userId !== null
@@ -571,10 +581,6 @@ export async function saveBillProofAction(
       };
     }
 
-    /*
-     * An OCR receipt already satisfies the proof requirement.
-     * Do not allow a second proof to be attached by the employee.
-     */
     if (expense.ocrReceiptUrl || expense.ocrReceiptPath) {
       return {
         success: false,
@@ -582,9 +588,6 @@ export async function saveBillProofAction(
       };
     }
 
-    /*
-     * Bill proof is immutable once uploaded.
-     */
     if (expense.billProofUrl || expense.billProofPath) {
       return {
         success: false,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 
 import {
@@ -42,6 +43,8 @@ export default function AddExpenseForm({
   editingExpense,
   setEditingExpense,
 }: AddExpenseFormProps) {
+  const router = useRouter();
+
   const [state, setState] = useState(initialState);
   const [pending, setPending] = useState(false);
 
@@ -158,6 +161,7 @@ export default function AddExpenseForm({
   /*
    * Upload the original receipt and save its metadata.
    * This is deliberately kept separate from OCR extraction.
+   *
    * OCR can fail while the original receipt can still be saved.
    */
   async function saveOriginalReceipt(
@@ -202,7 +206,19 @@ export default function AddExpenseForm({
       <form
         ref={formRef}
         action={async (formData) => {
+          /*
+           * Prevent duplicate submissions.
+           *
+           * The button is disabled while pending, but this additional
+           * guard also protects the action handler from being triggered
+           * again while the previous submission is still running.
+           */
+          if (pending) {
+            return;
+          }
+
           setPending(true);
+          setState(initialState);
 
           try {
             let result;
@@ -222,76 +238,86 @@ export default function AddExpenseForm({
               if (!result.success) {
                 return;
               }
-            } else {
-              /*
-               * -------------------------------------------------------
-               * CREATE NEW EXPENSE
-               * -------------------------------------------------------
-               */
-              result = await createExpenseAction(null, formData);
-
-              if (!result.success) {
-                setState(result);
-                return;
-              }
 
               /*
-               * -------------------------------------------------------
-               * SAVE ORIGINAL RECEIPT
-               * -------------------------------------------------------
-               *
-               * The receipt is saved whenever a file was selected.
-               *
-               * This happens regardless of whether OCR succeeded.
-               *
-               * Therefore:
-               *
-               * OCR succeeds
-               *   → expense fields are populated automatically
-               *   → original receipt is saved
-               *
-               * OCR fails
-               *   → user enters fields manually
-               *   → original receipt is still saved
+               * Reset the form after a successful update.
                */
-              if (result.expenseId && receiptFile) {
-                try {
-                  await saveOriginalReceipt(
-                    result.expenseId,
-                    receiptFile,
-                    ocrResult?.rawText ?? "",
-                  );
-                } catch (error) {
-                  console.error("Original receipt storage error:", error);
+              setTimeout(() => {
+                resetForm();
+              }, 1000);
 
-                  setState({
-                    ...result,
-                    success: false,
-                    message:
-                      "Expense was created, but the original receipt could not be saved.",
-                  });
-
-                  return;
-                }
-              }
-
-              setState(result);
+              return;
             }
 
             /*
-             * Reset the form after successful creation/update.
+             * -------------------------------------------------------
+             * CREATE NEW EXPENSE
+             * -------------------------------------------------------
              */
-            setTimeout(() => {
-              resetForm();
-            }, 1000);
+            result = await createExpenseAction(null, formData);
+
+            if (!result.success) {
+              setState(result);
+              return;
+            }
+
+            /*
+             * -------------------------------------------------------
+             * SAVE ORIGINAL RECEIPT
+             * -------------------------------------------------------
+             *
+             * The expense is created first.
+             *
+             * If a receipt was selected, save the original receipt
+             * before considering the complete creation flow successful.
+             *
+             * This means the user is redirected only after:
+             *
+             *   1. Expense creation succeeds
+             *   2. Original receipt storage succeeds, if applicable
+             */
+            if (result.expenseId && receiptFile) {
+              try {
+                await saveOriginalReceipt(
+                  result.expenseId,
+                  receiptFile,
+                  ocrResult?.rawText ?? "",
+                );
+              } catch (error) {
+                console.error("Original receipt storage error:", error);
+
+                setState({
+                  ...result,
+                  success: false,
+                  message:
+                    "Expense was created, but the original receipt could not be saved.",
+                });
+
+                return;
+              }
+            }
+
+            /*
+             * -------------------------------------------------------
+             * CREATION SUCCESS
+             * -------------------------------------------------------
+             *
+             * The mentor requirement is to redirect the user to the
+             * expenses page after a successful expense creation.
+             *
+             * Do not reset the form first because the user is leaving
+             * this page immediately.
+             */
+            setState(result);
+
+            router.push("/expenses");
           } catch (error) {
             console.error("Expense submission error:", error);
 
             setState({
               success: false,
               errors: {},
-              message:
-                "Expense was created, but the original receipt could not be saved.",
+              message: "Unable to submit expense.",
               expenseId: undefined,
             });
           } finally {

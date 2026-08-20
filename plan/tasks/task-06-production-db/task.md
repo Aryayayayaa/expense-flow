@@ -130,61 +130,65 @@ cold starts, external API calls, or application logic.
 
 [x] Inspect the Prisma client configuration.
 
-[ ] Verify the Prisma client is reused appropriately during local development.
+[x] Verify the Prisma client is reused appropriately during local development.
 
-[ ] Determine whether the production deployment creates unnecessary Prisma connections.
+[] Determine whether the production deployment creates unnecessary Prisma connections.
 
-[ ] Verify Neon connection/pooling configuration.
+[x] Verify Neon connection/pooling configuration.
 
-[ ] Determine whether the production connection string uses an appropriate pooled endpoint.
+[x] Determine whether the production connection string uses an appropriate pooled endpoint.
 
-[ ] Check whether Prisma/Neon connection establishment contributes significantly to request latency.
+[x] Check whether Prisma/Neon connection establishment contributes significantly to request latency.
 
-[ ] Apply only necessary Prisma/Neon configuration changes.
+[x] Apply only necessary Prisma/Neon configuration changes.
 
 ---
 
 ## Subtask 06.5 — Production Verification
 
-[ ] Deploy the updated implementation to Vercel.
+### STATUS: COMPLETED/IN-PROGRESS
 
-[ ] Create a new expense in production.
+[x] Deploy the updated implementation to Vercel.
 
-[ ] Confirm the request succeeds.
+[x] Create a new expense in production.
 
-[ ] Confirm the expense appears in "My Expenses".
+[x] Confirm the request succeeds.
 
-[ ] Confirm the expense appears in the production Neon database.
+[x] Confirm the expense appears in "My Expenses".
 
-[ ] Confirm the expense audit log is created.
+[x] Confirm the expense appears in the production Neon database.
 
-[ ] Confirm required notifications are created.
+[x] Confirm the expense audit log is created.
 
-[ ] Measure the final request/action duration.
+[x] Confirm required notifications are created.
 
-[ ] Verify no regression was introduced in localhost.
+[x] Measure the final request/action duration.
+
+[x] Verify no regression was introduced in localhost.
 
 ---
 
 ## Subtask 06.6 — Final Validation
 
-[ ] Test expense creation using INR.
+### STATUS: IN PROGRESS
 
-[ ] Test expense creation using a non-INR currency.
+[x] Test expense creation using INR.
+
+[x] Test expense creation using a non-INR currency.
 
 [ ] Test expense creation with OCR receipt.
 
-[ ] Test expense creation without OCR receipt.
+[x] Test expense creation without OCR receipt.
 
-[ ] Test expense creation after restarting the local development server.
+[x] Test expense creation after restarting the local development server.
 
-[ ] Test production expense creation.
+[x] Test production expense creation.
 
-[ ] Confirm Prisma/Neon data consistency.
+[x] Confirm Prisma/Neon data consistency.
 
-[ ] Confirm no unexpected errors appear in the Vercel logs.
+[x] Confirm no unexpected errors appear in the Vercel logs.
 
-[ ] Confirm acceptable expense creation latency.
+[x] Confirm acceptable expense creation latency.
 
 ---
 
@@ -244,8 +248,8 @@ Task 06 can be marked complete only when:
 
 [x] Any unnecessary latency has been reduced where technically appropriate.
 
-[ ] Production database connectivity is stable.
+[x] Production database connectivity is stable.
 
 [ ] Final production testing succeeds.
 
-[ ] No database-related regression remains.
+[x] No database-related regression remains.
