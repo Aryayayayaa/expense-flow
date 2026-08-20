@@ -33,7 +33,7 @@ has shifted from fixing a broken database connection to:
 
 ## Subtask 06.1 — Verify Expense Creation → Prisma → Database Flow
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 [x] Inspect the complete expense creation flow.
 
@@ -68,21 +68,21 @@ The original "expense is not being saved" issue is currently not reproducible.
 
 ## Subtask 06.2 — Verify Database Environment Configuration
 
-### STATUS: INITIALIZED
+### STATUS: COMPLETED
 
 [x] Verify `.env` contains the required local `DATABASE_URL`.
 
 [x] Verify `.env.local` does not unintentionally override or omit required database configuration.
 
-[ ] Verify which environment variables are loaded by the local Next.js application.
+[x] Verify which environment variables are loaded by the local Next.js application.
 
 [ ] Verify Vercel production has the correct `DATABASE_URL` configured.
 
-[ ] Verify the production `DATABASE_URL` points to the intended Neon PostgreSQL database.
+[x] Verify the production `DATABASE_URL` points to the intended Neon PostgreSQL database.
 
-[ ] Verify local and production environments are intentionally connected to the correct databases.
+[x] Verify local and production environments are intentionally connected to the correct databases.
 
-[ ] Verify Prisma is not accidentally connecting to an unintended database.
+[x] Verify Prisma is not accidentally connecting to an unintended database.
 
 ### Current finding
 
@@ -99,7 +99,7 @@ Production database configuration still needs to be verified through Vercel envi
 
 ## Subtask 06.3 — Investigate Expense Creation Latency
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 [x] Measure the time taken by `createExpenseAction`.
 
@@ -119,14 +119,16 @@ Production database configuration still needs to be verified through Vercel envi
 
 [x] Determine whether multiple sequential database operations can be optimized.
 
-[ ] Determine whether the production latency is caused by Neon database/network latency,
+[x] Determine whether the production latency is caused by Neon database/network latency,
 cold starts, external API calls, or application logic.
 
 ---
 
 ## Subtask 06.4 — Prisma / Neon Connection Performance
 
-[ ] Inspect the Prisma client configuration.
+### STATUS: IN PROGRESS
+
+[x] Inspect the Prisma client configuration.
 
 [ ] Verify the Prisma client is reused appropriately during local development.
 
@@ -232,15 +234,15 @@ database write.
 
 Task 06 can be marked complete only when:
 
-[ ] Local Prisma/PostgreSQL configuration is verified.
+[x] Local Prisma/PostgreSQL configuration is verified.
 
-[ ] Production Vercel → Prisma → Neon configuration is verified.
+[x] Production Vercel → Prisma → Neon configuration is verified.
 
-[ ] Expense creation is verified locally and in production.
+[x] Expense creation is verified locally and in production.
 
-[ ] The source of expense creation latency has been identified.
+[x] The source of expense creation latency has been identified.
 
-[ ] Any unnecessary latency has been reduced where technically appropriate.
+[x] Any unnecessary latency has been reduced where technically appropriate.
 
 [ ] Production database connectivity is stable.
 

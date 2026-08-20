@@ -11,6 +11,15 @@ type CreateNotificationInput = {
   metadata?: Prisma.InputJsonValue;
 };
 
+type CreateNotificationsInput = {
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  expenseId?: number;
+  metadata?: Prisma.InputJsonValue;
+};
+
 export async function createNotification({
   userId,
   type,
@@ -34,6 +43,26 @@ export async function createNotification({
     console.error("Failed to create notification:", error);
 
     return null;
+  }
+}
+
+export async function createNotifications(
+  notifications: CreateNotificationsInput[],
+) {
+  if (notifications.length === 0) {
+    return {
+      count: 0,
+    };
+  }
+
+  try {
+    return await prisma.notification.createMany({
+      data: notifications,
+    });
+  } catch (error) {
+    console.error("Failed to create notifications:", error);
+
+    throw error;
   }
 }
 

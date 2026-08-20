@@ -18,7 +18,10 @@ import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 import { expenseSchema } from "../schemas/expense-schema";
 
 import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
-import { createNotification } from "@/features/notifications/lib/notifications";
+import {
+  createNotification,
+  createNotifications,
+} from "@/features/notifications/lib/notifications";
 
 import { capitalize } from "@/utils/capitalize";
 
@@ -130,6 +133,10 @@ export async function createExpenseAction(
       exchangeRateAt: exchangeRateResult.rateDate,
     });
 
+    console.log(
+      `[Expense Performance] expense create: ${(performance.now() - expenseCreateStart).toFixed(2)}ms`,
+    );
+
     /* ------------------------------------------------------------------ */
     /* Create audit log                                                   */
     /* ------------------------------------------------------------------ */
@@ -174,22 +181,20 @@ export async function createExpenseAction(
 
     const notificationsStart = performance.now();
 
-    await Promise.all(
-      reviewers.map((reviewer) =>
-        createNotification({
-          userId: reviewer.id,
-          type: "EXPENSE_SUBMITTED",
-          title: "New Expense Submitted",
-          message: `A new expense "${expense.title}" has been submitted for review.`,
-          expenseId: expense.id,
-          metadata: {
-            expenseTitle: expense.title,
-            amount: Number(expense.amount),
-            category: expense.category,
-            submittedById: Number(session.user.id),
-          },
-        }),
-      ),
+    await createNotifications(
+      reviewers.map((reviewer) => ({
+        userId: reviewer.id,
+        type: "EXPENSE_SUBMITTED",
+        title: "New Expense Submitted",
+        message: `A new expense "${expense.title}" has been submitted for review.`,
+        expenseId: expense.id,
+        metadata: {
+          expenseTitle: expense.title,
+          amount: Number(expense.amount),
+          category: expense.category,
+          submittedById: Number(session.user.id),
+        },
+      })),
     );
 
     console.log(
@@ -463,7 +468,7 @@ export async function updateExpenseAction(
       /*
        * Notify the expense owner when an Admin or HR modifies
        * the expense.
-
+       *
        * Employees editing their own expense do not need to
        * receive a notification about their own modification.
        */
