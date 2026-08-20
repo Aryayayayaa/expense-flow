@@ -33,15 +33,20 @@ export async function createExpenseAction(
   prevState: unknown,
   formData: FormData,
 ): Promise<ExpenseActionState> {
-  try {
-    const actionStart = performance.now();
+  const actionStart = performance.now();
 
-    const sessionStart = performance.now();
+  try {
+    /* ------------------------------------------------------------------ */
+    /* Auth                                                               */
+    /* ------------------------------------------------------------------ */
+
+    const authStart = performance.now();
+
+    const session = await auth();
 
     console.log(
-      `[Expense Performance] expense create action: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+      `[Expense Performance] auth: ${(performance.now() - authStart).toFixed(2)}ms`,
     );
-    const session = await auth();
 
     if (!session?.user?.id) {
       return {
@@ -51,6 +56,12 @@ export async function createExpenseAction(
         expenseId: undefined,
       };
     }
+
+    /* ------------------------------------------------------------------ */
+    /* Form processing + validation                                       */
+    /* ------------------------------------------------------------------ */
+
+    const validationStart = performance.now();
 
     const selectedCategory = String(formData.get("category"));
 
@@ -77,6 +88,10 @@ export async function createExpenseAction(
 
     const result = expenseSchema.safeParse(values);
 
+    console.log(
+      `[Expense Performance] validation: ${(performance.now() - validationStart).toFixed(2)}ms`,
+    );
+
     if (!result.success) {
       return {
         success: false,
@@ -86,9 +101,25 @@ export async function createExpenseAction(
       };
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Exchange rate                                                      */
+    /* ------------------------------------------------------------------ */
+
+    const exchangeRateStart = performance.now();
+
     const exchangeRateResult = await getExchangeRate(currency, "INR");
 
+    console.log(
+      `[Expense Performance] exchange rate: ${(performance.now() - exchangeRateStart).toFixed(2)}ms`,
+    );
+
     const baseCurrencyAmount = result.data.amount * exchangeRateResult.rate;
+
+    /* ------------------------------------------------------------------ */
+    /* Create expense                                                     */
+    /* ------------------------------------------------------------------ */
+
+    const expenseCreateStart = performance.now();
 
     const expense = await createExpense({
       ...result.data,
@@ -99,16 +130,28 @@ export async function createExpenseAction(
       exchangeRateAt: exchangeRateResult.rateDate,
     });
 
+    /* ------------------------------------------------------------------ */
+    /* Create audit log                                                   */
+    /* ------------------------------------------------------------------ */
+
+    const auditStart = performance.now();
+
     await createExpenseAuditLog({
       expenseId: expense.id,
       actorId: Number(session.user.id),
       action: "CREATED",
     });
 
-    /*
-     * Notify all Admin and HR users that a new expense
-     * has been submitted.
-     */
+    console.log(
+      `[Expense Performance] audit log: ${(performance.now() - auditStart).toFixed(2)}ms`,
+    );
+
+    /* ------------------------------------------------------------------ */
+    /* Find reviewers                                                     */
+    /* ------------------------------------------------------------------ */
+
+    const reviewersStart = performance.now();
+
     const reviewers = await prisma.user.findMany({
       where: {
         role: {
@@ -120,6 +163,16 @@ export async function createExpenseAction(
         id: true,
       },
     });
+
+    console.log(
+      `[Expense Performance] reviewer lookup: ${(performance.now() - reviewersStart).toFixed(2)}ms`,
+    );
+
+    /* ------------------------------------------------------------------ */
+    /* Create notifications                                               */
+    /* ------------------------------------------------------------------ */
+
+    const notificationsStart = performance.now();
 
     await Promise.all(
       reviewers.map((reviewer) =>
@@ -139,10 +192,28 @@ export async function createExpenseAction(
       ),
     );
 
+    console.log(
+      `[Expense Performance] notifications: ${(performance.now() - notificationsStart).toFixed(2)}ms`,
+    );
+
+    /* ------------------------------------------------------------------ */
+    /* Revalidate                                                         */
+    /* ------------------------------------------------------------------ */
+
+    const revalidateStart = performance.now();
+
     revalidatePath("/expenses");
 
     console.log(
-      `[Expense Performance] total: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+      `[Expense Performance] revalidate: ${(performance.now() - revalidateStart).toFixed(2)}ms`,
+    );
+
+    /* ------------------------------------------------------------------ */
+    /* Total                                                              */
+    /* ------------------------------------------------------------------ */
+
+    console.log(
+      `[Expense Performance] total: ${(performance.now() - actionStart).toFixed(2)}ms`,
     );
 
     return {
@@ -154,6 +225,10 @@ export async function createExpenseAction(
   } catch (error) {
     console.error("Create Expense Error:");
     console.error(error);
+
+    console.log(
+      `[Expense Performance] failed after: ${(performance.now() - actionStart).toFixed(2)}ms`,
+    );
 
     return {
       success: false,

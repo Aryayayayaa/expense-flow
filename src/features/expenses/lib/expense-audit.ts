@@ -20,10 +20,10 @@ export async function createExpenseAuditLog({
   const actionStart = performance.now();
 
   const sessionStart = performance.now();
-
   console.log(
     `[Expense Performance] audit log: ${(performance.now() - sessionStart).toFixed(2)}ms`,
   );
+
   return prisma.expenseAuditLog.create({
     data: {
       expenseId,

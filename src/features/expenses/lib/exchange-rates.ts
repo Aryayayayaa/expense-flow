@@ -14,6 +14,9 @@ export async function getExchangeRate(
   if (typeof baseCurrency !== "string" || typeof quoteCurrency !== "string") {
     throw new Error("Base and quote currencies must be valid strings.");
   }
+  const actionStart = performance.now();
+
+  const sessionStart = performance.now();
 
   const base = baseCurrency.trim().toUpperCase();
   const quote = quoteCurrency.trim().toUpperCase();
@@ -30,13 +33,7 @@ export async function getExchangeRate(
       rateDate: new Date(),
     };
   }
-  const actionStart = performance.now();
 
-  const sessionStart = performance.now();
-
-  console.log(
-    `[Expense Performance] exchange rate: ${(performance.now() - sessionStart).toFixed(2)}ms`,
-  );
   const response = await fetch(
     `${FRANKFURTER_API_URL}/rate/${encodeURIComponent(base)}/${encodeURIComponent(quote)}`,
     {
@@ -87,6 +84,10 @@ export async function getExchangeRate(
       rateDate = parsedDate;
     }
   }
+
+  console.log(
+    `[Expense Performance] exchange rate: ${(performance.now() - sessionStart).toFixed(2)}ms`,
+  );
 
   return {
     baseCurrency: base,

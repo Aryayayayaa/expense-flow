@@ -228,15 +228,12 @@ export async function createExpense(data: {
   exchangeRateAt: Date;
 }) {
   const actionStart = performance.now();
-
   const sessionStart = performance.now();
 
+  console.log("Saving to Prisma:", data);
   console.log(
     `[Expense Performance] expense create: ${(performance.now() - sessionStart).toFixed(2)}ms`,
   );
-
-  console.log("Saving to Prisma:", data);
-
   return prisma.expense.create({
     data,
   });

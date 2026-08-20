@@ -68,7 +68,7 @@ The original "expense is not being saved" issue is currently not reproducible.
 
 ## Subtask 06.2 — Verify Database Environment Configuration
 
-### STATUS: STARTING NEXT
+### STATUS: INITIALIZED
 
 [x] Verify `.env` contains the required local `DATABASE_URL`.
 
@@ -101,23 +101,23 @@ Production database configuration still needs to be verified through Vercel envi
 
 ### STATUS: IN PROGRESS
 
-[ ] Measure the time taken by `createExpenseAction`.
+[x] Measure the time taken by `createExpenseAction`.
 
-[ ] Identify how much time is spent in authentication.
+[x] Identify how much time is spent in authentication.
 
-[ ] Identify how much time is spent in exchange-rate retrieval.
+[x] Identify how much time is spent in exchange-rate retrieval.
 
-[ ] Identify how much time is spent in Prisma expense creation.
+[x] Identify how much time is spent in Prisma expense creation.
 
-[ ] Identify how much time is spent creating the expense audit log.
+[x] Identify how much time is spent creating the expense audit log.
 
-[ ] Identify how much time is spent querying Admin/HR reviewers.
+[x] Identify how much time is spent querying Admin/HR reviewers.
 
-[ ] Identify how much time is spent creating notifications.
+[x] Identify how much time is spent creating notifications.
 
-[ ] Determine whether `createNotification()` performs additional database queries.
+[x] Determine whether `createNotification()` performs additional database queries.
 
-[ ] Determine whether multiple sequential database operations can be optimized.
+[x] Determine whether multiple sequential database operations can be optimized.
 
 [ ] Determine whether the production latency is caused by Neon database/network latency,
 cold starts, external API calls, or application logic.
