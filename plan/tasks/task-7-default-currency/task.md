@@ -53,24 +53,24 @@ If an existing user does not yet have a stored default currency, the application
 
 ### 3. Edit Profile
 
-### STATUS: NEXT
+### STATUS: COMPLETED
 
 The **Edit Profile** section must allow the authenticated user to change their default currency.
 
 The Edit Profile flow should:
 
-[ ] Display the user's current default currency.
-[ ] Allow selection of another supported currency.
-[ ] Validate the selected currency.
-[ ] Persist the updated preference.
-[ ] Display appropriate success/error feedback.
-[ ] Reflect the new currency preference after the profile is updated.
+[x] Display the user's current default currency.
+[x] Allow selection of another supported currency.
+[x] Validate the selected currency.
+[x] Persist the updated preference.
+[x] Display appropriate success/error feedback.
+[x] Reflect the new currency preference after the profile is updated.
 
 ---
 
 ### 4. Expense Creation
 
-#### STATUS: NOT STARTED
+#### STATUS: NEXT
 
 The expense creation form should use the user's default currency as the initial currency selection.
 
