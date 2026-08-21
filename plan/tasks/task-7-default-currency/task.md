@@ -18,15 +18,17 @@ This task establishes the user-level currency preference that will be used by su
 
 ### 1. Registration
 
+#### STATUS: COMPLETED
+
 Add a default currency selection to the user registration flow.
 
 The registration form should:
 
-[ ] Provide a currency selection field.
-[ ] Allow the user to choose from the application's supported currencies.
-[ ] Have a sensible default selection.
-[ ] Validate the selected currency.
-[ ] Persist the selected currency when the user account is created.
+[x] Provide a currency selection field.
+[x] Allow the user to choose from the application's supported currencies.
+[x] Have a sensible default selection.
+[x] Validate the selected currency.
+[x] Persist the selected currency when the user account is created.
 
 The selected currency must become the user's stored default currency.
 
@@ -34,20 +36,24 @@ The selected currency must become the user's stored default currency.
 
 ### 2. User Data
 
+#### STATUS: COMPLETED
+
 The user's default currency must be persisted in the database as part of the user profile/account data.
 
 The implementation must:
 
-[ ] Use the existing supported currency definitions where possible.
-[ ] Avoid duplicating the supported currency list unnecessarily.
-[ ] Store a normalized currency code.
-[ ] Maintain compatibility with existing users/data.
+[x] Use the existing supported currency definitions where possible.
+[x] Avoid duplicating the supported currency list unnecessarily.
+[x] Store a normalized currency code.
+[x] Maintain compatibility with existing users/data.
 
 If an existing user does not yet have a stored default currency, the application must have a safe fallback behavior.
 
 ---
 
 ### 3. Edit Profile
+
+### STATUS: NEXT
 
 The **Edit Profile** section must allow the authenticated user to change their default currency.
 
@@ -63,6 +69,8 @@ The Edit Profile flow should:
 ---
 
 ### 4. Expense Creation
+
+#### STATUS: NOT STARTED
 
 The expense creation form should use the user's default currency as the initial currency selection.
 
@@ -80,6 +88,8 @@ The default currency is a user preference; the expense currency remains an expen
 
 ### 5. Existing Expense Behavior
 
+#### STATUS: NOT STARTED
+
 Existing expenses must retain their originally stored currency.
 
 Changing the user's default currency must NOT:
@@ -94,6 +104,8 @@ The default currency only affects future/default selections.
 ---
 
 ### 6. Validation and Security
+
+#### STATUS: NOT STARTED
 
 Default currency updates must only be performed for the authenticated user's own profile.
 
