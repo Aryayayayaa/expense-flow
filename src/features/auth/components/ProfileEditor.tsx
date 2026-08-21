@@ -1,23 +1,38 @@
 "use client";
 
 import { useState } from "react";
-
 import { updateOwnProfileAction } from "../actions/profile-actions";
+
+import {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "@/constants/currencies";
 
 type ProfileEditorProps = {
   name: string;
   email: string;
   role: "ADMIN" | "HR" | "EMPLOYEE";
+  defaultCurrency?: string;
 };
 
 export default function ProfileEditor({
   name: initialName,
   email: initialEmail,
   role,
+  defaultCurrency: initialDefaultCurrency,
 }: ProfileEditorProps) {
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
+
+  const [defaultCurrency, setDefaultCurrency] = useState<CurrencyCode>(
+    SUPPORTED_CURRENCIES.some(
+      (currency) => currency.code === initialDefaultCurrency,
+    )
+      ? (initialDefaultCurrency as CurrencyCode)
+      : DEFAULT_CURRENCY,
+  );
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -35,6 +50,7 @@ export default function ProfileEditor({
         name,
         email,
         password: password || undefined,
+        defaultCurrency,
       });
 
       if (!result.success) {
@@ -82,6 +98,7 @@ export default function ProfileEditor({
             disabled={role === "EMPLOYEE" || role === "ADMIN"}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
           />
+
           {(role === "EMPLOYEE" || role === "ADMIN") && (
             <p className="mt-2 text-xs text-slate-500">
               Name changes must be requested through HR.
@@ -104,6 +121,36 @@ export default function ProfileEditor({
             onChange={(event) => setEmail(event.target.value)}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="profile-default-currency"
+            className="text-sm font-medium text-slate-700"
+          >
+            Default Currency
+          </label>
+
+          <select
+            id="profile-default-currency"
+            value={defaultCurrency}
+            onChange={(event) =>
+              setDefaultCurrency(event.target.value as CurrencyCode)
+            }
+            disabled={saving}
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
+          >
+            {SUPPORTED_CURRENCIES.map((currency) => (
+              <option key={currency.code} value={currency.code}>
+                {currency.code} — {currency.name} ({currency.symbol})
+              </option>
+            ))}
+          </select>
+
+          <p className="mt-2 text-xs text-slate-500">
+            This currency is used as your preferred currency throughout the
+            application.
+          </p>
         </div>
 
         <div>

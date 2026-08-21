@@ -7,6 +7,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/features/notifications/lib/notifications";
 
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from "@/constants/currencies";
+
 async function requireUser() {
   const session = await auth();
 
@@ -25,6 +27,7 @@ export async function updateOwnProfileAction(data: {
   email?: string;
   password?: string;
   image?: string | null;
+  defaultCurrency?: string;
 }) {
   try {
     const currentUser = await requireUser();
@@ -45,6 +48,7 @@ export async function updateOwnProfileAction(data: {
         name: true,
         email: true,
         image: true,
+        defaultCurrency: true,
       },
     });
 
@@ -60,6 +64,7 @@ export async function updateOwnProfileAction(data: {
       email?: string;
       password?: string;
       image?: string | null;
+      defaultCurrency?: string;
     } = {};
 
     const changes: string[] = [];
@@ -136,6 +141,26 @@ export async function updateOwnProfileAction(data: {
       changes.push("profile photo");
     }
 
+    if (data.defaultCurrency !== undefined) {
+      const defaultCurrency = data.defaultCurrency.trim().toUpperCase();
+
+      const isSupportedCurrency = SUPPORTED_CURRENCIES.some(
+        (currency) => currency.code === defaultCurrency,
+      );
+
+      if (!isSupportedCurrency) {
+        return {
+          success: false,
+          message: "Please select a supported default currency.",
+        };
+      }
+
+      if (defaultCurrency !== user.defaultCurrency) {
+        updateData.defaultCurrency = defaultCurrency;
+        changes.push("default currency");
+      }
+    }
+
     if (changes.length === 0) {
       return {
         success: true,
@@ -152,6 +177,7 @@ export async function updateOwnProfileAction(data: {
         id: true,
         name: true,
         email: true,
+        defaultCurrency: true,
       },
     });
 
@@ -164,11 +190,16 @@ export async function updateOwnProfileAction(data: {
         changes,
         performedById: updatedUser.id,
         performedByRole: currentUser.role,
+        defaultCurrency: updatedUser.defaultCurrency ?? DEFAULT_CURRENCY,
       },
     });
 
     revalidatePath("/profile");
     revalidatePath("/dashboard");
+    revalidatePath("/expenses");
+    revalidatePath("/reports");
+    revalidatePath("/analytics");
+    revalidatePath("/approvals");
 
     return {
       success: true,
