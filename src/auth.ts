@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { getUserByEmail } from "@/features/auth/lib/users";
 import { authConfig } from "@/auth.config";
+import type { CurrencyCode } from "./constants/currencies";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -48,6 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          defaultCurrency: user.defaultCurrency as CurrencyCode,
         };
       },
     }),
@@ -55,11 +57,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   //jwt = json web token
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.defaultCurrency = user.defaultCurrency;
       }
+
+      if (trigger === "update" && session?.user?.defaultCurrency) {
+        token.defaultCurrency = session.user.defaultCurrency;
+      }
+
       return token;
     },
 
@@ -67,7 +75,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as "ADMIN" | "HR" | "EMPLOYEE";
+        session.user.defaultCurrency = token.defaultCurrency as CurrencyCode;
       }
+
       return session;
     },
   },

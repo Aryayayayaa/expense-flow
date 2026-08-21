@@ -30,6 +30,7 @@ type AddExpenseFormProps = {
   setEditingExpense: React.Dispatch<
     React.SetStateAction<SerializedExpense | null>
   >;
+  defaultCurrency?: CurrencyCode;
 };
 
 const initialState = {
@@ -42,6 +43,7 @@ const initialState = {
 export default function AddExpenseForm({
   editingExpense,
   setEditingExpense,
+  defaultCurrency = DEFAULT_CURRENCY,
 }: AddExpenseFormProps) {
   const router = useRouter();
 
@@ -52,7 +54,7 @@ export default function AddExpenseForm({
   const [title, setTitle] = useState("");
 
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
+  const [currency, setCurrency] = useState<CurrencyCode>(defaultCurrency);
 
   const [customCategory, setCustomCategory] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
@@ -83,7 +85,7 @@ export default function AddExpenseForm({
     formRef.current?.reset();
     setState(initialState);
 
-    setCurrency(DEFAULT_CURRENCY);
+    setCurrency(defaultCurrency);
   }
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export default function AddExpenseForm({
     setCurrency(
       SUPPORTED_CURRENCIES.some((item) => item.code === editingExpense.currency)
         ? (editingExpense.currency as CurrencyCode)
-        : DEFAULT_CURRENCY,
+        : defaultCurrency,
     );
 
     const date = new Date(
@@ -135,7 +137,7 @@ export default function AddExpenseForm({
       behavior: "smooth",
       block: "start",
     });
-  }, [editingExpense]);
+  }, [editingExpense, defaultCurrency]);
 
   /*
    * Apply OCR results to the form.

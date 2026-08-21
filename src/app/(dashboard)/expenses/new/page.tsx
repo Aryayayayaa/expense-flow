@@ -1,6 +1,30 @@
-import NewExpensePageClient from "@/features/expenses/components/NewExpensePageClient";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
-export default function NewExpensePage() {
+import NewExpensePageClient from "@/features/expenses/components/NewExpensePageClient";
+import type { CurrencyCode } from "@/constants/currencies";
+
+export default async function NewExpensePage() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(session.user.id),
+    },
+    select: {
+      defaultCurrency: true,
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  const defaultCurrency = user.defaultCurrency as CurrencyCode;
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -13,7 +37,7 @@ export default function NewExpensePage() {
         </p>
       </div>
 
-      <NewExpensePageClient />
+      <NewExpensePageClient defaultCurrency={defaultCurrency} />
     </main>
   );
 }
