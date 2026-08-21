@@ -1,6 +1,6 @@
 # Task 07 — Default Currency
 
-## Status: STARTING
+## Status IN PROGRESS
 
 ## Objective
 
@@ -22,11 +22,11 @@ Add a default currency selection to the user registration flow.
 
 The registration form should:
 
-- Provide a currency selection field.
-- Allow the user to choose from the application's supported currencies.
-- Have a sensible default selection.
-- Validate the selected currency.
-- Persist the selected currency when the user account is created.
+[ ] Provide a currency selection field.
+[ ] Allow the user to choose from the application's supported currencies.
+[ ] Have a sensible default selection.
+[ ] Validate the selected currency.
+[ ] Persist the selected currency when the user account is created.
 
 The selected currency must become the user's stored default currency.
 
@@ -38,10 +38,10 @@ The user's default currency must be persisted in the database as part of the use
 
 The implementation must:
 
-- Use the existing supported currency definitions where possible.
-- Avoid duplicating the supported currency list unnecessarily.
-- Store a normalized currency code.
-- Maintain compatibility with existing users/data.
+[ ] Use the existing supported currency definitions where possible.
+[ ] Avoid duplicating the supported currency list unnecessarily.
+[ ] Store a normalized currency code.
+[ ] Maintain compatibility with existing users/data.
 
 If an existing user does not yet have a stored default currency, the application must have a safe fallback behavior.
 
@@ -53,12 +53,12 @@ The **Edit Profile** section must allow the authenticated user to change their d
 
 The Edit Profile flow should:
 
-- Display the user's current default currency.
-- Allow selection of another supported currency.
-- Validate the selected currency.
-- Persist the updated preference.
-- Display appropriate success/error feedback.
-- Reflect the new currency preference after the profile is updated.
+[ ] Display the user's current default currency.
+[ ] Allow selection of another supported currency.
+[ ] Validate the selected currency.
+[ ] Persist the updated preference.
+[ ] Display appropriate success/error feedback.
+[ ] Reflect the new currency preference after the profile is updated.
 
 ---
 
@@ -68,9 +68,9 @@ The expense creation form should use the user's default currency as the initial 
 
 The user's default currency should:
 
-- Be loaded from the authenticated user's profile.
-- Be selected automatically when opening the New Expense form.
-- Still allow the user to manually select another supported currency for an individual expense.
+[ ] Be loaded from the authenticated user's profile.
+[ ] Be selected automatically when opening the New Expense form.
+[ ] Still allow the user to manually select another supported currency for an individual expense.
 
 Changing the expense currency for one expense must not change the user's default currency.
 
@@ -84,10 +84,10 @@ Existing expenses must retain their originally stored currency.
 
 Changing the user's default currency must NOT:
 
-- Convert existing expenses.
-- Modify existing expense currency values.
-- Modify historical exchange rates.
-- Recalculate previously stored base-currency amounts.
+[ ] Convert existing expenses.
+[ ] Modify existing expense currency values.
+[ ] Modify historical exchange rates.
+[ ] Recalculate previously stored base-currency amounts.
 
 The default currency only affects future/default selections.
 
@@ -99,10 +99,10 @@ Default currency updates must only be performed for the authenticated user's own
 
 The implementation must:
 
-- Validate the currency against the application's supported currencies.
-- Reject invalid/unsupported currency codes.
-- Prevent unauthorized users from modifying another user's default currency.
-- Keep server-side validation authoritative.
+[ ] Validate the currency against the application's supported currencies.
+[ ] Reject invalid/unsupported currency codes.
+[ ] Prevent unauthorized users from modifying another user's default currency.
+[ ] Keep server-side validation authoritative.
 
 Client-side validation/UI behavior must not be treated as a security boundary.
 
