@@ -44,10 +44,17 @@ export type SerializedExpense = Omit<
   /*
    * Optional because not every expense query loads
    * Admin modification information.
-   *
-   * For example:
-   * - Employee expenses page loads it.
-   * - Admin approval list does not need it.
    */
   adminModification?: AdminModification | null;
+};
+
+/*
+ * Expense prepared specifically for display.
+ *
+ * displayAmount is calculated using the user's CURRENT
+ * default currency. It does not modify the original
+ * stored expense amount/currency.
+ */
+export type DisplayExpense = SerializedExpense & {
+  displayAmount: number;
 };

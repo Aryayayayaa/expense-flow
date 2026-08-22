@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import AddExpenseForm from "./AddExpenseForm";
 
-import { SerializedExpense } from "../types";
+import type { DisplayExpense } from "../types";
 import type { CurrencyCode } from "@/constants/currencies";
 
 type NewExpensePageClientProps = {
@@ -14,8 +14,9 @@ type NewExpensePageClientProps = {
 export default function NewExpensePageClient({
   defaultCurrency,
 }: NewExpensePageClientProps) {
-  const [editingExpense, setEditingExpense] =
-    useState<SerializedExpense | null>(null);
+  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+    null,
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl">

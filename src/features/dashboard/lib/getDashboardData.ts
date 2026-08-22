@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import type { CurrencyCode } from "@/constants/currencies";
 import { getExpenses } from "@/features/expenses/lib/expenses";
 
 export async function getDashboardData() {
@@ -9,8 +10,16 @@ export async function getDashboardData() {
   }
 
   const userId = Number(session.user.id);
+  const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
 
-  const expenseResult = await getExpenses(userId);
+  const expenseResult = await getExpenses(
+    userId,
+    1,
+    10,
+    "ALL",
+    "ALL",
+    defaultCurrency,
+  );
   const expenses = expenseResult.expenses;
 
   const now = new Date();

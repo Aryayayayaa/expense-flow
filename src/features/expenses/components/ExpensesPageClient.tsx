@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Wallet, Calendar, Folder, X, Plus, AlertTriangle } from "lucide-react";
+import { Wallet, Calendar, Folder, Plus, AlertTriangle } from "lucide-react";
 
 import Pagination from "@/components/common/Pagination";
 import Filters from "@/components/common/Filters";
@@ -16,9 +16,13 @@ import {
   type ExpenseReimbursementStatus,
 } from "./StatusFilters";
 
-import { SerializedExpense } from "../types";
+import type { DisplayExpense } from "../types";
 
-import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
+import {
+  ALL_CURRENCIES,
+  type CurrencyCode,
+  type CurrencyFilter,
+} from "@/constants/currencies";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
@@ -52,8 +56,9 @@ type DeletedExpense = {
 };
 
 type ExpensesPageClientProps = {
-  expenses: SerializedExpense[];
+  expenses: DisplayExpense[];
   deletedExpenses: DeletedExpense[];
+  defaultCurrency: CurrencyCode;
   pagination: {
     page: number;
     pageSize: number;
@@ -65,10 +70,12 @@ type ExpensesPageClientProps = {
 export default function ExpensesPageClient({
   expenses,
   deletedExpenses,
+  defaultCurrency,
   pagination,
 }: ExpensesPageClientProps) {
-  const [editingExpense, setEditingExpense] =
-    useState<SerializedExpense | null>(null);
+  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+    null,
+  );
 
   /* ---------------------------------------------------------------------- */
   /* Filters                                                                */
@@ -213,12 +220,24 @@ export default function ExpensesPageClient({
     return expenses.filter((expense) => {
       const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-      const matchesCategory =
-        selectedCategory === "" || expense.category === selectedCategory;
-
+      /*
+       * Currency filtering is based on the ORIGINAL transaction currency.
+       *
+       * Example:
+       * - Current default = USD
+       * - Expense originally saved as INR
+       *
+       * Selecting INR still finds that expense.
+       *
+       * The card itself will continue displaying the converted
+       * value in the current default currency.
+       */
       const matchesCurrency =
         selectedCurrency === ALL_CURRENCIES ||
         expense.currency === selectedCurrency;
+
+      const matchesCategory =
+        selectedCategory === "" || expense.category === selectedCategory;
 
       const matchesApprovalStatus =
         approvalStatus === "ALL" || expense.status === approvalStatus;
@@ -352,20 +371,28 @@ export default function ExpensesPageClient({
   /* Display amount                                                         */
   /* ---------------------------------------------------------------------- */
 
-  function getDisplayAmount(expense: SerializedExpense) {
-    if (selectedCurrency === ALL_CURRENCIES) {
-      return Number(expense.baseCurrencyAmount ?? expense.amount);
-    }
-
-    return Number(expense.amount);
+  /*
+   * displayAmount is already calculated on the server in the user's
+   * CURRENT default currency.
+   *
+   * Therefore the summary must use displayAmount regardless of which
+   * original-currency filter is selected.
+   */
+  function getDisplayAmount(expense: DisplayExpense) {
+    return Number(expense.displayAmount);
   }
 
   /* ---------------------------------------------------------------------- */
   /* Summary                                                                */
   /* ---------------------------------------------------------------------- */
 
-  const summaryCurrency =
-    selectedCurrency === ALL_CURRENCIES ? "INR" : selectedCurrency;
+  /*
+   * Summary cards ALWAYS use the user's current default currency.
+   *
+   * They should NOT switch to INR merely because "All Currencies"
+   * is selected.
+   */
+  const summaryCurrency = defaultCurrency;
 
   const totalExpenses = filteredExpenses.reduce(
     (sum, expense) => sum + getDisplayAmount(expense),

@@ -1,4 +1,6 @@
 import ExpensesPageClient from "@/features/expenses/components/ExpensesPageClient";
+import type { CurrencyCode } from "@/constants/currencies";
+import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 
 import {
   getDeletedExpensesForUser,
@@ -33,15 +35,77 @@ export default async function ExpensesPage({
 
   const pageSize = 10;
 
+  const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
+
+  /*
+   * baseCurrencyAmount is stored in INR.
+   *
+   * When the user's current default currency is not INR,
+   * we need the rate:
+   *
+   *     1 DEFAULT_CURRENCY = X INR
+   *
+   * so that:
+   *
+   *     INR amount / X = DEFAULT_CURRENCY amount
+   */
+  const displayRateToInr =
+    defaultCurrency === "INR"
+      ? 1
+      : (await getExchangeRate(defaultCurrency, "INR")).rate;
+
   const [expenseResult, deletedExpenses] = await Promise.all([
-    getExpenses(userId, page, pageSize),
+    getExpenses(userId, page, pageSize, "ALL", "ALL", defaultCurrency),
     getDeletedExpensesForUser(userId),
   ]);
 
-  const serializedExpenses = expenseResult.expenses.map((expense) => ({
-    ...expense,
-    amount: Number(expense.amount),
-  }));
+  const serializedExpenses = expenseResult.expenses.map((expense) => {
+    const amount = Number(expense.amount);
+
+    /*
+     * If the original expense currency is already the
+     * user's current default currency, no conversion is required.
+     */
+    if (expense.currency === defaultCurrency) {
+      return {
+        ...expense,
+        amount,
+        displayAmount: amount,
+      };
+    }
+
+    /*
+     * baseCurrencyAmount is the historical INR-normalized
+     * value stored when the expense was created.
+     *
+     * For older INR expenses created before baseCurrencyAmount
+     * existed, the original INR amount is the base amount.
+     */
+    const baseCurrencyAmount =
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : expense.currency === "INR"
+          ? amount
+          : null;
+
+    /*
+     * If we cannot determine a normalized amount, fall back
+     * to the original amount rather than silently converting
+     * an unknown value.
+     */
+    const displayAmount =
+      baseCurrencyAmount === null
+        ? amount
+        : defaultCurrency === "INR"
+          ? baseCurrencyAmount
+          : baseCurrencyAmount / displayRateToInr;
+
+    return {
+      ...expense,
+      amount,
+      displayAmount,
+    };
+  });
 
   const serializedDeletedExpenses = deletedExpenses.map((expense) => ({
     ...expense,
@@ -53,6 +117,7 @@ export default async function ExpensesPage({
       <ExpensesPageClient
         expenses={serializedExpenses}
         deletedExpenses={serializedDeletedExpenses}
+        defaultCurrency={defaultCurrency}
         pagination={{
           page: expenseResult.page,
           pageSize: expenseResult.pageSize,

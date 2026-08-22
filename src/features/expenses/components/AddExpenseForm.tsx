@@ -21,14 +21,15 @@ import Card from "@/components/common/Card";
 
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
 
-import { SerializedExpense } from "../types";
+import type { DisplayExpense } from "../types";
 import type { OcrResult } from "../types/ocr";
+
 import ReceiptOcrUpload from "./ReceiptOcrUpload";
 
 type AddExpenseFormProps = {
-  editingExpense: SerializedExpense | null;
+  editingExpense: DisplayExpense | null;
   setEditingExpense: React.Dispatch<
-    React.SetStateAction<SerializedExpense | null>
+    React.SetStateAction<DisplayExpense | null>
   >;
   defaultCurrency?: CurrencyCode;
 };
@@ -258,10 +259,15 @@ export default function AddExpenseForm({
              */
             result = await createExpenseAction(null, formData);
 
+            console.log("starting");
+
             if (!result.success) {
               setState(result);
+              console.log("error!!!");
               return;
             }
+
+            console.log("success and finished!!!");
 
             /*
              * -------------------------------------------------------
@@ -304,11 +310,8 @@ export default function AddExpenseForm({
              * CREATION SUCCESS
              * -------------------------------------------------------
              *
-             * The mentor requirement is to redirect the user to the
-             * expenses page after a successful expense creation.
-             *
-             * Do not reset the form first because the user is leaving
-             * this page immediately.
+             * Redirect the user to the expenses page after
+             * successful expense creation.
              */
             setState(result);
 

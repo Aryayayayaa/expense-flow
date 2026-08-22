@@ -3,11 +3,15 @@
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
 
-import { auth } from "@/auth";
+import { auth, unstable_update } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/features/notifications/lib/notifications";
 
-import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from "@/constants/currencies";
+import {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "@/constants/currencies";
 
 async function requireUser() {
   const session = await auth();
@@ -141,6 +145,11 @@ export async function updateOwnProfileAction(data: {
       changes.push("profile photo");
     }
 
+    /*
+     * Validate and prepare the new default currency.
+     */
+    let newDefaultCurrency: CurrencyCode | undefined;
+
     if (data.defaultCurrency !== undefined) {
       const defaultCurrency = data.defaultCurrency.trim().toUpperCase();
 
@@ -155,8 +164,10 @@ export async function updateOwnProfileAction(data: {
         };
       }
 
-      if (defaultCurrency !== user.defaultCurrency) {
-        updateData.defaultCurrency = defaultCurrency;
+      newDefaultCurrency = defaultCurrency as CurrencyCode;
+
+      if (newDefaultCurrency !== user.defaultCurrency) {
+        updateData.defaultCurrency = newDefaultCurrency;
         changes.push("default currency");
       }
     }
@@ -180,6 +191,20 @@ export async function updateOwnProfileAction(data: {
         defaultCurrency: true,
       },
     });
+
+    /*
+     * Update the current NextAuth JWT/session immediately when
+     * the default currency changes.
+     *
+     * This prevents the user from needing to log out and log back in.
+     */
+    if (newDefaultCurrency && newDefaultCurrency !== user.defaultCurrency) {
+      await unstable_update({
+        user: {
+          defaultCurrency: newDefaultCurrency,
+        },
+      });
+    }
 
     await createNotification({
       userId: updatedUser.id,

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import { updateOwnProfileAction } from "../actions/profile-actions";
 
 import {
@@ -22,6 +24,8 @@ export default function ProfileEditor({
   role,
   defaultCurrency: initialDefaultCurrency,
 }: ProfileEditorProps) {
+  const router = useRouter();
+
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -60,6 +64,20 @@ export default function ProfileEditor({
 
       setMessage(result.message);
       setPassword("");
+
+      /*
+       * The server action updates:
+       *
+       * 1. Prisma User.defaultCurrency
+       * 2. The current NextAuth JWT/session
+       *
+       * Refreshing the server component tree causes DashboardLayout
+       * to call auth() again and provide the updated currency to
+       * UserProvider.
+       *
+       * Therefore the user does NOT need to log out and log back in.
+       */
+      router.refresh();
     } catch (error) {
       console.error("Profile update error:", error);
       setError("Unable to update profile.");
@@ -96,7 +114,7 @@ export default function ProfileEditor({
             value={name}
             onChange={(event) => setName(event.target.value)}
             disabled={role === "EMPLOYEE" || role === "ADMIN"}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
           />
 
           {(role === "EMPLOYEE" || role === "ADMIN") && (
@@ -119,7 +137,7 @@ export default function ProfileEditor({
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
           />
         </div>
 
@@ -138,7 +156,7 @@ export default function ProfileEditor({
               setDefaultCurrency(event.target.value as CurrencyCode)
             }
             disabled={saving}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
           >
             {SUPPORTED_CURRENCIES.map((currency) => (
               <option key={currency.code} value={currency.code}>
@@ -167,7 +185,7 @@ export default function ProfileEditor({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Leave blank to keep current password"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
           />
         </div>
       </div>

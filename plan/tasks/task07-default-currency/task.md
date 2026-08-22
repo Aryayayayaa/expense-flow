@@ -25,15 +25,10 @@ Add a default currency selection to the user registration flow.
 The registration form should:
 
 [x] Provide a currency selection field.
-
 [x] Allow the user to choose from the application's supported currencies.
-
 [x] Have a sensible default selection.
-
 [x] Validate the selected currency.
-
 [x] Persist the selected currency when the user account is created.
-
 The selected currency must become the user's stored default currency.
 
 ---
@@ -47,11 +42,8 @@ The user's default currency must be persisted in the database as part of the use
 The implementation must:
 
 [x] Use the existing supported currency definitions where possible.
-
 [x] Avoid duplicating the supported currency list unnecessarily.
-
 [x] Store a normalized currency code.
-
 [x] Maintain compatibility with existing users/data.
 
 If an existing user does not yet have a stored default currency, the application must have a safe fallback behavior.
@@ -67,15 +59,10 @@ The **Edit Profile** section must allow the authenticated user to change their d
 The Edit Profile flow should:
 
 [x] Display the user's current default currency.
-
 [x] Allow selection of another supported currency.
-
 [x] Validate the selected currency.
-
 [x] Persist the updated preference.
-
 [x] Display appropriate success/error feedback.
-
 [x] Reflect the new currency preference after the profile is updated.
 
 ---
@@ -87,11 +74,8 @@ The Edit Profile flow should:
 The expense creation form should use the user's default currency as the initial currency selection.
 
 The user's default currency should:
-
 [x] Be loaded from the authenticated user's profile.
-
 [x] Be selected automatically when opening the New Expense form.
-
 [x] Still allow the user to manually select another supported currency for an individual expense.
 
 Changing the expense currency for one expense must not change the user's default currency.
@@ -102,41 +86,107 @@ The default currency is a user preference; the expense currency remains an expen
 
 ### 5. Existing Expense Behavior
 
-#### STATUS: NEXT
+#### STATUS: COMPLETED
+
+### 5. Existing Expense Behavior
+
+#### STATUS: COMPLETED
 
 Existing expenses must retain their originally stored currency.
 
 Changing the user's default currency must NOT:
-
-[ ] Convert existing expenses.
-
-[ ] Modify existing expense currency values.
-
-[ ] Modify historical exchange rates.
-
-[ ] Recalculate previously stored base-currency amounts.
+[x] Convert existing expenses.
+[x] Modify existing expense currency values.
+[x] Modify historical exchange rates.
+[x] Recalculate previously stored base-currency amounts.
 
 The default currency only affects future/default selections.
 
+However, the user's current default currency must affect the **display representation** of existing expenses without modifying their stored transaction data.
+
+The application should:
+[x] Display existing expense amounts using the user's current default currency.
+[x] Convert the existing expense's stored amount into the user's current default currency for display purposes only.
+[x] When the expense's original currency is different from the user's current default currency, display the original transaction amount and currency in brackets next to/below the converted default-currency value.
+[x] When the expense's original currency matches the user's current default currency, display only the default-currency value without the original-currency value in brackets.
+[x] Preserve the original expense amount and currency in the database.
+[x] Preserve the historical exchange rate and exchange-rate date stored against the expense.
+[x] Preserve the previously stored base-currency amount.
+[x] Changing the user's default currency must update the displayed representation of existing expenses without mutating the stored expense record.
+
+Example:
+
+If the user's default currency is INR and an expense was originally created as USD 100:
+
+Display:
+
+    ₹<converted INR value>
+    ($100)
+
+If the user later changes their default currency to USD:
+
+Display:
+
+    $100
+
+No bracketed original value is required because the expense's original currency now matches the user's current default currency.
+
+If the user later changes their default currency to EUR:
+
+Display:
+
+    €<converted EUR value>
+    ($100)
+
+The original transaction remains stored as USD 100 throughout these changes.
+
+This display-currency behavior must eventually be applied consistently across:
+[x] My Expenses / Expense Cards.
+[x] Dashboard.
+[x] Analytics.
+[x] Reports.
+[x] Approvals.
+
+## The display conversion must not overwrite or recalculate the historical transaction data stored for the expense.
+
 ---
 
-### 6. Validation and Security
+### 6. Dashboard Default Currency Display
 
-#### STATUS: NOT STARTED
+#### STATUS: NEXT
 
-Default currency updates must only be performed for the authenticated user's own profile.
+The Dashboard must use the authenticated user's current default currency for all applicable monetary display and aggregation.
 
-The implementation must:
+The Dashboard must:
 
-[ ] Validate the currency against the application's supported currencies.
+- [ ] Load the authenticated user's current default currency.
+- [ ] Display "Total Expenses" using the user's current default currency.
+- [ ] Display "This Month" using the user's current default currency.
+- [ ] Include expenses stored in all supported currencies when calculating totals.
+- [ ] Convert non-default-currency expenses into the user's current default currency before aggregation.
+- [ ] Keep expenses originally stored in the user's default currency unchanged.
+- [ ] Ensure changing the user's default currency updates Dashboard monetary values in the same session.
+- [ ] Ensure changing the user's default currency does not modify historical expense data.
 
-[ ] Reject invalid/unsupported currency codes.
+#### Recent Expenses
 
-[ ] Prevent unauthorized users from modifying another user's default currency.
+The Recent Expenses table must continue to contain:
 
-[ ] Keep server-side validation authoritative.
+- Date
+- Expense
+- Category
+- Amount
 
-Client-side validation/UI behavior must not be treated as a security boundary.
+Only the Amount column requires currency-display changes.
+
+The Amount column must:
+
+- [ ] Display the expense amount primarily in the user's current default currency.
+- [ ] Convert the expense into the user's default currency when the original expense currency differs.
+- [ ] Display the original transaction amount and currency in brackets when the original currency differs from the default currency.
+- [ ] Display only the default-currency amount when the original expense currency matches the default currency.
+- [ ] Preserve the original transaction amount and currency in the database.
+- [ ] Never overwrite the historical expense amount merely because the user's default currency changes.
 
 ---
 

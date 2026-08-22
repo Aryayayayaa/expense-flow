@@ -8,7 +8,7 @@ import { getUserByEmail } from "@/features/auth/lib/users";
 import { authConfig } from "@/auth.config";
 import type { CurrencyCode } from "./constants/currencies";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   ...authConfig,
 
   adapter: PrismaAdapter(prisma),
@@ -55,15 +55,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
-  //jwt = json web token
+  // jwt = JSON Web Token
   callbacks: {
     async jwt({ token, user, trigger, session }) {
+      /*
+       * Initial login.
+       *
+       * The user's database values are placed into the JWT.
+       */
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.defaultCurrency = user.defaultCurrency;
       }
 
+      /*
+       * Session update.
+       *
+       * This is used when the user changes their default currency
+       * without logging out.
+       *
+       * The updated value is written into the existing JWT.
+       */
       if (trigger === "update" && session?.user?.defaultCurrency) {
         token.defaultCurrency = session.user.defaultCurrency;
       }

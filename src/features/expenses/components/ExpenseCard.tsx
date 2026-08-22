@@ -1,5 +1,7 @@
 "use client";
 
+import { useUser } from "@/context/UserContext";
+
 import {
   Calendar,
   Clock,
@@ -21,7 +23,8 @@ import { formatDate, formatTime } from "@/utils/formatDate";
 import { getCategoryColor } from "@/utils/categoryColor";
 
 import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
-import { SerializedExpense } from "../types";
+
+import type { DisplayExpense } from "../types";
 
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
@@ -29,11 +32,21 @@ import Button from "@/components/common/Button";
 import ReceiptUpload from "./ReceiptUpload";
 
 type ExpenseCardProps = {
-  expense: SerializedExpense;
-  onEdit: (expense: SerializedExpense) => void;
+  expense: DisplayExpense;
+  onEdit: (expense: DisplayExpense) => void;
 };
 
 export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
+  const { defaultCurrency } = useUser();
+
+  /*
+   * displayAmount has already been calculated on the server
+   * using the user's CURRENT default currency.
+   *
+   * The original amount/currency remain untouched.
+   */
+  const displayAmount = expense.displayAmount;
+
   const canModify = expense.status === "PENDING";
 
   const deleteAction = deleteExpenseAction.bind(null, expense.id);
@@ -59,16 +72,17 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         </h2>
 
         <div>
-          <p className="text-2xl font-bold tracking-tight text-green-600">
-            {formatCurrency(expense.amount, expense.currency)}
-          </p>
+          <div>
+            <p className="text-2xl font-bold tracking-tight text-green-600">
+              {formatCurrency(displayAmount, defaultCurrency)}
+            </p>
 
-          {expense.currency !== "INR" &&
-            expense.baseCurrencyAmount !== null && (
+            {expense.currency !== defaultCurrency && (
               <p className="mt-1 text-sm text-gray-500">
-                ≈ {formatCurrency(expense.baseCurrencyAmount, "INR")}
+                ({formatCurrency(expense.amount, expense.currency)})
               </p>
             )}
+          </div>
         </div>
       </div>
 
@@ -95,10 +109,7 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         </div>
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Admin Modification Notice                                         */}
-      {/* ------------------------------------------------------------------ */}
-
+      {/* Admin Modification Notice */}
       {hasAdminModification && expense.adminModification && (
         <div className="mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
           <div className="flex items-start gap-3">
