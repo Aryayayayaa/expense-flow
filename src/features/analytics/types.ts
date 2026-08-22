@@ -15,6 +15,11 @@ export type AnalyticsExpense = {
   exchangeRate: number | null;
   exchangeRateAt: Date | null;
 
+  // Current reporting conversion.
+  convertedDisplayAmount: number | null;
+  displayExchangeRate: number | null;
+  displayExchangeRateAt: Date | null;
+
   category: string;
   expenseDate: Date | null;
   billProofUrl: string | null;

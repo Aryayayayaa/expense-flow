@@ -11,12 +11,15 @@ import {
   YAxis,
 } from "recharts";
 
+import { ALL_CURRENCIES } from "@/constants/currencies";
+
 import { AnalyticsExpense } from "../../types";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type CategoryComparisonChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const CATEGORY_COLORS = [
@@ -32,11 +35,18 @@ const CATEGORY_COLORS = [
 
 export default function CategoryComparisonChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: CategoryComparisonChartProps) {
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
-      const amount = getReportExpenseAmount(expense, currency);
+      const amount = getReportExpenseAmount(expense, {
+        selectedCurrency,
+        defaultCurrency,
+      });
 
       totals[expense.category] = (totals[expense.category] ?? 0) + amount;
 
@@ -80,7 +90,7 @@ export default function CategoryComparisonChart({
             tickFormatter={(value) =>
               new Intl.NumberFormat("en-IN", {
                 style: "currency",
-                currency,
+                currency: reportCurrency,
                 maximumFractionDigits: 0,
               }).format(Number(value))
             }
@@ -92,7 +102,7 @@ export default function CategoryComparisonChart({
             formatter={(value) => [
               new Intl.NumberFormat("en-IN", {
                 style: "currency",
-                currency,
+                currency: reportCurrency,
               }).format(Number(value)),
               "Total Expenses",
             ]}

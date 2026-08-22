@@ -59,23 +59,27 @@ type ExpensesPageClientProps = {
   expenses: DisplayExpense[];
   deletedExpenses: DeletedExpense[];
   defaultCurrency: CurrencyCode;
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+  initialPage?: number;
 };
+
+const PAGE_SIZE = 10;
 
 export default function ExpensesPageClient({
   expenses,
   deletedExpenses,
   defaultCurrency,
-  pagination,
+  initialPage = 1,
 }: ExpensesPageClientProps) {
   const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
     null,
   );
+
+  /*
+   * Pagination is intentionally local to this page.
+   *
+   * Filtering happens BEFORE pagination.
+   */
+  const [currentPage, setCurrentPage] = useState(Math.max(1, initialPage));
 
   /* ---------------------------------------------------------------------- */
   /* Filters                                                                */
@@ -221,20 +225,22 @@ export default function ExpensesPageClient({
       const expenseDate = expense.expenseDate ?? expense.createdAt;
 
       /*
-       * Currency filtering is based on the ORIGINAL transaction currency.
+       * IMPORTANT:
        *
-       * Example:
-       * - Current default = USD
-       * - Expense originally saved as INR
+       * Currency filtering uses the ORIGINAL currency stored
+       * on the expense.
        *
-       * Selecting INR still finds that expense.
+       * Therefore:
        *
-       * The card itself will continue displaying the converted
-       * value in the current default currency.
+       * USD filter → only expenses originally saved as USD
+       * INR filter → only expenses originally saved as INR
+       *
+       * An INR expense converted to USD for display does NOT
+       * become a USD expense.
        */
       const matchesCurrency =
         selectedCurrency === ALL_CURRENCIES ||
-        expense.currency === selectedCurrency;
+        expense.currency.toUpperCase() === selectedCurrency.toUpperCase();
 
       const matchesCategory =
         selectedCategory === "" || expense.category === selectedCategory;
@@ -368,16 +374,56 @@ export default function ExpensesPageClient({
   ]);
 
   /* ---------------------------------------------------------------------- */
+  /* Pagination                                                             */
+  /* ---------------------------------------------------------------------- */
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredExpenses.length / PAGE_SIZE),
+  );
+
+  /*
+   * Keep the current page valid if filtering reduces the number
+   * of matching expenses.
+   */
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedExpenses = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+
+    return filteredExpenses.slice(startIndex, endIndex);
+  }, [filteredExpenses, safeCurrentPage]);
+
+  function changePage(page: number) {
+    const nextPage = Math.min(Math.max(1, page), totalPages);
+
+    setCurrentPage(nextPage);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /*
+   * Any filter change starts from page 1.
+   *
+   * This is critical for cases such as:
+   *
+   * ALL CURRENCIES → USD
+   *
+   * where the currently selected page may no longer exist
+   * in the filtered result.
+   */
+  function resetPagination() {
+    setCurrentPage(1);
+  }
+
+  /* ---------------------------------------------------------------------- */
   /* Display amount                                                         */
   /* ---------------------------------------------------------------------- */
 
-  /*
-   * displayAmount is already calculated on the server in the user's
-   * CURRENT default currency.
-   *
-   * Therefore the summary must use displayAmount regardless of which
-   * original-currency filter is selected.
-   */
   function getDisplayAmount(expense: DisplayExpense) {
     return Number(expense.displayAmount);
   }
@@ -387,10 +433,13 @@ export default function ExpensesPageClient({
   /* ---------------------------------------------------------------------- */
 
   /*
-   * Summary cards ALWAYS use the user's current default currency.
+   * IMPORTANT:
    *
-   * They should NOT switch to INR merely because "All Currencies"
-   * is selected.
+   * Summary calculations use filteredExpenses, NOT
+   * paginatedExpenses.
+   *
+   * Therefore an expense on page 2 still contributes
+   * to Total Expenses / This Month / Categories.
    */
   const summaryCurrency = defaultCurrency;
 
@@ -431,6 +480,8 @@ export default function ExpensesPageClient({
     setReimbursementStatus("ALL");
     setCustomStartDate("");
     setCustomEndDate("");
+
+    resetPagination();
   }
 
   const hasActiveFilters =
@@ -577,25 +628,52 @@ export default function ExpensesPageClient({
 
       <Filters
         selectedCurrency={selectedCurrency}
-        onCurrencyChange={setSelectedCurrency}
+        onCurrencyChange={(value) => {
+          setSelectedCurrency(value);
+          resetPagination();
+        }}
         approvalStatus={approvalStatus}
-        onApprovalStatusChange={setApprovalStatus}
+        onApprovalStatusChange={(value) => {
+          setApprovalStatus(value);
+          resetPagination();
+        }}
         reimbursementStatus={reimbursementStatus}
-        onReimbursementStatusChange={setReimbursementStatus}
+        onReimbursementStatusChange={(value) => {
+          setReimbursementStatus(value);
+          resetPagination();
+        }}
         selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        onCategoryChange={(value) => {
+          setSelectedCategory(value);
+          resetPagination();
+        }}
         categories={categories}
         selectedYear={selectedYear}
-        onYearChange={setSelectedYear}
+        onYearChange={(value) => {
+          setSelectedYear(value);
+          resetPagination();
+        }}
         years={years}
         selectedMonth={selectedMonth}
-        onMonthChange={setSelectedMonth}
+        onMonthChange={(value) => {
+          setSelectedMonth(value);
+          resetPagination();
+        }}
         dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
+        onDateFilterChange={(value) => {
+          setDateFilter(value);
+          resetPagination();
+        }}
         customStartDate={customStartDate}
         customEndDate={customEndDate}
-        onCustomStartDateChange={setCustomStartDate}
-        onCustomEndDateChange={setCustomEndDate}
+        onCustomStartDateChange={(value) => {
+          setCustomStartDate(value);
+          resetPagination();
+        }}
+        onCustomEndDateChange={(value) => {
+          setCustomEndDate(value);
+          resetPagination();
+        }}
         minDate={customMinDate}
         maxDate={customMaxDate}
         disableDatePresets={disableDatePresets}
@@ -603,7 +681,7 @@ export default function ExpensesPageClient({
         onClearFilters={clearFilters}
       />
 
-      {/* Expense count */}
+      {/* Add expense */}
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link
@@ -618,7 +696,7 @@ export default function ExpensesPageClient({
       {/* Expense cards */}
 
       <div className="mt-4">
-        <ExpenseList expenses={filteredExpenses} onEdit={setEditingExpense} />
+        <ExpenseList expenses={paginatedExpenses} onEdit={setEditingExpense} />
       </div>
 
       {/* Edit Expense */}
@@ -644,7 +722,13 @@ export default function ExpensesPageClient({
         </div>
       )}
 
-      <Pagination page={pagination.page} totalPages={pagination.totalPages} />
+      {/* Pagination */}
+
+      <Pagination
+        page={safeCurrentPage}
+        totalPages={totalPages}
+        onPageChange={changePage}
+      />
     </>
   );
 }

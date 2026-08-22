@@ -11,14 +11,16 @@ import {
   YAxis,
 } from "recharts";
 
-import { AnalyticsExpense } from "../../types";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
+import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type MonthlyCategoryTrendChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const monthNames = [
@@ -49,8 +51,12 @@ const categoryColors = [
 
 export default function MonthlyCategoryTrendChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: MonthlyCategoryTrendChartProps) {
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   const categories = [
     ...new Set(expenses.map((expense) => expense.category)),
   ].sort();
@@ -86,7 +92,10 @@ export default function MonthlyCategoryTrendChart({
 
     monthData[category] =
       Number(monthData[category] ?? 0) +
-      getReportExpenseAmount(expense, currency);
+      getReportExpenseAmount(expense, {
+        selectedCurrency,
+        defaultCurrency,
+      });
   });
 
   const chartData = Array.from(monthlyData.values()).sort((a, b) => {
@@ -122,12 +131,14 @@ export default function MonthlyCategoryTrendChart({
           <XAxis dataKey="label" />
 
           <YAxis
-            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+            tickFormatter={(value) =>
+              formatCurrency(Number(value), reportCurrency)
+            }
           />
 
           <Tooltip
             formatter={(value) => [
-              formatCurrency(Number(value), currency),
+              formatCurrency(Number(value), reportCurrency),
               "Expenses",
             ]}
           />

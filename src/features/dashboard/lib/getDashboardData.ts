@@ -85,23 +85,27 @@ export async function getDashboardData() {
    * display-currency logic as /expenses.
    */
   const totalSpent = expenses.reduce(
-    (total, expense) => total + getDashboardDisplayAmount(expense),
+    (total: number, expense: (typeof expenses)[number]) =>
+      total + getDashboardDisplayAmount(expense),
     0,
   );
 
   const now = new Date();
 
-  const monthlyExpenses = expenses.filter((expense) => {
-    const date = expense.expenseDate ?? expense.createdAt;
+  const monthlyExpenses = expenses.filter(
+    (expense: (typeof expenses)[number]) => {
+      const date = expense.expenseDate ?? expense.createdAt;
 
-    return (
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear()
-    );
-  });
+      return (
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+      );
+    },
+  );
 
   const monthlySpent = monthlyExpenses.reduce(
-    (total, expense) => total + getDashboardDisplayAmount(expense),
+    (total: number, expense: (typeof expenses)[number]) =>
+      total + getDashboardDisplayAmount(expense),
     0,
   );
 

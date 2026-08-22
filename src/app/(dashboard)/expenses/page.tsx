@@ -2,8 +2,8 @@ import ExpensesPageClient from "@/features/expenses/components/ExpensesPageClien
 import type { CurrencyCode } from "@/constants/currencies";
 
 import {
+  getAllExpensesForUser,
   getDeletedExpensesForUser,
-  getExpenses,
 } from "@/features/expenses/lib/expenses";
 
 import { auth } from "@/auth";
@@ -32,40 +32,41 @@ export default async function ExpensesPage({
   const page =
     Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-  const pageSize = 10;
-
   const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
 
   /*
-   * getExpenses() is responsible for preparing expenses
-   * for display in the authenticated user's current
-   * default currency.
+   * IMPORTANT:
    *
-   * It calculates:
+   * The Expenses page intentionally loads ALL expenses here.
    *
-   *   original amount
-   *   original currency
+   * Pagination must happen AFTER the client-side filters are applied.
+   *
+   * Otherwise:
+   *
+   *   DB pagination
    *        ↓
-   *   historical/base INR value
+   *   current page only
    *        ↓
-   *   current default currency
+   *   filtering
    *
-   * The original expense amount and currency are never
-   * modified.
+   * causes filtered expenses and summary cards to incorrectly
+   * depend on which database page happens to be displayed.
+   *
+   * The correct flow is:
+   *
+   *   ALL expenses
+   *        ↓
+   *   filters
+   *        ↓
+   *   summary calculations
+   *        ↓
+   *   pagination
    */
-  const [expenseResult, deletedExpenses] = await Promise.all([
-    getExpenses(userId, page, pageSize, "ALL", "ALL", defaultCurrency),
+  const [expenses, deletedExpenses] = await Promise.all([
+    getAllExpensesForUser(userId, defaultCurrency),
     getDeletedExpensesForUser(userId),
   ]);
 
-  /*
-   * getExpenses() already serializes the monetary Decimal
-   * values into JavaScript numbers and calculates
-   * displayAmount using the user's current default currency.
-   *
-   * Therefore no additional exchange-rate calculation
-   * should happen here.
-   */
   const serializedDeletedExpenses = deletedExpenses.map((expense) => ({
     ...expense,
     amount: Number(expense.amount),
@@ -74,15 +75,10 @@ export default async function ExpensesPage({
   return (
     <main className="mx-auto w-full max-w-7xl space-y-8 p-8">
       <ExpensesPageClient
-        expenses={expenseResult.expenses}
+        expenses={expenses}
         deletedExpenses={serializedDeletedExpenses}
         defaultCurrency={defaultCurrency}
-        pagination={{
-          page: expenseResult.page,
-          pageSize: expenseResult.pageSize,
-          total: expenseResult.total,
-          totalPages: expenseResult.totalPages,
-        }}
+        initialPage={page}
       />
     </main>
   );

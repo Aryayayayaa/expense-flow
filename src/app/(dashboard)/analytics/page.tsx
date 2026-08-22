@@ -40,6 +40,7 @@ export default async function AnalyticsPage({
           expenses={expenses}
           scope={scope}
           role={session.user.role}
+          defaultCurrency={session.user.defaultCurrency}
         />
       </div>
     </div>

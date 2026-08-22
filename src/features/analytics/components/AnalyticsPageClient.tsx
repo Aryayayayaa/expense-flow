@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import AnalyticsTabs from "./AnalyticsTabs";
-
 import Filters from "@/components/common/Filters";
 
 import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
@@ -29,6 +28,7 @@ type AnalyticsPageClientProps = {
   expenses: AnalyticsExpense[];
   scope: AnalyticsScope;
   role: "ADMIN" | "HR" | "EMPLOYEE";
+  defaultCurrency: string;
 };
 
 type AnalyticsTab = "categories" | "monthly" | "yearly";
@@ -37,21 +37,20 @@ export default function AnalyticsPageClient({
   expenses,
   scope,
   role,
+  defaultCurrency,
 }: AnalyticsPageClientProps) {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("categories");
 
   const [selectedCategory, setSelectedCategory] = useState("");
-
   const [selectedYear, setSelectedYear] = useState("");
-
   const [selectedMonth, setSelectedMonth] = useState("");
-
   const [dateFilter, setDateFilter] = useState("all");
 
-  const [selectedCurrency, setSelectedCurrency] =
-    useState<CurrencyFilter>(ALL_CURRENCIES);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyFilter>(
+    defaultCurrency as CurrencyFilter,
+  );
 
   const [approvalStatus, setApprovalStatus] =
     useState<ExpenseApprovalStatus>("ALL");
@@ -60,7 +59,6 @@ export default function AnalyticsPageClient({
     useState<ExpenseReimbursementStatus>("ALL");
 
   const [customStartDate, setCustomStartDate] = useState("");
-
   const [customEndDate, setCustomEndDate] = useState("");
 
   /* ---------------------------------------------------------------------- */
@@ -89,14 +87,12 @@ export default function AnalyticsPageClient({
   ].sort((a, b) => b - a);
 
   const isYearSelected = selectedYear !== "";
-
   const selectedYearNumber = Number(selectedYear);
 
   const isCurrentYearSelected =
     isYearSelected && selectedYearNumber === currentYear;
 
   const isMonthSelected = selectedMonth !== "";
-
   const selectedMonthNumber = Number(selectedMonth);
 
   const earliestExpenseDate = expenses.reduce<Date | null>(
@@ -207,19 +203,15 @@ export default function AnalyticsPageClient({
     );
 
     const startOfTomorrow = new Date(startOfToday);
-
     startOfTomorrow.setDate(startOfToday.getDate() + 1);
 
     const startOfYesterday = new Date(startOfToday);
-
     startOfYesterday.setDate(startOfToday.getDate() - 1);
 
     const startOfLast7Days = new Date(startOfToday);
-
     startOfLast7Days.setDate(startOfToday.getDate() - 6);
 
     const startOfLast30Days = new Date(startOfToday);
-
     startOfLast30Days.setDate(startOfToday.getDate() - 29);
 
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -271,7 +263,6 @@ export default function AnalyticsPageClient({
       case "custom":
         if (customStartDate && customEndDate) {
           const start = new Date(`${customStartDate}T00:00:00`);
-
           const end = new Date(`${customEndDate}T23:59:59`);
 
           matchesDate = expenseDate >= start && expenseDate <= end;
@@ -297,15 +288,19 @@ export default function AnalyticsPageClient({
   const disableDatePresets =
     isMonthSelected || (isYearSelected && !isCurrentYearSelected);
 
+  /* ---------------------------------------------------------------------- */
+  /* Report currency                                                        */
+  /* ---------------------------------------------------------------------- */
+
   const reportCurrency =
-    selectedCurrency === ALL_CURRENCIES ? "INR" : selectedCurrency;
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
   /* ---------------------------------------------------------------------- */
   /* Clear filters                                                          */
   /* ---------------------------------------------------------------------- */
 
   function clearFilters() {
-    setSelectedCurrency(ALL_CURRENCIES);
+    setSelectedCurrency(defaultCurrency as CurrencyFilter);
 
     setSelectedCategory("");
     setSelectedYear("");
@@ -320,7 +315,7 @@ export default function AnalyticsPageClient({
   }
 
   const hasActiveFilters =
-    selectedCurrency !== ALL_CURRENCIES ||
+    selectedCurrency !== defaultCurrency ||
     selectedCategory !== "" ||
     selectedYear !== "" ||
     selectedMonth !== "" ||
@@ -334,8 +329,6 @@ export default function AnalyticsPageClient({
 
   return (
     <div>
-      {/* Expense Scope */}
-
       {(role === "ADMIN" || role === "HR") && (
         <div className="mb-6 max-w-xs">
           <label
@@ -354,15 +347,11 @@ export default function AnalyticsPageClient({
             className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
           >
             <option value="OWN">OWN</option>
-
             <option value="ALL">ALL</option>
-
             <option value="EMPLOYEES">EMPLOYEES</option>
           </select>
         </div>
       )}
-
-      {/* Common Filters */}
 
       <Filters
         title="Filter Analytics"
@@ -394,8 +383,6 @@ export default function AnalyticsPageClient({
         onClearFilters={clearFilters}
       />
 
-      {/* Analytics Tabs */}
-
       <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="rounded-lg border bg-white p-8 shadow">
@@ -412,7 +399,8 @@ export default function AnalyticsPageClient({
             <div className="mt-6">
               <CategoryPieChart
                 expenses={filteredExpenses}
-                currency={reportCurrency}
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
               />
             </div>
 
@@ -428,7 +416,8 @@ export default function AnalyticsPageClient({
               <div className="mt-6">
                 <CategoryComparisonChart
                   expenses={filteredExpenses}
-                  currency={reportCurrency}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
                 />
               </div>
             </div>
@@ -452,7 +441,8 @@ export default function AnalyticsPageClient({
 
               <MonthlyTrendChart
                 expenses={filteredExpenses}
-                currency={reportCurrency}
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
               />
             </div>
 
@@ -467,7 +457,8 @@ export default function AnalyticsPageClient({
 
               <MonthlyCategoryTrendChart
                 expenses={filteredExpenses}
-                currency={reportCurrency}
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
               />
             </div>
           </div>
@@ -490,7 +481,8 @@ export default function AnalyticsPageClient({
 
               <YearlyTrendChart
                 expenses={filteredExpenses}
-                currency={reportCurrency}
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
               />
             </div>
 
@@ -505,7 +497,8 @@ export default function AnalyticsPageClient({
 
               <YearlyCategoryChart
                 expenses={filteredExpenses}
-                currency={reportCurrency}
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
               />
             </div>
           </div>

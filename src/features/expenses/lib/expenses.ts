@@ -74,6 +74,7 @@ export async function getExpenses(
   approvalStatus: ExpenseStatus | "ALL" = "ALL",
   reimbursementStatus: ReimbursementStatus | "ALL" = "ALL",
   defaultCurrency: CurrencyCode = DEFAULT_CURRENCY,
+  paginate: boolean = true,
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
@@ -146,8 +147,12 @@ export async function getExpenses(
 
       orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
 
-      skip: (safePage - 1) * safePageSize,
-      take: safePageSize,
+      ...(paginate
+        ? {
+            skip: (safePage - 1) * safePageSize,
+            take: safePageSize,
+          }
+        : {}),
     }),
 
     prisma.expense.count({
@@ -226,8 +231,133 @@ export async function getExpenses(
     total,
     page: safePage,
     pageSize: safePageSize,
-    totalPages: Math.ceil(total / safePageSize),
+    totalPages: paginate ? Math.ceil(total / safePageSize) : 1,
   };
+}
+
+export async function getAllExpensesForUser(
+  userId: number,
+  defaultCurrency: CurrencyCode = DEFAULT_CURRENCY,
+) {
+  const expenses = await prisma.expense.findMany({
+    where: {
+      userId,
+    },
+
+    include: {
+      decidedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+
+      reimbursementBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+
+      auditLogs: {
+        where: {
+          action: "UPDATED",
+          actor: {
+            role: "ADMIN",
+          },
+        },
+
+        include: {
+          actor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+
+        take: 1,
+      },
+    },
+
+    orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
+  });
+
+  return Promise.all(
+    expenses.map(async (expense) => {
+      const latestAdminModification = expense.auditLogs[0];
+
+      let adminModification: AdminModification | null = null;
+
+      if (latestAdminModification?.actor) {
+        const metadata = latestAdminModification.metadata;
+
+        let changes: AdminModification["changes"] = {};
+
+        if (
+          metadata &&
+          typeof metadata === "object" &&
+          !Array.isArray(metadata) &&
+          "changes" in metadata
+        ) {
+          const metadataChanges = metadata.changes;
+
+          if (
+            metadataChanges &&
+            typeof metadataChanges === "object" &&
+            !Array.isArray(metadataChanges)
+          ) {
+            changes = metadataChanges as AdminModification["changes"];
+          }
+        }
+
+        adminModification = {
+          admin: latestAdminModification.actor,
+          modifiedAt: latestAdminModification.createdAt,
+          changes,
+        };
+      }
+
+      const amount = Number(expense.amount);
+
+      const baseCurrencyAmount =
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null;
+
+      const exchangeRate =
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null;
+
+      const displayAmount = await getDisplayExpenseAmount(
+        {
+          amount,
+          currency: expense.currency,
+          baseCurrencyAmount,
+          exchangeRate,
+        },
+        defaultCurrency,
+      );
+
+      return {
+        ...expense,
+        amount,
+        baseCurrencyAmount,
+        exchangeRate,
+        displayAmount,
+        adminModification,
+      };
+    }),
+  );
 }
 
 export async function getExpense(id: number, userId: number) {

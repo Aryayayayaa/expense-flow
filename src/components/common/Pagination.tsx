@@ -8,12 +8,14 @@ type PaginationProps = {
   page: number;
   totalPages: number;
   paramName?: string;
+  onPageChange?: (page: number) => void;
 };
 
 export default function Pagination({
   page,
   totalPages,
   paramName = "page",
+  onPageChange,
 }: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,6 +52,11 @@ export default function Pagination({
       return;
     }
 
+    if (onPageChange) {
+      onPageChange(requestedPage);
+      return;
+    }
+
     window.location.href = createPageUrl(requestedPage);
   }
 
@@ -62,17 +69,32 @@ export default function Pagination({
       className="flex items-center justify-between border-t border-slate-200 px-5 py-4 dark:border-slate-800"
     >
       {/* Previous */}
-      <Link
-        href={createPageUrl(previousPage)}
-        aria-disabled={page === 1}
-        className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
-          page === 1
-            ? "pointer-events-none border-slate-100 text-slate-300 dark:border-slate-800 dark:text-slate-600"
-            : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-        }`}
-      >
-        Previous
-      </Link>
+      {onPageChange ? (
+        <button
+          type="button"
+          onClick={() => onPageChange(previousPage)}
+          disabled={page === 1}
+          className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+            page === 1
+              ? "pointer-events-none border-slate-100 text-slate-300 dark:border-slate-800 dark:text-slate-600"
+              : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          }`}
+        >
+          Previous
+        </button>
+      ) : (
+        <Link
+          href={createPageUrl(previousPage)}
+          aria-disabled={page === 1}
+          className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+            page === 1
+              ? "pointer-events-none border-slate-100 text-slate-300 dark:border-slate-800 dark:text-slate-600"
+              : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          }`}
+        >
+          Previous
+        </Link>
+      )}
 
       {/* Current Page */}
       <form
@@ -95,17 +117,32 @@ export default function Pagination({
       </form>
 
       {/* Next */}
-      <Link
-        href={createPageUrl(nextPage)}
-        aria-disabled={page === totalPages}
-        className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
-          page === totalPages
-            ? "pointer-events-none border-slate-100 text-slate-300 dark:border-slate-800 dark:text-slate-600"
-            : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-        }`}
-      >
-        Next
-      </Link>
+      {onPageChange ? (
+        <button
+          type="button"
+          onClick={() => onPageChange(nextPage)}
+          disabled={page === totalPages}
+          className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+            page === totalPages
+              ? "pointer-events-none border-slate-100 text-slate-300 dark:border-slate-800 dark:text-slate-600"
+              : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          }`}
+        >
+          Next
+        </button>
+      ) : (
+        <Link
+          href={createPageUrl(nextPage)}
+          aria-disabled={page === totalPages}
+          className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+            page === totalPages
+              ? "pointer-events-none border-slate-100 text-slate-300 dark:border-slate-800 dark:text-slate-600"
+              : "border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          }`}
+        >
+          Next
+        </Link>
+      )}
     </nav>
   );
 }

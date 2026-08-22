@@ -10,26 +10,35 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { AnalyticsExpense } from "../../types";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
+import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type YearlyTrendChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 export default function YearlyTrendChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: YearlyTrendChartProps) {
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   const yearlyData = expenses.reduce(
     (acc, expense) => {
       const date = expense.expenseDate ?? expense.createdAt;
       const year = date.getFullYear();
 
-      const amount = getReportExpenseAmount(expense, currency);
+      const amount = getReportExpenseAmount(expense, {
+        selectedCurrency,
+        defaultCurrency,
+      });
 
       const existingYear = acc.find((item) => item.year === year);
 
@@ -66,12 +75,14 @@ export default function YearlyTrendChart({
           <XAxis dataKey="year" />
 
           <YAxis
-            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+            tickFormatter={(value) =>
+              formatCurrency(Number(value), reportCurrency)
+            }
           />
 
           <Tooltip
             formatter={(value) => [
-              formatCurrency(Number(value), currency),
+              formatCurrency(Number(value), reportCurrency),
               "Total Expenses",
             ]}
           />

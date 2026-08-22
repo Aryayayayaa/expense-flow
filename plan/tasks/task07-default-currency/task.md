@@ -259,7 +259,7 @@ After making the changes:
 
 8. Insights — Analysis
 
-#### STATUS: NEXT
+#### STATUS: COMPLETED
 
 Create an Insights section/page that contains Analysis and Reports together.
 There must be NO sub-tabs between Analysis and Reports.
@@ -269,19 +269,19 @@ The Analysis section must provide monetary analysis based on the authenticated u
 The existing currency filter must remain available.
 
 The currency filter must:
-[ ] Keep the existing order of currency options unchanged.
-[ ] Default to the authenticated user's current defaultCurrency when the user first lands on the Insights page.
-[ ] Not default to ALL CURRENCIES.
-[ ] Allow the user to explicitly select ALL CURRENCIES.
-[ ] Allow the user to select any supported individual currency.
+[x] Keep the existing order of currency options unchanged.
+[x] Default to the authenticated user's current defaultCurrency when the user first lands on the Insights page.
+[x] Not default to ALL CURRENCIES.
+[x] Allow the user to explicitly select ALL CURRENCIES.
+[x] Allow the user to select any supported individual currency.
 
 **When a specific currency is selected**
 
 When the currency filter contains a specific currency such as INR, USD, EUR, etc.:
 
-[ ] Include only expenses whose original transaction currency matches the selected currency.
-[ ] Do not convert expenses from another original currency into the selected currency.
-[ ] Use the original stored expense amount for the analysis.
+[x] Include only expenses whose original transaction currency matches the selected currency.
+[x] Do not convert expenses from another original currency into the selected currency.
+[x] Use the original stored expense amount for the analysis.
 
 For example:
 Currency Filter = USD
@@ -292,23 +292,23 @@ EUR 200 → excluded
 When ALL CURRENCIES is selected
 When the currency filter is ALL CURRENCIES:
 
-[ ] Include expenses from all supported original currencies.
-[ ] Use the authenticated user's current default currency as the reporting/display currency.
-[ ] Convert expenses whose original currency differs from the user's default currency.
-[ ] Do not modify the original stored expense amount or currency.
-[ ] Aggregate the converted values using the user's default currency.
+[x] Include expenses from all supported original currencies.
+[x] Use the authenticated user's current default currency as the reporting/display currency.
+[x] Convert expenses whose original currency differs from the user's default currency.
+[x] Do not modify the original stored expense amount or currency.
+[x] Aggregate the converted values using the user's default currency.
 
 **Analysis graphs**
 Analysis must include the relevant existing analysis graphs for:
 
-[ ] Category-based spending.
-[ ] Monthly spending.
-[ ] Yearly spending.
+[x] Category-based spending.
+[x] Monthly spending.
+[x] Yearly spending.
 
 **For each graph:**
-[ ] Specific currency filter → only expenses originally saved in that currency are included.
-[ ] ALL CURRENCIES → all expenses are converted to the user's default currency before aggregation.
-[ ] Graph totals must use the same conversion logic as the summary values.
+[x] Specific currency filter → only expenses originally saved in that currency are included.
+[x] ALL CURRENCIES → all expenses are converted to the user's default currency before aggregation.
+[x] Graph totals must use the same conversion logic as the summary values.
 
 **Analysis tooltips**
 When ALL CURRENCIES is selected, graph tooltips must explain how the displayed value was calculated.
@@ -322,10 +322,10 @@ USD: $30.00 = €25.67
 Total: €270.38
 
 The exact visual formatting may vary, but the tooltip must clearly communicate:
-[ ] Original currency.
-[ ] Original amount.
-[ ] Converted amount in the user's default currency.
-[ ] Final total used by the graph.
+[x] Original currency.
+[x] Original amount.
+[x] Converted amount in the user's default currency.
+[x] Final total used by the graph.
 
 The same calculation principle must work for category, monthly, and yearly graphs.
 
@@ -341,32 +341,32 @@ Reports must follow the same currency-filter and conversion rules established fo
 
 **Currency Filter**
 The existing currency filter must remain available.
-[ ] Currency filter options must remain in their existing order.
-[ ] The authenticated user's defaultCurrency must be selected by default when first landing on Insights.
-[ ] ALL CURRENCIES must remain available as an explicit selection.
+[] Currency filter options must remain in their existing order.
+[] The authenticated user's defaultCurrency must be selected by default when first landing on Insights.
+[] ALL CURRENCIES must remain available as an explicit selection.
 
 **Specific currency selected**
 When a specific currency is selected:
-[ ] Include only expenses originally saved with that currency.
-[ ] Do not convert expenses from other currencies.
-[ ] Use the original transaction amount for calculations.
+[] Include only expenses originally saved with that currency.
+[] Do not convert expenses from other currencies.
+[] Use the original transaction amount for calculations.
 
 **ALL CURRENCIES selected**
 When ALL CURRENCIES is selected:
-[ ] Include expenses from all currencies.
-[ ] Convert non-default-currency expenses into the authenticated user's current default currency.
-[ ] Aggregate converted values using the default currency.
-[ ] Never overwrite historical expense values.
+[] Include expenses from all currencies.
+[] Convert non-default-currency expenses into the authenticated user's current default currency.
+[] Aggregate converted values using the default currency.
+[] Never overwrite historical expense values.
 
 **Summary Cards**
 Summary cards must follow the same filtering and conversion behavior as /expenses.
-[ ] Summary values respond to the selected filters.
-[ ] Specific currency → only expenses originally saved in that currency are included.
-[ ] ALL CURRENCIES → all expenses are included after conversion to the user's default currency.
-[ ] Summary values are displayed using the user's default currency.
-[ ] Total Expenses uses the same calculation basis as the filtered report data.
-[ ] This Month uses the same calculation basis as the filtered report data.
-[ ] Other monetary summary values use the same conversion rules.
+[x] Summary values respond to the selected filters.
+[x] Specific currency → only expenses originally saved in that currency are included.
+[x] ALL CURRENCIES → all expenses are included after conversion to the user's default currency.
+[x] Summary values are displayed using the user's default currency.
+[x] Total Expenses uses the same calculation basis as the filtered report data.
+[x] This Month uses the same calculation basis as the filtered report data.
+[x] Other monetary summary values use the same conversion rules.
 
 **Spending Summary**
 The Spending Summary must:

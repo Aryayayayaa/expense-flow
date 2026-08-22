@@ -43,6 +43,7 @@ export default async function ReportsPage({
           scope={scope}
           expenses={expenses}
           canChooseScope={canChooseScope}
+          defaultCurrency={session.user.defaultCurrency}
         />
       </div>
     </div>

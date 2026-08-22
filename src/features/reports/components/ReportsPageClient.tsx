@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 
 import Filters from "@/components/common/Filters";
 
-import OverviewSummaryCards from "@/features/analytics/components/OverviewSummaryCards";
 import CategoryComparisonChart from "@/features/analytics/components/charts/CategoryComparisonChart";
 
 import ReportSummary from "@/features/analytics/components/reports/ReportSummary";
-import SpendingSummary from "@/features/analytics/components/reports/SpendingSummary";
 import LargestExpenses from "@/features/analytics/components/reports/LargestExpenses";
 import TopCategories from "@/features/analytics/components/reports/TopCategories";
 
@@ -26,12 +24,14 @@ type ReportsPageClientProps = {
   scope: "OWN" | "ALL" | "EMPLOYEES";
   expenses: AnalyticsExpense[];
   canChooseScope: boolean;
+  defaultCurrency: string;
 };
 
 export default function ReportsPageClient({
   scope,
   expenses,
   canChooseScope,
+  defaultCurrency,
 }: ReportsPageClientProps) {
   const router = useRouter();
 
@@ -39,8 +39,9 @@ export default function ReportsPageClient({
   /* Filter state                                                           */
   /* ---------------------------------------------------------------------- */
 
-  const [selectedCurrency, setSelectedCurrency] =
-    useState<CurrencyFilter>(ALL_CURRENCIES);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyFilter>(
+    defaultCurrency as CurrencyFilter,
+  );
 
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
@@ -190,41 +191,27 @@ export default function ReportsPageClient({
     return expenses.filter((expense) => {
       const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-      /* Currency */
-
       const matchesCurrency =
         selectedCurrency === ALL_CURRENCIES ||
         expense.currency === selectedCurrency;
 
-      /* Category */
-
       const matchesCategory =
         selectedCategory === "" || expense.category === selectedCategory;
 
-      /* Approval Status */
-
       const matchesApprovalStatus =
         approvalStatus === "ALL" || expense.status === approvalStatus;
-
-      /* Reimbursement Status */
 
       const matchesReimbursementStatus =
         reimbursementStatus === "ALL" ||
         expense.reimbursementStatus === reimbursementStatus;
 
-      /* Year */
-
       const matchesYear =
         selectedYear === "" ||
         expenseDate.getFullYear() === Number(selectedYear);
 
-      /* Month */
-
       const matchesMonth =
         selectedMonth === "" ||
         expenseDate.getMonth() + 1 === Number(selectedMonth);
-
-      /* Date */
 
       let matchesDate = true;
 
@@ -347,11 +334,18 @@ export default function ReportsPageClient({
     isMonthSelected || (isYearSelected && !isCurrentYearSelected);
 
   /* ---------------------------------------------------------------------- */
+  /* Currency used by report calculations                                   */
+  /* ---------------------------------------------------------------------- */
+
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
+  /* ---------------------------------------------------------------------- */
   /* Clear filters                                                          */
   /* ---------------------------------------------------------------------- */
 
   function clearFilters() {
-    setSelectedCurrency(ALL_CURRENCIES);
+    setSelectedCurrency(defaultCurrency as CurrencyFilter);
     setSelectedCategory("");
     setSelectedYear("");
     setSelectedMonth("");
@@ -363,7 +357,7 @@ export default function ReportsPageClient({
   }
 
   const hasActiveFilters =
-    selectedCurrency !== ALL_CURRENCIES ||
+    selectedCurrency !== defaultCurrency ||
     selectedCategory !== "" ||
     selectedYear !== "" ||
     selectedMonth !== "" ||
@@ -372,52 +366,11 @@ export default function ReportsPageClient({
     reimbursementStatus !== "ALL";
 
   /* ---------------------------------------------------------------------- */
-  /* Currency used by report calculations                                   */
-  /* ---------------------------------------------------------------------- */
-
-  /*
-   * "All Currencies" means:
-   * - include every currency
-   * - convert foreign-currency expenses to INR
-   * - combine them with INR expenses
-   * - display the report in INR
-   *
-   * A specific currency means:
-   * - include only expenses saved in that currency
-   * - use their original amount
-   * - display the report in that currency
-   */
-  const reportCurrency =
-    selectedCurrency === ALL_CURRENCIES ? "INR" : selectedCurrency;
-
-  /*
-   * Show an additional INR-converted overview only when a specific
-   * non-INR currency is selected.
-   *
-   * Example:
-   * USD selected:
-   *   Main reports -> USD
-   *   OverviewSummaryCards -> INR equivalent
-   *
-   * INR selected:
-   *   Main reports -> INR
-   *   No duplicate INR overview
-   *
-   * All Currencies:
-   *   Main reports -> INR
-   *   No duplicate INR overview
-   */
-  const showInrOverview =
-    selectedCurrency !== ALL_CURRENCIES && selectedCurrency !== "INR";
-
-  /* ---------------------------------------------------------------------- */
   /* UI                                                                     */
   /* ---------------------------------------------------------------------- */
 
   return (
     <>
-      {/* Expense Scope */}
-
       {canChooseScope && (
         <div className="mb-6 max-w-xs">
           <label
@@ -441,8 +394,6 @@ export default function ReportsPageClient({
           </select>
         </div>
       )}
-
-      {/* Shared Filters */}
 
       <Filters
         title="Filter Reports"
@@ -474,36 +425,26 @@ export default function ReportsPageClient({
         onClearFilters={clearFilters}
       />
 
-      {/* Reports */}
-
       <div className="mt-6 space-y-6">
-        {/* Main report summary */}
         <ReportSummary expenses={filteredExpenses} currency={reportCurrency} />
-
-        {/* INR equivalent overview for non-INR currency selection */}
-        {showInrOverview && (
-          <h3 className="font-bold text-lg">
-            INR Format Summary:
-            <OverviewSummaryCards expenses={filteredExpenses} />
-          </h3>
-        )}
 
         <CategoryComparisonChart
           expenses={filteredExpenses}
-          currency={reportCurrency}
-        />
-
-        <SpendingSummary
-          expenses={filteredExpenses}
-          currency={reportCurrency}
+          selectedCurrency={selectedCurrency}
+          defaultCurrency={defaultCurrency}
         />
 
         <LargestExpenses
           expenses={filteredExpenses}
-          currency={reportCurrency}
+          selectedCurrency={selectedCurrency}
+          defaultCurrency={defaultCurrency}
         />
 
-        <TopCategories expenses={filteredExpenses} currency={reportCurrency} />
+        <TopCategories
+          expenses={filteredExpenses}
+          selectedCurrency={selectedCurrency}
+          defaultCurrency={defaultCurrency}
+        />
       </div>
     </>
   );

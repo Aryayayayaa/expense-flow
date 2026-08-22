@@ -11,13 +11,16 @@ import {
   YAxis,
 } from "recharts";
 
+import { ALL_CURRENCIES } from "@/constants/currencies";
+
 import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 
 type YearlyCategoryChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const categoryColors = [
@@ -33,8 +36,12 @@ const categoryColors = [
 
 export default function YearlyCategoryChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: YearlyCategoryChartProps) {
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   const categories = [
     ...new Set(expenses.map((expense) => expense.category)),
   ].sort();
@@ -63,7 +70,10 @@ export default function YearlyCategoryChart({
 
     yearData[category] =
       Number(yearData[category] ?? 0) +
-      getReportExpenseAmount(expense, currency);
+      getReportExpenseAmount(expense, {
+        selectedCurrency,
+        defaultCurrency,
+      });
   });
 
   const chartData = Array.from(yearlyData.values()).sort(
@@ -95,12 +105,14 @@ export default function YearlyCategoryChart({
           <XAxis dataKey="year" />
 
           <YAxis
-            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+            tickFormatter={(value) =>
+              formatCurrency(Number(value), reportCurrency)
+            }
           />
 
           <Tooltip
             formatter={(value) => [
-              formatCurrency(Number(value), currency),
+              formatCurrency(Number(value), reportCurrency),
               "Expenses",
             ]}
           />
