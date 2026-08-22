@@ -192,350 +192,387 @@ The Amount column must:
 
 ### 7. Expense Display Currency
 
-#### STATUS: NEXT
+#### STATUS: STARTING NEXT
 
 The user's default currency must become the primary display currency for expense values throughout the application.
 
 This is a display/representation requirement and must not modify the original expense currency stored in the database.
 
 The implementation must:
-
-[ ] Load the authenticated user's current defaultCurrency.
-
-[ ] Display expense values primarily in the user's current default currency.
-
-[ ] Convert expenses whose original currency differs from the user's default currency using the available exchange-rate information.
-
-[ ] Preserve and display the original transaction amount and currency for expenses whose original currency differs from the user's default currency.
+[x] Load the authenticated user's current defaultCurrency.
+[x] Display expense values primarily in the user's current default currency.
+[x] Convert expenses whose original currency differs from the user's default currency using the available exchange-rate information.
+[x] Preserve and display the original transaction amount and currency for expenses whose original currency differs from the user's default currency.
 
 ---
 
-### 8. Default Currency Changes
+8. Insights — Analysis
 
 #### STATUS: NOT STARTED
 
-[ ] When a user changes their default currency from the Edit Profile section, the new currency must immediately become the application's display currency for that user.
+Create an Insights section/page that contains Analysis and Reports together.
+There must be NO sub-tabs between Analysis and Reports.
+The Analysis section must provide monetary analysis based on the authenticated user's current default currency and the selected currency filter.
+
+**Currency Filter**
+The existing currency filter must remain available.
+
+The currency filter must:
+[ ] Keep the existing order of currency options unchanged.
+[ ] Default to the authenticated user's current defaultCurrency when the user first lands on the Insights page.
+[ ] Not default to ALL CURRENCIES.
+[ ] Allow the user to explicitly select ALL CURRENCIES.
+[ ] Allow the user to select any supported individual currency.
+
+**When a specific currency is selected**
+
+When the currency filter contains a specific currency such as INR, USD, EUR, etc.:
+
+[ ] Include only expenses whose original transaction currency matches the selected currency.
+[ ] Do not convert expenses from another original currency into the selected currency.
+[ ] Use the original stored expense amount for the analysis.
+
+For example:
+Currency Filter = USD
+USD 100 → included as USD 100
+INR 5000 → excluded
+EUR 200 → excluded
+
+When ALL CURRENCIES is selected
+When the currency filter is ALL CURRENCIES:
+
+[ ] Include expenses from all supported original currencies.
+[ ] Use the authenticated user's current default currency as the reporting/display currency.
+[ ] Convert expenses whose original currency differs from the user's default currency.
+[ ] Do not modify the original stored expense amount or currency.
+[ ] Aggregate the converted values using the user's default currency.
+
+**Analysis graphs**
+Analysis must include the relevant existing analysis graphs for:
+
+[ ] Category-based spending.
+[ ] Monthly spending.
+[ ] Yearly spending.
+
+**For each graph:**
+[ ] Specific currency filter → only expenses originally saved in that currency are included.
+[ ] ALL CURRENCIES → all expenses are converted to the user's default currency before aggregation.
+[ ] Graph totals must use the same conversion logic as the summary values.
+
+**Analysis tooltips**
+When ALL CURRENCIES is selected, graph tooltips must explain how the displayed value was calculated.
+For example, if the user's default currency is EUR:
+EUR: €200.00
+INR: ₹5,000.00 = €44.71
+USD: $30.00 = €25.67
 
 ---
 
-### 9. My Expenses Page
+Total: €270.38
+
+The exact visual formatting may vary, but the tooltip must clearly communicate:
+[ ] Original currency.
+[ ] Original amount.
+[ ] Converted amount in the user's default currency.
+[ ] Final total used by the graph.
+
+The same calculation principle must work for category, monthly, and yearly graphs.
+
+---
+
+9. Insights — Reports
 
 #### STATUS: NOT STARTED
 
-Remove currency filtering from the My Expenses page.
+The Reports section must be part of the same Insights page/section as Analysis.
+There must be NO separate Reports sub-tab.
+Reports must follow the same currency-filter and conversion rules established for Analysis.
 
-The /expenses page must:
+**Currency Filter**
+The existing currency filter must remain available.
+[ ] Currency filter options must remain in their existing order.
+[ ] The authenticated user's defaultCurrency must be selected by default when first landing on Insights.
+[ ] ALL CURRENCIES must remain available as an explicit selection.
 
-[ ] Remove the currency filter from the available filters.
+**Specific currency selected**
+When a specific currency is selected:
+[ ] Include only expenses originally saved with that currency.
+[ ] Do not convert expenses from other currencies.
+[ ] Use the original transaction amount for calculations.
 
-[ ] Never provide an ALL, INR, USD, EUR, etc. currency filter to the user.
+**ALL CURRENCIES selected**
+When ALL CURRENCIES is selected:
+[ ] Include expenses from all currencies.
+[ ] Convert non-default-currency expenses into the authenticated user's current default currency.
+[ ] Aggregate converted values using the default currency.
+[ ] Never overwrite historical expense values.
 
-[ ] Display all expenses regardless of their original currency.
+**Summary Cards**
+Summary cards must follow the same filtering and conversion behavior as /expenses.
+[ ] Summary values respond to the selected filters.
+[ ] Specific currency → only expenses originally saved in that currency are included.
+[ ] ALL CURRENCIES → all expenses are included after conversion to the user's default currency.
+[ ] Summary values are displayed using the user's default currency.
+[ ] Total Expenses uses the same calculation basis as the filtered report data.
+[ ] This Month uses the same calculation basis as the filtered report data.
+[ ] Other monetary summary values use the same conversion rules.
 
-[ ] Display expense amounts primarily using the user's current default currency.
+**Spending Summary**
+The Spending Summary must:
+[ ] Respect the active filters.
+[ ] Use the user's default currency for displayed monetary values.
+[ ] Convert non-default currencies when ALL CURRENCIES is selected.
+[ ] Exclude expenses with other original currencies when a specific currency is selected.
+[ ] Use the same calculation logic as the Summary Cards.
 
-[ ] Display the original amount and original currency for expenses whose original currency differs from the user's default currency.
+**Largest Expenses**
+The Largest Expenses section must contain:
+Column Requirement
+Description Expense description/title
+Category Expense category
+Date Expense date
+Default Currency Amount Amount represented in user's default currency
+Original Amount Original transaction amount/currency when different from default currency
 
-[ ] Ensure summary values use the user's default currency.
+**Requirements:**
+[ ] Respect all active filters.
+[ ] When a specific currency is selected, only expenses originally saved in that currency are included.
+[ ] When ALL CURRENCIES is selected, non-default currencies are converted to the user's default currency.
+[ ] Preserve the original transaction amount and currency.
+[ ] Show - for Original Amount when the original currency is the user's default currency.
 
-[ ] Ensure "Total Expenses" is calculated using converted default-currency values.
+**Top Spending Categories**
+Top Spending Categories must:
+[ ] Respect all active filters.
+[ ] When a specific currency is selected, include only expenses originally saved with that currency.
+[ ] Do not convert values when a specific currency is selected.
+[ ] When ALL CURRENCIES is selected, convert all applicable expenses into the user's default currency.
+[ ] Sum converted values by category.
+[ ] Compare categories using the converted default-currency totals.
 
-[ ] Ensure "This Month" is calculated using converted default-currency values.
+**Reports tooltips**
+When ALL CURRENCIES is selected, report visualizations/tooltips must explain the calculation in the same manner as Analysis.
 
-[ ] Keep category, year, month, date, approval, and reimbursement filters working independently of currency.
-
-Currency must not be used as a filtering dimension.
+For example:
+EUR: €200.00
+INR: ₹5,000.00 = €44.71
+USD: $30.00 = €25.67
 
 ---
 
-### 10. Dashboard
+Total: €270.38
+
+The exact UI can differ, but the calculation must be understandable to the user.
+
+---
+
+10. Application-Wide Currency Consistency & Final Validation
 
 #### STATUS: NOT STARTED
 
-The Dashboard must use the user's default currency rather than assuming INR.
+The final subtask ensures that all default-currency functionality implemented throughout Task 07 behaves consistently.
 
-The Dashboard must:
-
-[ ] Load the user's current default currency.
-
-[ ] Display Total Expenses in the user's default currency.
-
-[ ] Display This Month in the user's default currency.
-
-[ ] Convert non-default-currency expenses into the user's default currency for aggregation.
-
-[ ] Display recent expense values primarily in the user's default currency.
-
-[ ] Display the original transaction amount/currency as secondary information when the expense currency differs from the user's default currency.
-
-[ ] Continue to support users whose default currency is INR.
-
-[ ] Continue to support users whose default currency is any other supported currency.
-
----
-
-### 11. Reports
-
-STATUS: NOT STARTED
-
-Remove currency filtering from the Reports page.
-
-The Reports page must:
-
-[ ] Have no currency filter.
-
-[ ] Use the authenticated user's default currency for applicable user-level report output.
-
-[ ] Convert non-default-currency expenses into the user's default currency.
-
-[ ] Include both default-currency expenses and converted non-default-currency expenses in totals.
-
-[ ] Display report totals using the user's default currency.
-
-[ ] Ensure charts, summaries, totals, and other monetary outputs use the same default-currency basis.
-
-[ ] Preserve the original transaction currency where the report displays individual expense-level information.
-
-The Reports page must not assume INR as the reporting currency.
-
----
-
-### 12. Analytics
-
-#### STATUS: NOT STARTED
-
-Remove currency filtering from the Analytics page.
-
-The Analytics page must:
-
-[ ] Have no currency filter.
-
-[ ] Use the authenticated user's default currency for monetary analysis.
-
-[ ] Convert non-default-currency expenses into the user's default currency.
-
-[ ] Include converted values in totals, averages, category analysis, trends, charts, and other monetary calculations.
-
-[ ] Display monetary output using the user's current default currency.
-
-[ ] Preserve original expense currency information where individual transactions are displayed.
-
-Changing the user's default currency must cause Analytics to use the new default currency for its monetary output.
-
----
-
-### 13. Approvals
-
-#### STATUS: NOT STARTED
-
-The Approvals page must also respect the appropriate default-currency display behavior.
-
-For expenses submitted by employees:
-
-[ ] Display the relevant user's default currency as the primary display currency where the expense is being represented for that user.
-
-[ ] Convert the expense into the appropriate default currency when required.
-
-[ ] Preserve the original expense amount and currency as secondary information when different.
-
-[ ] Approval history must display monetary values consistently.
-
-[ ] My Expense Status must display monetary values using the authenticated user's default currency.
-
-The implementation must ensure that changing a user's default currency does not alter the historical expense transaction itself.
-
----
-
-### 14. Currency Filters Removal
-
-#### STATUS: NOT STARTED
-
-Currency filters must be removed completely from:
-
-[ ] /expenses
-
-[ ] /analytics
-
-[ ] /reports
-
-The application must not expose currency filtering controls on these pages.
-
-Currency selection remains available where it is logically required:
-
-[ ] Registration — user default currency.
-
-[ ] Edit Profile — user default currency.
-
-[ ] Expense Creation — individual expense currency.
-
-The currency selected during expense creation is independent of the user's default currency.
-
----
-
-### 15. Currency Conversion and Historical Values
-
-#### STATUS: NOT STARTED
-
-The application must distinguish between:
-
-User default currency.
-Original expense currency.
-Original expense amount.
-Stored exchange rate.
-Normalized/default-currency display amount.
-
-Existing expense records must remain historically accurate.
-
-The implementation must:
-[ ] Preserve the original expense amount.
-[ ] Preserve the original expense currency.
-[ ] Preserve the stored exchange rate information.
-[ ] Avoid overwriting historical transaction data merely because the user's default currency changes.
-[ ] Use conversion logic to determine the appropriate display/reporting value.
-[ ] Avoid treating the user's default currency as the expense's original currency.
-
----
-
-### 16. Application-Wide Currency Consistency
-
-#### STATUS: NOT STARTED
-
-The default currency behavior must be consistent wherever monetary values are displayed.
-The implementation should review monetary output across:
+**Application-wide display**
+Review monetary output across:
 [ ] Dashboard.
 [ ] My Expenses.
 [ ] Expense cards.
 [ ] Expense summaries.
-[ ] Analytics.
-[ ] Reports.
+[ ] Insights → Analysis.
+[ ] Insights → Reports.
 [ ] Approvals.
 [ ] Approval history.
 [ ] My Expense Status.
 [ ] Any additional page/component that displays expense amounts.
-No page should silently fall back to INR when the authenticated user's default currency is another supported currency unless the fallback is explicitly required for legacy/missing data.
 
----
+**Currency behavior**
+[ ] Authenticated user's current defaultCurrency is used wherever default-currency display is required.
+[ ] Changing the user's default currency does not modify historical expense data.
+[ ] Original expense amount remains unchanged.
+[ ] Original expense currency remains unchanged.
+[ ] Stored exchange-rate information remains unchanged.
+[ ] Non-default-currency expenses are converted only when default-currency aggregation/display requires conversion.
+[ ] Specific currency filters include only expenses originally saved in that currency.
+[ ] ALL CURRENCIES includes expenses from all supported currencies and converts them to the user's default currency where required.
+[ ] No monetary page silently assumes INR when the user's default currency is another supported currency.
 
-### 17. Backward Compatibility
+**Currency filters**
+Currency filters must NOT be removed as previously planned.
+They remain available where they are useful for analysis/reporting.
+[x] /expenses currency filter remains available.
+[ ] /insights currency filter remains available.
+[ ] Currency filter options retain their existing order.
+[ ] Insights defaults the currency filter to the user's default currency.
+[ ] ALL CURRENCIES remains available as an explicit option.
+[ ] Registration continues to use currency selection for the user's default currency.
+[x] Edit Profile continxes to use currency selection for the user's default currency.
+[ ] Expense Creation continues to allow an individual expense currency independent of the user's default currency.
 
-#### STATUS: NOT STARTED
+**Historical data**
+[ ] Changing the user's default currency does not update historical expense currency.
+[ ] Changing the user's default currency does not update historical expense amount.
+[ ] Existing baseCurrencyAmount values continue to be used appropriately.
+[x] Existing exchange-rate information is preserved.
+[x] Legacy INR expenses continue to work correctly.
+[x] Users can access existing expenses after changing their default currency.
 
-Existing users and existing expenses must continue to work correctly after this feature is completed.
-The implementation must:
-[ ] Provide a safe default currency for legacy users without a stored preference.
-[ ] Continue displaying legacy INR expenses correctly.
-[ ] Continue using existing baseCurrencyAmount values where appropriate.
-[ ] Avoid breaking existing expense records.
-[ ] Avoid breaking existing reports and analytics data.
-[ ] Ensure users with newly selected default currencies can still access all existing expenses.
+**Authorization and validation**
+[ ] Unsupported currency codes are rejected server-side.
+[ ] Users cannot modify another user's default currency.
+[ ] Currency conversion is performed using the existing exchange-rate implementation.
 
----
+Final regression
+[ ] Test INR as default currency.
+[ ] Test USD as default currency.
+[ ] Test EUR as default currency.
+[ ] Test at least one additional supported currency.
+[ ] Test expenses containing multiple original currencies.
+[ ] Test switching default currency during the same authenticated session.
+[ ] Verify the new currency becomes effective without requiring logout/login.
+[x] Verify Dashboard reflects the new currency.
+[x] Verify My Expenses reflects the new currency.
+[ ] Verify Insights reflects the new currency.
+[ ] Verify Analysis reflects the new currency.
+[ ] Verify Reports reflects the new currency.
+[ ] Verify Approvals reflects the appropriate currency.
+[ ] Run TypeScript validation.
+[ ] Run ESLint.
+[ ] Run production build.
 
-### Completion Criteria
+**Completion Criteria**
 
 #### STATUS: NOT STARTED
 
 Task 07 is complete only when all of the following are satisfied:
-[ ] New users can select their default currency during registration.
+[x] New users can select their default currency during registration.
 [x] Default currency is stored on the User model.
 [x] Existing users have safe fallback behavior.
 [x] Users can change their default currency from Edit Profile.
+[x] Changing the default currency updates the active session without requiring logout/login.
+[x] Dashboard displays monetary values in the user's default currency.
 [ ] New Expense form automatically selects the user's default currency.
 [ ] Users can still select a different currency for an individual expense.
 [ ] Changing an expense's currency does not change the user's default currency.
-[ ] Existing expenses retain their original transaction currency.
-[ ] Existing expense amounts are not overwritten when the user changes default currency.
-[ ] My Expenses has no currency filter.
-[ ] Reports has no currency filter.
-[ ] Analytics has no currency filter.
-[ ] Dashboard displays monetary values in the user's default currency.
+[x] Existing expenses retain their original transaction currency.
+[x] Existing expense amounts are not overwritten when the user changes default currency.
 [ ] My Expenses displays monetary values in the user's default currency.
-[ ] Reports display monetary values in the user's default currency.
-[ ] Analytics displays monetary values in the user's default currency.
+[ ] My Expenses currency filter remains available.
+[ ] My Expenses specific-currency filtering uses the original transaction currency.
+[ ] My Expenses ALL CURRENCIES includes all expenses and uses default-currency values for aggregation.
+[ ] Insights contains Analysis and Reports without sub-tabs.
+[ ] Insights currency filter remains available.
+[ ] Insights defaults the currency filter to the authenticated user's default currency.
+[ ] Analysis supports category, monthly, and yearly analysis.
+[ ] Analysis specific-currency filtering includes only expenses originally saved in that currency.
+[ ] Analysis ALL CURRENCIES converts expenses to the user's default currency.
+[ ] Analysis tooltips explain multi-currency calculations.
+[ ] Reports summary values respond to active filters.
+[ ] Reports Spending Summary responds to active filters.
+[ ] Reports Largest Expenses responds to active filters.
+[ ] Reports Top Spending Categories respond to active filters.
+[ ] Reports specific-currency filtering uses original transaction currency.
+[ ] Reports ALL CURRENCIES converts expenses to the user's default currency.
+[ ] Reports tooltips explain multi-currency calculations where applicable.
 [ ] Approvals display monetary values consistently with the applicable default currency.
-[ ] Non-default-currency expenses are converted for default-currency display and aggregation.
-[ ] Original transaction amount/currency remains visible as secondary information where required.
-[ ] Report and Analytics calculations use converted default-currency values.
-[ ] Changing the user's default currency updates future display/reporting output without modifying historical expense data.
+[ ] My Expense Status displays monetary values using the authenticated user's default currency.
+[ ] Non-default-currency expenses are converted when default-currency display/aggregation is required.
+[ ] Original transaction amount/currency remains available where required.
+[ ] Historical expense data is never modified merely because the user's default currency changes.
 [ ] All supported currencies are handled consistently.
 [ ] Server-side validation prevents unsupported currency codes.
 [ ] Server-side authorization prevents users from modifying another user's default currency.
+[ ] TypeScript validation passes.
+[ ] ESLint passes.
+[ ] Production build passes.
 
----
+**Testing Checklist**
 
-Testing Checklist
-STATUS: IN PROGRESS
-Registration
+#### STATUS: IN PROGRESS
+
+**Registration**
 [x] Register a new user with INR.
 [x] Register a new user with USD.
 [x] Register a new user with another supported currency.
 [x] Verify the selected currency is persisted in the database.
 [x] Verify invalid currency codes are rejected.
 
-Edit Profile
+**Edit Profile**
 [x] Change default currency from INR to USD.
 [x] Change default currency from USD to EUR.
 [x] Change default currency back to INR.
 [x] Verify the new preference persists after logout/login.
+[x] Verify the new currency becomes active during the same session without logout/login.
 [x] Verify another user's default currency cannot be modified.
 
-Expense Creation
-[ ] Verify the New Expense form initially selects the user's default currency.
-[ ] Create an expense using the default currency.
-[ ] Create an expense using a different currency.
-[ ] Verify changing the expense currency does not change the user's default currency.
+**Expense Creation**
+[x] Verify the New Expense form initially selects the user's default currency.
+[x] Create an expense using the default currency.
+[x] Create an expense using a different currency.
+[x] Verify changing the expense currency does not change the user's default currency.
 
-Existing Expenses
+**Existing Expenses**
 [ ] Create expenses in multiple currencies.
 [ ] Change the user's default currency.
 [ ] Verify existing expense original amounts remain unchanged.
 [ ] Verify existing expense original currencies remain unchanged.
 [ ] Verify displayed converted values use the new default currency.
 
-Dashboard
-[ ] Verify summary values use the user's default currency.
-[ ] Verify monthly totals use the user's default currency.
-[ ] Verify recent expenses display converted values correctly.
+**Dashboard**
+[x] Verify summary values use the user's default currency.
+[x] Verify monthly totals use the user's default currency.
+[x] Verify recent expenses display converted values correctly.
 
-My Expenses
-[ ] Verify currency filter is completely removed.
-[ ] Verify all currencies are displayed together.
+**My Expenses**
+[ ] Verify the currency filter remains available.
+[ ] Verify currency filter options retain their existing order.
+[ ] Verify ALL CURRENCIES includes all expenses.
+[ ] Verify selecting a specific currency includes only expenses originally saved in that currency.
 [ ] Verify summary values use the default currency.
-[ ] Verify non-default transaction amounts are shown as secondary information.
+[ ] Verify non-default transaction amounts are shown as secondary information where required.
 
-Reports
-[ ] Verify currency filter is completely removed.
-[ ] Verify report totals use the user's default currency.
-[ ] Verify non-default expenses are converted before aggregation.
+**Insights — Analysis**
+[ ] Verify Analysis and Reports appear together without sub-tabs.
+[ ] Verify the currency filter remains available.
+[ ] Verify the default selected currency is the authenticated user's default currency.
+[ ] Verify selecting a specific currency includes only expenses originally saved in that currency.
+[ ] Verify selecting a specific currency does not convert other currencies.
+[ ] Verify ALL CURRENCIES includes expenses from all currencies.
+[ ] Verify ALL CURRENCIES converts non-default expenses to the user's default currency.
+[ ] Verify category analysis uses the correct currency behavior.
+[ ] Verify monthly analysis uses the correct currency behavior.
+[ ] Verify yearly analysis uses the correct currency behavior.
+[ ] Verify graph tooltips explain the conversion calculation when ALL CURRENCIES is selected.
 
-Analytics
-[ ] Verify currency filter is completely removed.
-[ ] Verify monetary analytics use the user's default currency.
-[ ] Verify charts and totals include converted non-default-currency expenses.
+**Insights — Reports**
+[ ] Verify Summary Cards respond to filters.
+[ ] Verify Spending Summary responds to filters.
+[ ] Verify Largest Expenses responds to filters.
+[ ] Verify Top Spending Categories respond to filters.
+[ ] Verify specific currency selection includes only expenses originally saved in that currency.
+[ ] Verify ALL CURRENCIES converts expenses to the user's default currency.
+[ ] Verify Original Amount is shown when applicable.
+[ ] Verify - is shown when the original currency equals the default currency.
+[ ] Verify report tooltips explain multi-currency calculations.
 
-Approvals
+**Approvals**
 [ ] Verify pending approval amounts display correctly.
 [ ] Verify approval history amounts display correctly.
 [ ] Verify My Expense Status amounts display correctly.
 
-Regression
-[ ] Run TypeScript validation.
-[ ] Run ESLint.
-[ ] Run production build.
+**Regression**
 [ ] Test INR as default currency.
 [ ] Test USD as default currency.
 [ ] Test EUR as default currency.
 [ ] Test at least one additional supported currency.
+[ ] Test multiple original expense currencies.
+[ ] Change default currency without logging out.
+[ ] Verify Dashboard updates.
+[ ] Verify My Expenses updates.
+[ ] Verify Insights updates.
+[ ] Verify Analysis updates.
+[ ] Verify Reports updates.
+[ ] Verify Approvals updates.
+[ ] Run TypeScript validation.
+[ ] Run ESLint.
+[ ] Run production build.
 [ ] Verify existing users and existing expenses continue working.
-
----
-
-## Technical Considerations
-
-### Supported currencies
-
-Use the existing currency configuration:
-
-```text
-src/constants/currencies
-```
