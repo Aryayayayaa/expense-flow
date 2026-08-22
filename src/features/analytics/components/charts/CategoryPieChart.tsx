@@ -2,17 +2,18 @@
 
 import {
   Cell,
+  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
 
 import { ALL_CURRENCIES } from "@/constants/currencies";
 
 import { AnalyticsExpense } from "../../types";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type CategoryPieChartProps = {
   expenses: AnalyticsExpense[];
@@ -39,24 +40,46 @@ export default function CategoryPieChart({
   const reportCurrency =
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
-  const categoryTotals = expenses.reduce<Record<string, number>>(
-    (totals, expense) => {
-      const amount = getReportExpenseAmount(expense, {
-        selectedCurrency,
-        defaultCurrency,
-      });
+  /*
+   * Keep the original expenses inside each chart data item.
+   *
+   * The displayed total is calculated using the same currency
+   * rules as the rest of Analysis:
+   *
+   * Specific currency:
+   *   original transaction amount
+   *
+   * ALL CURRENCIES:
+   *   converted amount in the user's default currency
+   */
+  const categoryExpenses = expenses.reduce<Record<string, AnalyticsExpense[]>>(
+    (groups, expense) => {
+      if (!groups[expense.category]) {
+        groups[expense.category] = [];
+      }
 
-      totals[expense.category] = (totals[expense.category] ?? 0) + amount;
+      groups[expense.category].push(expense);
 
-      return totals;
+      return groups;
     },
     {},
   );
 
-  const data = Object.entries(categoryTotals).map(([category, amount]) => ({
-    name: category,
-    value: amount,
-  }));
+  const data = Object.entries(categoryExpenses).map(
+    ([category, categoryExpenseList]) => ({
+      name: category,
+      expenses: categoryExpenseList,
+      value: categoryExpenseList.reduce(
+        (total, expense) =>
+          total +
+          getReportExpenseAmount(expense, {
+            selectedCurrency,
+            defaultCurrency,
+          }),
+        0,
+      ),
+    }),
+  );
 
   const totalExpenses = data.reduce((sum, item) => sum + item.value, 0);
 
@@ -92,13 +115,12 @@ export default function CategoryPieChart({
           </Pie>
 
           <Tooltip
-            formatter={(value) => [
-              new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency: reportCurrency,
-              }).format(Number(value)),
-              "Expenses",
-            ]}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
           <Legend />

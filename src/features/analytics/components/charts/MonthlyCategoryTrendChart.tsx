@@ -16,6 +16,7 @@ import { ALL_CURRENCIES } from "@/constants/currencies";
 import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type MonthlyCategoryTrendChartProps = {
   expenses: AnalyticsExpense[];
@@ -67,7 +68,8 @@ export default function MonthlyCategoryTrendChart({
       year: number;
       monthNumber: number;
       label: string;
-      [category: string]: string | number;
+      expenses: AnalyticsExpense[];
+      [category: string]: string | number | AnalyticsExpense[] | undefined;
     }
   >();
 
@@ -85,10 +87,13 @@ export default function MonthlyCategoryTrendChart({
         year,
         monthNumber,
         label: `${monthNames[monthNumber - 1]} ${year}`,
+        expenses: [],
       });
     }
 
     const monthData = monthlyData.get(key)!;
+
+    monthData.expenses.push(expense);
 
     monthData[category] =
       Number(monthData[category] ?? 0) +
@@ -137,10 +142,13 @@ export default function MonthlyCategoryTrendChart({
           />
 
           <Tooltip
-            formatter={(value) => [
-              formatCurrency(Number(value), reportCurrency),
-              "Expenses",
-            ]}
+            shared={false}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
           <Legend />

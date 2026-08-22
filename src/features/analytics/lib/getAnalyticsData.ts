@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 
-import { AnalyticsExpense } from "../types";
+import type { AnalyticsExpense } from "../types";
 
 export type AnalyticsScope = "OWN" | "ALL" | "EMPLOYEES";
 
@@ -13,6 +13,7 @@ async function getExpensesForAnalytics(scope: AnalyticsScope, userId: number) {
       where: {
         userId,
       },
+
       orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
     });
   }
@@ -24,6 +25,7 @@ async function getExpensesForAnalytics(scope: AnalyticsScope, userId: number) {
           role: "EMPLOYEE",
         },
       },
+
       orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
     });
   }
@@ -45,22 +47,26 @@ export async function getAnalyticsData(
   const userId = Number(session.user.id);
   const role = session.user.role;
 
+  /*
+   * Only ADMIN and HR can view expenses outside
+   * their own account.
+   */
   if (scope !== "OWN" && role !== "ADMIN" && role !== "HR") {
     throw new Error("Forbidden");
   }
 
   /*
-   * The reporting/display currency always comes from the
-   * authenticated user's current defaultCurrency.
+   * The authenticated user's CURRENT default currency
+   * is the reporting/display currency.
    *
-   * This is intentionally NOT derived from the selected
-   * currency filter because the selected currency is a
-   * client-side analysis filter.
+   * This is independent from the currency filter selected
+   * later on the client.
    */
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
     },
+
     select: {
       defaultCurrency: true,
     },
@@ -75,15 +81,24 @@ export async function getAnalyticsData(
   const expenses = await getExpensesForAnalytics(scope, userId);
 
   /*
-   * Get the current conversion rate for every unique
-   * original expense currency.
+   * We only need current conversion rates for currencies
+   * that actually require conversion.
    *
-   * We only make one API request per currency pair instead
-   * of one request per expense.
+   * The conversion basis is:
+   *
+   *   Original expense
+   *        ↓
+   *   historical/base INR amount
+   *        ↓
+   *   current default currency
+   *
+   * This keeps Analytics consistent with /expenses.
    */
-  const currencies = [
+  const currenciesRequiringConversion = [
     ...new Set(
-      expenses.map((expense) => expense.currency.trim().toUpperCase()),
+      expenses
+        .map((expense) => expense.currency.trim().toUpperCase())
+        .filter((currency) => currency !== defaultCurrency),
     ),
   ];
 
@@ -95,49 +110,208 @@ export async function getAnalyticsData(
     }
   >();
 
-  await Promise.all(
-    currencies.map(async (currency) => {
-      const result = await getExchangeRate(currency, defaultCurrency);
+  /*
+   * We use INR as the stored base currency.
+   *
+   * Therefore the current conversion needed is:
+   *
+   * INR -> user's current default currency
+   */
+  if (defaultCurrency !== "INR" && currenciesRequiringConversion.length > 0) {
+    const result = await getExchangeRate("INR", defaultCurrency);
 
-      exchangeRates.set(currency, {
-        rate: result.rate,
-        rateDate: result.rateDate,
-      });
-    }),
-  );
+    exchangeRates.set("INR_TO_DEFAULT", {
+      rate: result.rate,
+      rateDate: result.rateDate,
+    });
+  }
 
-  return expenses.map((expense) => {
+  return expenses.map((expense): AnalyticsExpense => {
     const originalCurrency = expense.currency.trim().toUpperCase();
 
-    const displayExchangeRate = exchangeRates.get(originalCurrency);
+    const amount = Number(expense.amount);
 
-    const convertedDisplayAmount = displayExchangeRate
-      ? Number(expense.amount) * displayExchangeRate.rate
-      : null;
+    const baseCurrencyAmount =
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : originalCurrency === "INR"
+          ? amount
+          : null;
+
+    const exchangeRate =
+      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null;
+
+    /*
+     * Same currency:
+     *
+     * Original amount is already in the user's
+     * current default currency.
+     */
+    if (originalCurrency === defaultCurrency) {
+      return {
+        id: expense.id,
+        title: expense.title,
+
+        amount,
+        currency: originalCurrency,
+
+        baseCurrencyAmount,
+        exchangeRate,
+        exchangeRateAt: expense.exchangeRateAt,
+
+        convertedDisplayAmount: amount,
+        displayExchangeRate: 1,
+        displayExchangeRateAt: null,
+
+        category: expense.category,
+
+        status: expense.status,
+        reimbursementStatus: expense.reimbursementStatus,
+
+        expenseDate: expense.expenseDate,
+        billProofUrl: expense.billProofUrl,
+        billProofPath: expense.billProofPath,
+        createdAt: expense.createdAt,
+        updatedAt: expense.updatedAt,
+
+        userId: expense.userId,
+      };
+    }
+
+    /*
+     * If there is no historical/base INR amount for a
+     * non-default currency expense, we cannot safely
+     * represent it in the current default currency.
+     *
+     * Do NOT silently treat the original amount as though
+     * it were already in the default currency.
+     */
+    if (baseCurrencyAmount === null) {
+      return {
+        id: expense.id,
+        title: expense.title,
+
+        amount,
+        currency: originalCurrency,
+
+        baseCurrencyAmount: null,
+        exchangeRate,
+        exchangeRateAt: expense.exchangeRateAt,
+
+        convertedDisplayAmount: null,
+        displayExchangeRate: null,
+        displayExchangeRateAt: null,
+
+        category: expense.category,
+
+        status: expense.status,
+        reimbursementStatus: expense.reimbursementStatus,
+
+        expenseDate: expense.expenseDate,
+        billProofUrl: expense.billProofUrl,
+        billProofPath: expense.billProofPath,
+        createdAt: expense.createdAt,
+        updatedAt: expense.updatedAt,
+
+        userId: expense.userId,
+      };
+    }
+
+    /*
+     * Default currency is INR.
+     *
+     * The historical/base INR amount is already in
+     * the required reporting currency.
+     */
+    if (defaultCurrency === "INR") {
+      return {
+        id: expense.id,
+        title: expense.title,
+
+        amount,
+        currency: originalCurrency,
+
+        baseCurrencyAmount,
+        exchangeRate,
+        exchangeRateAt: expense.exchangeRateAt,
+
+        convertedDisplayAmount: baseCurrencyAmount,
+        displayExchangeRate: 1,
+        displayExchangeRateAt: null,
+
+        category: expense.category,
+
+        status: expense.status,
+        reimbursementStatus: expense.reimbursementStatus,
+
+        expenseDate: expense.expenseDate,
+        billProofUrl: expense.billProofUrl,
+        billProofPath: expense.billProofPath,
+        createdAt: expense.createdAt,
+        updatedAt: expense.updatedAt,
+
+        userId: expense.userId,
+      };
+    }
+
+    /*
+     * Non-INR default currency.
+     *
+     * Example:
+     *
+     * historical/base amount = INR 5,000
+     * current default currency = EUR
+     * INR -> EUR rate = 0.00894
+     *
+     * display amount = 5,000 × 0.00894
+     */
+    const displayRate = exchangeRates.get("INR_TO_DEFAULT");
+
+    if (!displayRate) {
+      return {
+        id: expense.id,
+        title: expense.title,
+
+        amount,
+        currency: originalCurrency,
+
+        baseCurrencyAmount,
+        exchangeRate,
+        exchangeRateAt: expense.exchangeRateAt,
+
+        convertedDisplayAmount: null,
+        displayExchangeRate: null,
+        displayExchangeRateAt: null,
+
+        category: expense.category,
+
+        status: expense.status,
+        reimbursementStatus: expense.reimbursementStatus,
+
+        expenseDate: expense.expenseDate,
+        billProofUrl: expense.billProofUrl,
+        billProofPath: expense.billProofPath,
+        createdAt: expense.createdAt,
+        updatedAt: expense.updatedAt,
+
+        userId: expense.userId,
+      };
+    }
 
     return {
       id: expense.id,
       title: expense.title,
 
-      // Original transaction amount and currency.
-      amount: Number(expense.amount),
+      amount,
       currency: originalCurrency,
 
-      // Existing normalized/base-currency information.
-      baseCurrencyAmount:
-        expense.baseCurrencyAmount !== null
-          ? Number(expense.baseCurrencyAmount)
-          : null,
-
-      exchangeRate:
-        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
-
+      baseCurrencyAmount,
+      exchangeRate,
       exchangeRateAt: expense.exchangeRateAt,
 
-      // Current reporting conversion.
-      convertedDisplayAmount,
-      displayExchangeRate: displayExchangeRate?.rate ?? null,
-      displayExchangeRateAt: displayExchangeRate?.rateDate ?? null,
+      convertedDisplayAmount: baseCurrencyAmount * displayRate.rate,
+      displayExchangeRate: displayRate.rate,
+      displayExchangeRateAt: displayRate.rateDate,
 
       category: expense.category,
 
@@ -149,6 +323,7 @@ export async function getAnalyticsData(
       billProofPath: expense.billProofPath,
       createdAt: expense.createdAt,
       updatedAt: expense.updatedAt,
+
       userId: expense.userId,
     };
   });

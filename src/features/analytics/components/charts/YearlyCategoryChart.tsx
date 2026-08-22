@@ -16,6 +16,7 @@ import { ALL_CURRENCIES } from "@/constants/currencies";
 import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type YearlyCategoryChartProps = {
   expenses: AnalyticsExpense[];
@@ -50,7 +51,8 @@ export default function YearlyCategoryChart({
     number,
     {
       year: number;
-      [category: string]: string | number;
+      expenses: AnalyticsExpense[];
+      [category: string]: string | number | AnalyticsExpense[] | undefined;
     }
   >();
 
@@ -63,10 +65,13 @@ export default function YearlyCategoryChart({
     if (!yearlyData.has(year)) {
       yearlyData.set(year, {
         year,
+        expenses: [],
       });
     }
 
     const yearData = yearlyData.get(year)!;
+
+    yearData.expenses.push(expense);
 
     yearData[category] =
       Number(yearData[category] ?? 0) +
@@ -111,10 +116,13 @@ export default function YearlyCategoryChart({
           />
 
           <Tooltip
-            formatter={(value) => [
-              formatCurrency(Number(value), reportCurrency),
-              "Expenses",
-            ]}
+            shared={false}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
           <Legend />
