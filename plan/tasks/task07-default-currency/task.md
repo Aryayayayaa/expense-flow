@@ -204,11 +204,62 @@ The implementation must:
 [x] Convert expenses whose original currency differs from the user's default currency using the available exchange-rate information.
 [x] Preserve and display the original transaction amount and currency for expenses whose original currency differs from the user's default currency.
 
+Important: DO NOT remove the currency filter from /expenses.
+
+The currency filter must remain available and must continue to filter expenses by their ORIGINAL transaction currency.
+
+The responsibilities must remain separate:
+
+1. Currency filter:
+   - Filters by expense.currency, i.e. the original currency stored on the transaction.
+   - ALL shows expenses of all original currencies.
+   - INR shows only expenses originally created in INR.
+   - USD shows only expenses originally created in USD.
+   - EUR shows only expenses originally created in EUR.
+   - And similarly for all supported currencies.
+
+2. Default currency:
+   - Controls the primary currency used to DISPLAY monetary values.
+   - Controls summary calculations.
+   - Must not modify the stored expense amount or original currency.
+
+Review the existing /expenses implementation and make only the changes actually required to satisfy this behavior.
+
+**Specifically verify/fix:**
+
+- ExpensesPageClient continues passing:
+  selectedCurrency
+  onCurrencyChange
+  to Filters.
+- selectedCurrency remains part of the client-side filtering logic.
+- matchesCurrency compares against expense.currency, not displayAmount or defaultCurrency.
+- Currency filtering must not cause the displayed currency to change.
+- displayAmount must continue representing the expense in the user's CURRENT default currency.
+- Summary cards must calculate Total Expenses and This Month using displayAmount.
+- Summary cards must always format values using defaultCurrency.
+- When an expense's original currency differs from defaultCurrency:
+  - primary amount should use displayAmount/defaultCurrency
+  - original amount and original currency should remain visible as secondary information.
+- When original currency equals defaultCurrency:
+  - display the original amount as the primary amount
+  - do not show a redundant secondary currency value.
+- ALL currency filter must show all expenses while still displaying every monetary value in the user's current default currency.
+- Individual currency filters must only change which transactions are included, not how those transactions are displayed.
+- Category, year, month, date, approval and reimbursement filters must continue working independently.
+
+After making the changes:
+
+1. Run TypeScript validation.
+2. Run ESLint.
+3. Run the production build if appropriate.
+4. Report exactly which files were changed and why.
+5. Do not move to the next subtask.
+
 ---
 
 8. Insights — Analysis
 
-#### STATUS: NOT STARTED
+#### STATUS: NEXT
 
 Create an Insights section/page that contains Analysis and Reports together.
 There must be NO sub-tabs between Analysis and Reports.
