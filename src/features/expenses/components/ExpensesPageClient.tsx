@@ -431,22 +431,16 @@ export default function ExpensesPageClient({
   /* ---------------------------------------------------------------------- */
   /* Summary                                                                */
   /* ---------------------------------------------------------------------- */
+  const summaryCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
-  /*
-   * IMPORTANT:
-   *
-   * Summary calculations use filteredExpenses, NOT
-   * paginatedExpenses.
-   *
-   * Therefore an expense on page 2 still contributes
-   * to Total Expenses / This Month / Categories.
-   */
-  const summaryCurrency = defaultCurrency;
+  const totalExpenses = filteredExpenses.reduce((sum, expense) => {
+    if (selectedCurrency !== ALL_CURRENCIES) {
+      return sum + Number(expense.amount);
+    }
 
-  const totalExpenses = filteredExpenses.reduce(
-    (sum, expense) => sum + getDisplayAmount(expense),
-    0,
-  );
+    return sum + getDisplayAmount(expense);
+  }, 0);
 
   const thisMonthExpenses = filteredExpenses
     .filter((expense) => {
@@ -457,7 +451,13 @@ export default function ExpensesPageClient({
         expenseDate.getFullYear() === currentDate.getFullYear()
       );
     })
-    .reduce((sum, expense) => sum + getDisplayAmount(expense), 0);
+    .reduce((sum, expense) => {
+      if (selectedCurrency !== ALL_CURRENCIES) {
+        return sum + Number(expense.amount);
+      }
+
+      return sum + getDisplayAmount(expense);
+    }, 0);
 
   const totalCategories = new Set(
     filteredExpenses.map((expense) => expense.category),

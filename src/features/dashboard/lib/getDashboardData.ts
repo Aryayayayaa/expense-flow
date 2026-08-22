@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import type { CurrencyCode } from "@/constants/currencies";
-import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 import { getExpenses } from "@/features/expenses/lib/expenses";
 
 export async function getDashboardData() {
@@ -13,6 +12,20 @@ export async function getDashboardData() {
   const userId = Number(session.user.id);
   const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
 
+  /*
+   * Dashboard is intentionally NOT paginated.
+   *
+   * The My Expenses page uses pagination because it displays
+   * expense cards.
+   *
+   * Dashboard summary cards, however, must represent ALL
+   * expenses belonging to the user.
+   *
+   * Therefore:
+   *
+   *   My Expenses → paginated
+   *   Dashboard   → all expenses
+   */
   const expenseResult = await getExpenses(
     userId,
     1,
@@ -20,114 +33,64 @@ export async function getDashboardData() {
     "ALL",
     "ALL",
     defaultCurrency,
+    false,
   );
 
   const expenses = expenseResult.expenses;
 
   /*
-   * Keep Dashboard conversion logic identical to /expenses.
+   * getExpenses() already calculates displayAmount using
+   * the user's current default currency.
    *
-   * baseCurrencyAmount is stored in INR.
+   * Therefore Dashboard must use displayAmount directly.
    *
-   * For a non-INR default currency:
-   *
-   *   INR amount / (default currency -> INR rate)
-   *
-   * gives the default-currency amount.
-   *
-   * We fetch the rate ONCE so every expense uses exactly
-   * the same conversion rate.
-   */
-  const displayRateToInr =
-    defaultCurrency === "INR"
-      ? 1
-      : (await getExchangeRate(defaultCurrency, "INR")).rate;
-
-  const getDashboardDisplayAmount = (expense: (typeof expenses)[number]) => {
-    const amount = Number(expense.amount);
-
-    /*
-     * If the expense was originally saved in the user's
-     * current default currency, preserve the original amount.
-     */
-    if (expense.currency === defaultCurrency) {
-      return amount;
-    }
-
-    /*
-     * Use the stored INR-normalized value.
-     *
-     * Older INR expenses may not have baseCurrencyAmount,
-     * so fall back to their original amount.
-     */
-    const baseCurrencyAmount =
-      expense.baseCurrencyAmount !== null
-        ? Number(expense.baseCurrencyAmount)
-        : expense.currency === "INR"
-          ? amount
-          : null;
-
-    /*
-     * If no normalized value exists, preserve the original
-     * amount rather than silently applying an incorrect rate.
-     */
-    if (baseCurrencyAmount === null) {
-      return amount;
-    }
-
-    return defaultCurrency === "INR"
-      ? baseCurrencyAmount
-      : baseCurrencyAmount / displayRateToInr;
-  };
-
-  /*
-   * Calculate Dashboard totals using the exact same
-   * display-currency logic as /expenses.
+   * No additional exchange-rate conversion is required here.
    */
   const totalSpent = expenses.reduce(
-    (total: number, expense: (typeof expenses)[number]) =>
-      total + getDashboardDisplayAmount(expense),
+    (total, expense) => total + Number(expense.displayAmount),
     0,
   );
 
   const now = new Date();
 
-  const monthlyExpenses = expenses.filter(
-    (expense: (typeof expenses)[number]) => {
-      const date = expense.expenseDate ?? expense.createdAt;
+  const monthlyExpenses = expenses.filter((expense) => {
+    const date = expense.expenseDate ?? expense.createdAt;
 
-      return (
-        date.getMonth() === now.getMonth() &&
-        date.getFullYear() === now.getFullYear()
-      );
-    },
-  );
+    return (
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
+  });
 
   const monthlySpent = monthlyExpenses.reduce(
-    (total: number, expense: (typeof expenses)[number]) =>
-      total + getDashboardDisplayAmount(expense),
+    (total, expense) => total + Number(expense.displayAmount),
     0,
   );
 
   /*
-   * Recent expenses preserve:
-   *
-   * - displayAmount → user's current default currency
-   * - amount/currency → original transaction value
+   * Dashboard shows only the five most recent expenses,
+   * but summary calculations above use ALL expenses.
    */
   const recentExpenses = expenses.slice(0, 5).map((expense) => ({
     id: expense.id,
     title: expense.title,
     category: expense.category,
 
-    // Original transaction amount.
+    /*
+     * Original transaction amount.
+     */
     amount: Number(expense.amount),
 
-    // Original transaction currency.
+    /*
+     * Original transaction currency.
+     */
     currency: expense.currency,
 
-    // Current default-currency display amount.
-    displayAmount: getDashboardDisplayAmount(expense),
+    /*
+     * Amount converted into the user's current
+     * default currency.
+     */
+    displayAmount: Number(expense.displayAmount),
 
     date: expense.expenseDate ?? expense.createdAt,
   }));
@@ -142,8 +105,20 @@ export async function getDashboardData() {
     defaultCurrency,
 
     summary: {
+      /*
+       * Total of ALL expenses, not just the first
+       * pagination page.
+       */
       totalSpent,
+
+      /*
+       * Total of ALL expenses from the current month.
+       */
       monthlySpent,
+
+      /*
+       * Total number of expenses, not page size.
+       */
       totalExpenses: expenses.length,
     },
 
