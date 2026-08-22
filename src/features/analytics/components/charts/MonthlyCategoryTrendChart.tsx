@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   CartesianGrid,
   Legend,
@@ -55,6 +57,8 @@ export default function MonthlyCategoryTrendChart({
   selectedCurrency,
   defaultCurrency,
 }: MonthlyCategoryTrendChartProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const reportCurrency =
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
@@ -103,13 +107,35 @@ export default function MonthlyCategoryTrendChart({
       });
   });
 
-  const chartData = Array.from(monthlyData.values()).sort((a, b) => {
-    if (a.year !== b.year) {
-      return a.year - b.year;
-    }
+  const chartData = Array.from(monthlyData.values())
+    .map((monthData) => {
+      /*
+       * When a category is selected through the legend,
+       * restrict the tooltip's underlying expenses to that
+       * category only.
+       */
+      const tooltipExpenses = selectedCategory
+        ? monthData.expenses.filter(
+            (expense) => expense.category === selectedCategory,
+          )
+        : monthData.expenses;
 
-    return a.monthNumber - b.monthNumber;
-  });
+      return {
+        ...monthData,
+        name: selectedCategory
+          ? `${monthData.label} — ${selectedCategory}`
+          : monthData.label,
+        category: selectedCategory ?? undefined,
+        expenses: tooltipExpenses,
+      };
+    })
+    .sort((a, b) => {
+      if (a.year !== b.year) {
+        return a.year - b.year;
+      }
+
+      return a.monthNumber - b.monthNumber;
+    });
 
   if (chartData.length === 0) {
     return (
@@ -117,6 +143,16 @@ export default function MonthlyCategoryTrendChart({
         No expense data available for the selected filters.
       </div>
     );
+  }
+
+  function handleLegendClick(entry: { value?: string }) {
+    const category = entry.value;
+
+    if (!category) {
+      return;
+    }
+
+    setSelectedCategory((current) => (current === category ? null : category));
   }
 
   return (
@@ -151,7 +187,12 @@ export default function MonthlyCategoryTrendChart({
             }
           />
 
-          <Legend />
+          <Legend
+            onClick={handleLegendClick}
+            wrapperStyle={{
+              cursor: "pointer",
+            }}
+          />
 
           {categories.map((category, index) => (
             <Line
@@ -160,8 +201,11 @@ export default function MonthlyCategoryTrendChart({
               dataKey={category}
               name={category}
               stroke={categoryColors[index % categoryColors.length]}
-              strokeWidth={2}
-              dot={{ r: 3 }}
+              strokeWidth={selectedCategory === category ? 4 : 2}
+              strokeOpacity={
+                selectedCategory && selectedCategory !== category ? 0.2 : 1
+              }
+              dot={{ r: selectedCategory === category ? 5 : 3 }}
               connectNulls
             />
           ))}

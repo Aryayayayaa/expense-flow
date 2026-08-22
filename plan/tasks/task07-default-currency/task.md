@@ -355,19 +355,19 @@ The Analysis section must provide monetary analysis based on the authenticated u
 The existing currency filter must remain available.
 
 The currency filter must:
-[] Keep the existing order of currency options unchanged.
-[] Default to the authenticated user's current defaultCurrency when the user first lands on the Insights page.
-[] Not default to ALL CURRENCIES.
-[] Allow the user to explicitly select ALL CURRENCIES.
-[] Allow the user to select any supported individual currency.
+[x] Keep the existing order of currency options unchanged.
+[x] Default to the authenticated user's current defaultCurrency when the user first lands on the Insights page.
+[x] Not default to ALL CURRENCIES.
+[x] Allow the user to explicitly select ALL CURRENCIES.
+[x] Allow the user to select any supported individual currency.
 
 **When a specific currency is selected**
 
 When the currency filter contains a specific currency such as INR, USD, EUR, etc.:
 
-[] Include only expenses whose original transaction currency matches the selected currency.
-[] Do not convert expenses from another original currency into the selected currency.
-[] Use the original stored expense amount for the analysis.
+[x] Include only expenses whose original transaction currency matches the selected currency.
+[x] Do not convert expenses from another original currency into the selected currency.
+[x] Use the original stored expense amount for the analysis.
 
 For example:
 Currency Filter = USD
@@ -378,23 +378,23 @@ EUR 200 → excluded
 When ALL CURRENCIES is selected
 When the currency filter is ALL CURRENCIES:
 
-[] Include expenses from all supported original currencies.
-[] Use the authenticated user's current default currency as the reporting/display currency.
-[] Convert expenses whose original currency differs from the user's default currency.
-[] Do not modify the original stored expense amount or currency.
-[] Aggregate the converted values using the user's default currency.
+[x] Include expenses from all supported original currencies.
+[x] Use the authenticated user's current default currency as the reporting/display currency.
+[x] Convert expenses whose original currency differs from the user's default currency.
+[x] Do not modify the original stored expense amount or currency.
+[x] Aggregate the converted values using the user's default currency.
 
 **Analysis graphs**
 Analysis must include the relevant existing analysis graphs for:
 
-[] Category-based spending.
-[] Monthly spending.
-[] Yearly spending.
+[x] Category-based spending.
+[x] Monthly spending.
+[x] Yearly spending.
 
 **For each graph:**
-[] Specific currency filter → only expenses originally saved in that currency are included.
-[] ALL CURRENCIES → all expenses are converted to the user's default currency before aggregation.
-[] Graph totals must use the same conversion logic as the summary values.
+[x] Specific currency filter → only expenses originally saved in that currency are included.
+[x] ALL CURRENCIES → all expenses are converted to the user's default currency before aggregation.
+[x] Graph totals must use the same conversion logic as the summary values.
 
 **Analysis tooltips**
 When ALL CURRENCIES is selected, graph tooltips must explain how the displayed value was calculated.
@@ -408,16 +408,16 @@ USD: $30.00 = €25.67
 Total: €270.38
 
 The exact visual formatting may vary, but the tooltip must clearly communicate:
-[] Original currency.
-[] Original amount.
-[] Converted amount in the user's default currency.
-[] Final total used by the graph.
+[x] Original currency.
+[x] Original amount.
+[x] Converted amount in the user's default currency.
+[x] Final total used by the graph.
 
 The same calculation principle must work for category, monthly, and yearly graphs.
 
 ---
 
-10. Application-Wide Currency Consistency & Final Validation
+### 10. Application-Wide Currency Consistency & Final Validation
 
 #### STATUS: IN PROGRESS
 
@@ -429,10 +429,10 @@ Review monetary output across:
 [x] My Expenses.
 [x] Expense cards.
 [x] Expense summaries.
-[ ] Insights → Analysis.
-[ ] Insights → Reports.
-[ ] Approvals.
-[ ] Approval history.
+[x] Insights → Analysis.
+[x] Insights → Reports.
+[x] Approvals.
+[x] Approval history.
 [x] My Expense Status.
 [x] Any additional page/component that displays expense amounts.
 
@@ -451,18 +451,18 @@ Review monetary output across:
 Currency filters must NOT be removed as previously planned.
 They remain available where they are useful for analysis/reporting.
 [x] /expenses currency filter remains available.
-[ ] /insights currency filter remains available.
-[ ] Currency filter options retain their existing order.
-[ ] Insights defaults the currency filter to the user's default currency.
-[ ] ALL CURRENCIES remains available as an explicit option.
-[ ] Registration continues to use currency selection for the user's default currency.
+[x] /insights currency filter remains available.
+[x] Currency filter options retain their existing order.
+[x] Insights defaults the currency filter to the user's default currency.
+[x] ALL CURRENCIES remains available as an explicit option.
+[x] Registration continues to use currency selection for the user's default currency.
 [x] Edit Profile continxes to use currency selection for the user's default currency.
-[ ] Expense Creation continues to allow an individual expense currency independent of the user's default currency.
+[x] Expense Creation continues to allow an individual expense currency independent of the user's default currency.
 
 **Historical data**
-[ ] Changing the user's default currency does not update historical expense currency.
-[ ] Changing the user's default currency does not update historical expense amount.
-[ ] Existing baseCurrencyAmount values continue to be used appropriately.
+[x] Changing the user's default currency does not update historical expense currency.
+[x] Changing the user's default currency does not update historical expense amount.
+[x] Existing baseCurrencyAmount values continue to be used appropriately.
 [x] Existing exchange-rate information is preserved.
 [x] Legacy INR expenses continue to work correctly.
 [x] Users can access existing expenses after changing their default currency.
@@ -482,10 +482,10 @@ Final regression
 [x] Verify the new currency becomes effective without requiring logout/login.
 [x] Verify Dashboard reflects the new currency.
 [x] Verify My Expenses reflects the new currency.
-[ ] Verify Insights reflects the new currency.
+[x] Verify Insights reflects the new currency.
 [x] Verify Analysis reflects the new currency.
 [x] Verify Reports reflects the new currency.
-[ ] Verify Approvals reflects the appropriate currency.
+[x] Verify Approvals reflects the appropriate currency.
 [x] Run TypeScript validation.
 [x] Run ESLint.
 [x] Run production build.
@@ -510,13 +510,13 @@ Task 07 is complete only when all of the following are satisfied:
 [x] My Expenses currency filter remains available.
 [x] My Expenses specific-currency filtering uses the original transaction currency.
 [x] My Expenses ALL CURRENCIES includes all expenses and uses default-currency values for aggregation.
-[ ] Insights contains Analysis and Reports without sub-tabs.
-[ ] Insights currency filter remains available.
-[ ] Insights defaults the currency filter to the authenticated user's default currency.
-[ ] Analysis supports category, monthly, and yearly analysis.
-[ ] Analysis specific-currency filtering includes only expenses originally saved in that currency.
-[ ] Analysis ALL CURRENCIES converts expenses to the user's default currency.
-[ ] Analysis tooltips explain multi-currency calculations.
+[x] Insights contains Analysis and Reports without sub-tabs.
+[x] Insights currency filter remains available.
+[x] Insights defaults the currency filter to the authenticated user's default currency.
+[x] Analysis supports category, monthly, and yearly analysis.
+[x] Analysis specific-currency filtering includes only expenses originally saved in that currency.
+[x] Analysis ALL CURRENCIES converts expenses to the user's default currency.
+[x] Analysis tooltips explain multi-currency calculations.
 [x] Reports summary values respond to active filters.
 [x] Reports Spending Summary responds to active filters.
 [x] Reports Largest Expenses responds to active filters.
@@ -524,7 +524,7 @@ Task 07 is complete only when all of the following are satisfied:
 [x] Reports specific-currency filtering uses original transaction currency.
 [x] Reports ALL CURRENCIES converts expenses to the user's default currency.
 [x] Reports tooltips explain multi-currency calculations where applicable.
-[ ] Approvals display monetary values consistently with the applicable default currency.
+[x] Approvals display monetary values consistently with the applicable default currency.
 [x] My Expense Status displays monetary values using the authenticated user's default currency.
 [x] Non-default-currency expenses are converted when default-currency display/aggregation is required.
 [x] Original transaction amount/currency remains available where required.
@@ -582,17 +582,17 @@ Task 07 is complete only when all of the following are satisfied:
 [x] Verify non-default transaction amounts are shown as secondary information where required.
 
 **Insights — Analysis**
-[ ] Verify Analysis and Reports appear together without sub-tabs.
-[ ] Verify the currency filter remains available.
-[ ] Verify the default selected currency is the authenticated user's default currency.
-[ ] Verify selecting a specific currency includes only expenses originally saved in that currency.
-[ ] Verify selecting a specific currency does not convert other currencies.
-[ ] Verify ALL CURRENCIES includes expenses from all currencies.
-[ ] Verify ALL CURRENCIES converts non-default expenses to the user's default currency.
-[ ] Verify category analysis uses the correct currency behavior.
-[ ] Verify monthly analysis uses the correct currency behavior.
-[ ] Verify yearly analysis uses the correct currency behavior.
-[ ] Verify graph tooltips explain the conversion calculation when ALL CURRENCIES is selected.
+[x] Verify Analysis and Reports appear together without sub-tabs.
+[x] Verify the currency filter remains available.
+[x] Verify the default selected currency is the authenticated user's default currency.
+[x] Verify selecting a specific currency includes only expenses originally saved in that currency.
+[x] Verify selecting a specific currency does not convert other currencies.
+[x] Verify ALL CURRENCIES includes expenses from all currencies.
+[x] Verify ALL CURRENCIES converts non-default expenses to the user's default currency.
+[x] Verify category analysis uses the correct currency behavior.
+[x] Verify monthly analysis uses the correct currency behavior.
+[x] Verify yearly analysis uses the correct currency behavior.
+[x] Verify graph tooltips explain the conversion calculation when ALL CURRENCIES is selected.
 
 **Insights — Reports**
 [x] Verify Summary Cards respond to filters.
@@ -606,9 +606,9 @@ Task 07 is complete only when all of the following are satisfied:
 [x] Verify report tooltips explain multi-currency calculations.
 
 **Approvals**
-[ ] Verify pending approval amounts display correctly.
-[ ] Verify approval history amounts display correctly.
-[ ] Verify My Expense Status amounts display correctly.
+[x] Verify pending approval amounts display correctly.
+[x] Verify approval history amounts display correctly.
+[x] Verify My Expense Status amounts display correctly.
 
 **Regression**
 [x] Test INR as default currency.
@@ -619,10 +619,10 @@ Task 07 is complete only when all of the following are satisfied:
 [x] Change default currency without logging out.
 [x] Verify Dashboard updates.
 [x] Verify My Expenses updates.
-[ ] Verify Insights updates.
-[ ] Verify Analysis updates.
+[x] Verify Insights updates.
+[x] Verify Analysis updates.
 [x] Verify Reports updates.
-[ ] Verify Approvals updates.
+[x] Verify Approvals updates.
 [x] Run TypeScript validation.
 [x] Run ESLint.
 [x] Run production build.

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Cell,
   Legend,
@@ -37,20 +39,13 @@ export default function CategoryPieChart({
   selectedCurrency,
   defaultCurrency,
 }: CategoryPieChartProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const reportCurrency =
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
   /*
-   * Keep the original expenses inside each chart data item.
-   *
-   * The displayed total is calculated using the same currency
-   * rules as the rest of Analysis:
-   *
-   * Specific currency:
-   *   original transaction amount
-   *
-   * ALL CURRENCIES:
-   *   converted amount in the user's default currency
+   * Group expenses by category.
    */
   const categoryExpenses = expenses.reduce<Record<string, AnalyticsExpense[]>>(
     (groups, expense) => {
@@ -66,19 +61,32 @@ export default function CategoryPieChart({
   );
 
   const data = Object.entries(categoryExpenses).map(
-    ([category, categoryExpenseList]) => ({
-      name: category,
-      expenses: categoryExpenseList,
-      value: categoryExpenseList.reduce(
-        (total, expense) =>
-          total +
-          getReportExpenseAmount(expense, {
-            selectedCurrency,
-            defaultCurrency,
-          }),
-        0,
-      ),
-    }),
+    ([category, categoryExpenseList]) => {
+      /*
+       * When a legend category is selected, the tooltip should
+       * use only that category's expenses.
+       *
+       * Otherwise it uses the expenses belonging to the
+       * currently hovered pie slice.
+       */
+      const tooltipExpenses = selectedCategory
+        ? (categoryExpenses[selectedCategory] ?? [])
+        : categoryExpenseList;
+
+      return {
+        name: category,
+        expenses: tooltipExpenses,
+        value: categoryExpenseList.reduce(
+          (total, expense) =>
+            total +
+            getReportExpenseAmount(expense, {
+              selectedCurrency,
+              defaultCurrency,
+            }),
+          0,
+        ),
+      };
+    },
   );
 
   const totalExpenses = data.reduce((sum, item) => sum + item.value, 0);
@@ -89,6 +97,16 @@ export default function CategoryPieChart({
         No expense data available for the selected filters.
       </p>
     );
+  }
+
+  function handleLegendClick(entry: { value?: string }) {
+    const category = entry.value;
+
+    if (!category) {
+      return;
+    }
+
+    setSelectedCategory((current) => (current === category ? null : category));
   }
 
   return (
@@ -110,6 +128,9 @@ export default function CategoryPieChart({
               <Cell
                 key={entry.name}
                 fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                opacity={
+                  selectedCategory && selectedCategory !== entry.name ? 0.35 : 1
+                }
               />
             ))}
           </Pie>
@@ -123,7 +144,12 @@ export default function CategoryPieChart({
             }
           />
 
-          <Legend />
+          <Legend
+            onClick={handleLegendClick}
+            wrapperStyle={{
+              cursor: "pointer",
+            }}
+          />
 
           <text
             x="50%"

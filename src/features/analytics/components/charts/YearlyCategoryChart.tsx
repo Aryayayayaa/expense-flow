@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Bar,
   BarChart,
@@ -40,6 +42,8 @@ export default function YearlyCategoryChart({
   selectedCurrency,
   defaultCurrency,
 }: YearlyCategoryChartProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const reportCurrency =
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
@@ -81,9 +85,29 @@ export default function YearlyCategoryChart({
       });
   });
 
-  const chartData = Array.from(yearlyData.values()).sort(
-    (a, b) => a.year - b.year,
-  );
+  const chartData = Array.from(yearlyData.values())
+    .map((yearData) => {
+      /*
+       * When a category is selected through the legend,
+       * restrict the tooltip's underlying expenses to that
+       * category only.
+       */
+      const tooltipExpenses = selectedCategory
+        ? yearData.expenses.filter(
+            (expense) => expense.category === selectedCategory,
+          )
+        : yearData.expenses;
+
+      return {
+        ...yearData,
+        name: selectedCategory
+          ? `${yearData.year} — ${selectedCategory}`
+          : String(yearData.year),
+        category: selectedCategory ?? undefined,
+        expenses: tooltipExpenses,
+      };
+    })
+    .sort((a, b) => a.year - b.year);
 
   if (chartData.length === 0) {
     return (
@@ -91,6 +115,16 @@ export default function YearlyCategoryChart({
         No expense data available for the selected filters.
       </div>
     );
+  }
+
+  function handleLegendClick(entry: { value?: string }) {
+    const category = entry.value;
+
+    if (!category) {
+      return;
+    }
+
+    setSelectedCategory((current) => (current === category ? null : category));
   }
 
   return (
@@ -125,7 +159,12 @@ export default function YearlyCategoryChart({
             }
           />
 
-          <Legend />
+          <Legend
+            onClick={handleLegendClick}
+            wrapperStyle={{
+              cursor: "pointer",
+            }}
+          />
 
           {categories.map((category, index) => (
             <Bar
@@ -134,6 +173,9 @@ export default function YearlyCategoryChart({
               name={category}
               stackId="expenses"
               fill={categoryColors[index % categoryColors.length]}
+              fillOpacity={
+                selectedCategory && selectedCategory !== category ? 0.2 : 1
+              }
             />
           ))}
         </BarChart>
