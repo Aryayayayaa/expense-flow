@@ -419,7 +419,7 @@ The same calculation principle must work for category, monthly, and yearly graph
 
 ### 10. Application-Wide Currency Consistency & Final Validation
 
-#### STATUS: IN PROGRESS
+#### STATUS: COMPLETED
 
 The final subtask ensures that all default-currency functionality implemented throughout Task 07 behaves consistently.
 
