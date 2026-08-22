@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import type { CurrencyCode } from "@/constants/currencies";
+import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 import { getExpenses } from "@/features/expenses/lib/expenses";
 
 export async function getDashboardData() {
@@ -20,38 +21,75 @@ export async function getDashboardData() {
     "ALL",
     defaultCurrency,
   );
+
   const expenses = expenseResult.expenses;
 
-  const now = new Date();
+  /*
+   * Keep Dashboard conversion logic identical to /expenses.
+   *
+   * baseCurrencyAmount is stored in INR.
+   *
+   * For a non-INR default currency:
+   *
+   *   INR amount / (default currency -> INR rate)
+   *
+   * gives the default-currency amount.
+   *
+   * We fetch the rate ONCE so every expense uses exactly
+   * the same conversion rate.
+   */
+  const displayRateToInr =
+    defaultCurrency === "INR"
+      ? 1
+      : (await getExchangeRate(defaultCurrency, "INR")).rate;
 
-  function getBaseCurrencyAmount(expense: {
-    amount: unknown;
-    currency: string;
-    baseCurrencyAmount: unknown;
-  }) {
-    if (expense.baseCurrencyAmount !== null) {
-      return Number(expense.baseCurrencyAmount);
+  const getDashboardDisplayAmount = (expense: (typeof expenses)[number]) => {
+    const amount = Number(expense.amount);
+
+    /*
+     * If the expense was originally saved in the user's
+     * current default currency, preserve the original amount.
+     */
+    if (expense.currency === defaultCurrency) {
+      return amount;
     }
 
-    // Existing INR expenses created before multi-currency support
-    // do not have baseCurrencyAmount populated.
-    if (expense.currency === "INR") {
-      return Number(expense.amount);
+    /*
+     * Use the stored INR-normalized value.
+     *
+     * Older INR expenses may not have baseCurrencyAmount,
+     * so fall back to their original amount.
+     */
+    const baseCurrencyAmount =
+      expense.baseCurrencyAmount !== null
+        ? Number(expense.baseCurrencyAmount)
+        : expense.currency === "INR"
+          ? amount
+          : null;
+
+    /*
+     * If no normalized value exists, preserve the original
+     * amount rather than silently applying an incorrect rate.
+     */
+    if (baseCurrencyAmount === null) {
+      return amount;
     }
 
-    return 0;
-  }
+    return defaultCurrency === "INR"
+      ? baseCurrencyAmount
+      : baseCurrencyAmount / displayRateToInr;
+  };
 
   /*
-   * Dashboard totals are stored in the application's base currency (INR).
-   *
-   * Individual expenses retain their original amount/currency.
-   * baseCurrencyAmount is the normalized value used for aggregation.
+   * Calculate Dashboard totals using the exact same
+   * display-currency logic as /expenses.
    */
   const totalSpent = expenses.reduce(
-    (total, expense) => total + getBaseCurrencyAmount(expense),
+    (total, expense) => total + getDashboardDisplayAmount(expense),
     0,
   );
+
+  const now = new Date();
 
   const monthlyExpenses = expenses.filter((expense) => {
     const date = expense.expenseDate ?? expense.createdAt;
@@ -63,10 +101,16 @@ export async function getDashboardData() {
   });
 
   const monthlySpent = monthlyExpenses.reduce(
-    (total, expense) => total + getBaseCurrencyAmount(expense),
+    (total, expense) => total + getDashboardDisplayAmount(expense),
     0,
   );
 
+  /*
+   * Recent expenses preserve:
+   *
+   * - displayAmount → user's current default currency
+   * - amount/currency → original transaction value
+   */
   const recentExpenses = expenses.slice(0, 5).map((expense) => ({
     id: expense.id,
     title: expense.title,
@@ -78,21 +122,20 @@ export async function getDashboardData() {
     // Original transaction currency.
     currency: expense.currency,
 
-    // Normalized INR value.
-    baseCurrencyAmount: getBaseCurrencyAmount(expense),
-
-    // Useful later when the dashboard gets a display-currency filter.
-    exchangeRate: Number(expense.exchangeRate ?? 1),
+    // Current default-currency display amount.
+    displayAmount: getDashboardDisplayAmount(expense),
 
     date: expense.expenseDate ?? expense.createdAt,
   }));
 
   return {
     user: {
-      id: Number(session.user.id),
+      id: userId,
       name: session.user.name ?? "User",
       email: session.user.email ?? "",
     },
+
+    defaultCurrency,
 
     summary: {
       totalSpent,

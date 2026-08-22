@@ -153,20 +153,20 @@ This display-currency behavior must eventually be applied consistently across:
 
 ### 6. Dashboard Default Currency Display
 
-#### STATUS: NEXT
+#### STATUS: COMPLETED
 
 The Dashboard must use the authenticated user's current default currency for all applicable monetary display and aggregation.
 
 The Dashboard must:
 
-- [ ] Load the authenticated user's current default currency.
-- [ ] Display "Total Expenses" using the user's current default currency.
-- [ ] Display "This Month" using the user's current default currency.
-- [ ] Include expenses stored in all supported currencies when calculating totals.
-- [ ] Convert non-default-currency expenses into the user's current default currency before aggregation.
-- [ ] Keep expenses originally stored in the user's default currency unchanged.
-- [ ] Ensure changing the user's default currency updates Dashboard monetary values in the same session.
-- [ ] Ensure changing the user's default currency does not modify historical expense data.
+- [x] Load the authenticated user's current default currency.
+- [x] Display "Total Expenses" using the user's current default currency.
+- [x] Display "This Month" using the user's current default currency.
+- [x] Include expenses stored in all supported currencies when calculating totals.
+- [x] Convert non-default-currency expenses into the user's current default currency before aggregation.
+- [x] Keep expenses originally stored in the user's default currency unchanged.
+- [x] Ensure changing the user's default currency updates Dashboard monetary values in the same session.
+- [x] Ensure changing the user's default currency does not modify historical expense data.
 
 #### Recent Expenses
 
@@ -181,18 +181,18 @@ Only the Amount column requires currency-display changes.
 
 The Amount column must:
 
-- [ ] Display the expense amount primarily in the user's current default currency.
-- [ ] Convert the expense into the user's default currency when the original expense currency differs.
-- [ ] Display the original transaction amount and currency in brackets when the original currency differs from the default currency.
-- [ ] Display only the default-currency amount when the original expense currency matches the default currency.
-- [ ] Preserve the original transaction amount and currency in the database.
-- [ ] Never overwrite the historical expense amount merely because the user's default currency changes.
+- [x] Display the expense amount primarily in the user's current default currency.
+- [x] Convert the expense into the user's default currency when the original expense currency differs.
+- [x] Display the original transaction amount and currency in brackets when the original currency differs from the default currency.
+- [x] Display only the default-currency amount when the original expense currency matches the default currency.
+- [x] Preserve the original transaction amount and currency in the database.
+- [x] Never overwrite the historical expense amount merely because the user's default currency changes.
 
 ---
 
 ### 7. Expense Display Currency
 
-#### STATUS: NOT STARTED
+#### STATUS: NEXT
 
 The user's default currency must become the primary display currency for expense values throughout the application.
 

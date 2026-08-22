@@ -80,14 +80,20 @@ export default async function DashboardPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total Expenses"
-            value={formatCurrency(data.summary.totalSpent, "INR")}
+            value={formatCurrency(
+              data.summary.totalSpent,
+              data.defaultCurrency,
+            )}
             description={`${data.summary.totalExpenses} expenses recorded`}
             icon={<WalletIcon />}
           />
 
           <StatCard
             title="This Month"
-            value={formatCurrency(data.summary.monthlySpent, "INR")}
+            value={formatCurrency(
+              data.summary.monthlySpent,
+              data.defaultCurrency,
+            )}
             description="Expenses recorded this month"
             icon={<CalendarIcon />}
           />
@@ -188,16 +194,16 @@ export default async function DashboardPage() {
 
                         <td className="px-5 py-4 text-sm font-semibold text-slate-900 dark:text-white">
                           <div>
-                            {formatCurrency(expense.amount, expense.currency)}
+                            {formatCurrency(
+                              expense.displayAmount,
+                              data.defaultCurrency,
+                            )}
                           </div>
-
-                          {expense.currency !== "INR" && (
+                          {expense.currency !== data.defaultCurrency && (
                             <div className="mt-1 text-xs font-normal text-slate-500 dark:text-slate-400">
-                              ≈{" "}
-                              {formatCurrency(
-                                expense.baseCurrencyAmount,
-                                "INR",
-                              )}
+                              (
+                              {formatCurrency(expense.amount, expense.currency)}
+                              )
                             </div>
                           )}
                         </td>
@@ -224,13 +230,15 @@ export default async function DashboardPage() {
 
                       <div className="text-right">
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                          {formatCurrency(expense.amount, expense.currency)}
+                          {formatCurrency(
+                            expense.displayAmount,
+                            data.defaultCurrency,
+                          )}
                         </p>
 
-                        {expense.currency !== "INR" && (
+                        {expense.currency !== data.defaultCurrency && (
                           <p className="mt-1 text-xs font-normal text-slate-500 dark:text-slate-400">
-                            ≈{" "}
-                            {formatCurrency(expense.baseCurrencyAmount, "INR")}
+                            ({formatCurrency(expense.amount, expense.currency)})
                           </p>
                         )}
                       </div>
@@ -296,7 +304,7 @@ function StatCard({ title, value, description, icon }: StatCardProps) {
             {title}
           </p>
 
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white truncate text-2xl font-semibold sm:text-3xl">
+          <p className="mt-2 truncate text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
             {value}
           </p>
         </div>
