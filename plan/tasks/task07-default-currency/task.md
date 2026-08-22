@@ -192,7 +192,7 @@ The Amount column must:
 
 ### 7. Expense Display Currency
 
-#### STATUS: STARTING NEXT
+#### STATUS: COMPLETED
 
 The user's default currency must become the primary display currency for expense values throughout the application.
 
