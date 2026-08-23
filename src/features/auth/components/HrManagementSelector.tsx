@@ -2,7 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-type Section = "verification" | "reimbursement" | "name-change";
+type Section =
+  | "verification"
+  | "reimbursement"
+  | "name-change"
+  | "role-verification";
 
 type Props = {
   section: Section;
@@ -14,12 +18,16 @@ const sections: { value: Section; label: string }[] = [
     label: "Employee Verification",
   },
   {
-    value: "reimbursement",
-    label: "Reimbursement",
-  },
-  {
     value: "name-change",
     label: "Name Change Requests",
+  },
+  {
+    value: "role-verification",
+    label: "Role Verification Requests",
+  },
+  {
+    value: "reimbursement",
+    label: "Reimbursement",
   },
 ];
 
@@ -41,7 +49,7 @@ export default function HrManagementSelector({ section }: Props) {
         htmlFor="hr-management-section"
         className="block text-sm font-medium text-slate-700"
       >
-        Management Section
+        People Management
       </label>
 
       <select

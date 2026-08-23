@@ -98,14 +98,6 @@ export default function Sidebar({ userRole }: SidebarProps) {
           )}
 
           <SidebarLink
-            href="/requests"
-            label="Requests"
-            tooltip="Submit and manage account-related requests"
-            icon={<RequestsIcon />}
-            active={pathname.startsWith("/requests")}
-          />
-
-          <SidebarLink
             href="/profile"
             label="Profile"
             tooltip="View and update your profile settings"

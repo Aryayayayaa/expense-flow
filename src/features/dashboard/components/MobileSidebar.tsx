@@ -153,13 +153,6 @@ export default function MobileSidebar({
             )}
 
             <MobileNavLink
-              href="/requests"
-              label="Requests"
-              onClick={closeMenu}
-              icon={<RequestsIcon />}
-            />
-
-            <MobileNavLink
               href="/profile"
               label="Profile"
               onClick={closeMenu}
