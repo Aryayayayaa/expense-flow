@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Check, CheckCheck } from "lucide-react";
 
 import {
@@ -12,8 +13,10 @@ type NotificationItem = {
   id: number;
   title: string;
   message: string;
+  type: string;
   isRead: boolean;
   createdAt: Date;
+  expenseId?: number | null;
 };
 
 type NotificationBellProps = {
@@ -32,41 +35,98 @@ function formatNotificationTime(date: Date) {
   });
 }
 
+function getNotificationDestination(notification: NotificationItem) {
+  if (notification.expenseId) {
+    switch (notification.type) {
+      case "EXPENSE_SUBMITTED":
+        return "/approvals";
+
+      case "EXPENSE_APPROVED":
+      case "EXPENSE_REJECTED":
+      case "EXPENSE_MODIFIED":
+      case "EXPENSE_DELETED":
+      case "REIMBURSEMENT_PENDING":
+      case "EXPENSE_REIMBURSED":
+      case "REIMBURSEMENT_REJECTED":
+        return `/expenses/${notification.expenseId}`;
+
+      case "EXPENSE_DELETED":
+        return "/expenses";
+      default:
+        return null;
+    }
+  }
+
+  switch (notification.type) {
+    case "EMPLOYEE_VERIFICATION_PENDING":
+      return "/hr";
+
+    case "EMPLOYEE_VERIFICATION_APPROVED":
+    case "EMPLOYEE_VERIFICATION_REJECTED":
+      return "/profile";
+
+    case "ROLE_VERIFICATION_PENDING":
+      return "/role-verification";
+
+    case "ROLE_VERIFICATION_APPROVED":
+    case "ROLE_VERIFICATION_REJECTED":
+    case "ROLE_UPGRADED":
+    case "ROLE_DOWNGRADED":
+    case "ROLE_CHANGED":
+      return "/profile";
+
+    case "EMPLOYEE_ACCOUNT_CREATED":
+    case "EMPLOYEE_ACCOUNT_ACTIVATED":
+    case "EMPLOYEE_ACCOUNT_DEACTIVATED":
+      return "/admin";
+
+    case "EMPLOYEE_ACCOUNT_UPDATED":
+      return "/profile";
+
+    default:
+      return null;
+  }
+}
+
 export default function NotificationBell({
   notifications,
   unreadCount,
 }: NotificationBellProps) {
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
 
   const [items, setItems] = useState(notifications);
 
   const [count, setCount] = useState(unreadCount);
 
-  async function handleMarkAsRead(notificationId: number) {
-    const notification = items.find((item) => item.id === notificationId);
+  async function handleNotificationClick(notification: NotificationItem) {
+    const destination = getNotificationDestination(notification);
 
-    if (!notification || notification.isRead) {
-      return;
+    if (!notification.isRead) {
+      const result = await markNotificationAsReadAction(notification.id);
+
+      if (result.success) {
+        setItems((current) =>
+          current.map((item) =>
+            item.id === notification.id
+              ? {
+                  ...item,
+                  isRead: true,
+                }
+              : item,
+          ),
+        );
+
+        setCount((current) => Math.max(0, current - 1));
+      }
     }
 
-    const result = await markNotificationAsReadAction(notificationId);
+    setOpen(false);
 
-    if (!result.success) {
-      return;
+    if (destination) {
+      router.push(destination);
     }
-
-    setItems((current) =>
-      current.map((item) =>
-        item.id === notificationId
-          ? {
-              ...item,
-              isRead: true,
-            }
-          : item,
-      ),
-    );
-
-    setCount((current) => Math.max(0, current - 1));
   }
 
   async function handleMarkAllAsRead() {
@@ -153,7 +213,7 @@ export default function NotificationBell({
                 <button
                   key={notification.id}
                   type="button"
-                  onClick={() => handleMarkAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                   className={`w-full border-b border-slate-100 px-4 py-4 text-left transition last:border-b-0 hover:bg-slate-50 ${
                     notification.isRead ? "bg-white" : "bg-blue-50/50"
                   }`}
