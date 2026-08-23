@@ -1,10 +1,10 @@
 import ExpenseCard from "./ExpenseCard";
-import { SerializedExpense } from "../types";
+import type { DisplayExpense } from "../types";
 import EmptyState from "@/components/feedback/EmptyState";
 
 type ExpenseListProps = {
-  expenses: SerializedExpense[];
-  onEdit: (expense: SerializedExpense) => void;
+  expenses: DisplayExpense[];
+  onEdit: (expense: DisplayExpense) => void;
 };
 
 export default function ExpenseList({ expenses, onEdit }: ExpenseListProps) {

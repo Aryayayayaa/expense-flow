@@ -8,8 +8,8 @@ export interface CreateUserData {
   name: string;
   email: string;
   password: string;
+  defaultCurrency: string;
 }
-
 
 export interface RegisterState {
   success: boolean;

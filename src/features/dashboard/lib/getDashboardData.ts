@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import type { CurrencyCode } from "@/constants/currencies";
 import { getExpenses } from "@/features/expenses/lib/expenses";
 
 export async function getDashboardData() {
@@ -9,40 +10,48 @@ export async function getDashboardData() {
   }
 
   const userId = Number(session.user.id);
-
-  const expenseResult = await getExpenses(userId);
-  const expenses = expenseResult.expenses;
-
-  const now = new Date();
-
-  function getBaseCurrencyAmount(expense: {
-    amount: unknown;
-    currency: string;
-    baseCurrencyAmount: unknown;
-  }) {
-    if (expense.baseCurrencyAmount !== null) {
-      return Number(expense.baseCurrencyAmount);
-    }
-
-    // Existing INR expenses created before multi-currency support
-    // do not have baseCurrencyAmount populated.
-    if (expense.currency === "INR") {
-      return Number(expense.amount);
-    }
-
-    return 0;
-  }
+  const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
 
   /*
-   * Dashboard totals are stored in the application's base currency (INR).
+   * Dashboard is intentionally NOT paginated.
    *
-   * Individual expenses retain their original amount/currency.
-   * baseCurrencyAmount is the normalized value used for aggregation.
+   * The My Expenses page uses pagination because it displays
+   * expense cards.
+   *
+   * Dashboard summary cards, however, must represent ALL
+   * expenses belonging to the user.
+   *
+   * Therefore:
+   *
+   *   My Expenses → paginated
+   *   Dashboard   → all expenses
+   */
+  const expenseResult = await getExpenses(
+    userId,
+    1,
+    10,
+    "ALL",
+    "ALL",
+    defaultCurrency,
+    false,
+  );
+
+  const expenses = expenseResult.expenses;
+
+  /*
+   * getExpenses() already calculates displayAmount using
+   * the user's current default currency.
+   *
+   * Therefore Dashboard must use displayAmount directly.
+   *
+   * No additional exchange-rate conversion is required here.
    */
   const totalSpent = expenses.reduce(
-    (total, expense) => total + getBaseCurrencyAmount(expense),
+    (total, expense) => total + Number(expense.displayAmount),
     0,
   );
+
+  const now = new Date();
 
   const monthlyExpenses = expenses.filter((expense) => {
     const date = expense.expenseDate ?? expense.createdAt;
@@ -54,40 +63,62 @@ export async function getDashboardData() {
   });
 
   const monthlySpent = monthlyExpenses.reduce(
-    (total, expense) => total + getBaseCurrencyAmount(expense),
+    (total, expense) => total + Number(expense.displayAmount),
     0,
   );
 
+  /*
+   * Dashboard shows only the five most recent expenses,
+   * but summary calculations above use ALL expenses.
+   */
   const recentExpenses = expenses.slice(0, 5).map((expense) => ({
     id: expense.id,
     title: expense.title,
     category: expense.category,
 
-    // Original transaction amount.
+    /*
+     * Original transaction amount.
+     */
     amount: Number(expense.amount),
 
-    // Original transaction currency.
+    /*
+     * Original transaction currency.
+     */
     currency: expense.currency,
 
-    // Normalized INR value.
-    baseCurrencyAmount: getBaseCurrencyAmount(expense),
-
-    // Useful later when the dashboard gets a display-currency filter.
-    exchangeRate: Number(expense.exchangeRate ?? 1),
+    /*
+     * Amount converted into the user's current
+     * default currency.
+     */
+    displayAmount: Number(expense.displayAmount),
 
     date: expense.expenseDate ?? expense.createdAt,
   }));
 
   return {
     user: {
-      id: Number(session.user.id),
+      id: userId,
       name: session.user.name ?? "User",
       email: session.user.email ?? "",
     },
 
+    defaultCurrency,
+
     summary: {
+      /*
+       * Total of ALL expenses, not just the first
+       * pagination page.
+       */
       totalSpent,
+
+      /*
+       * Total of ALL expenses from the current month.
+       */
       monthlySpent,
+
+      /*
+       * Total number of expenses, not page size.
+       */
       totalExpenses: expenses.length,
     },
 

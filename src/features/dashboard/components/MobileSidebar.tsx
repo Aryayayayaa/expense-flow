@@ -128,17 +128,10 @@ export default function MobileSidebar({
             />
 
             <MobileNavLink
-              href="/analytics"
-              label="Analysis"
+              href="/insights"
+              label="Insights"
               onClick={closeMenu}
               icon={<AnalysisIcon />}
-            />
-
-            <MobileNavLink
-              href="/reports"
-              label="Reports"
-              onClick={closeMenu}
-              icon={<ReportIcon />}
             />
 
             {userRole === "ADMIN" && (

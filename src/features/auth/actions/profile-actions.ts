@@ -3,9 +3,15 @@
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
 
-import { auth } from "@/auth";
+import { auth, unstable_update } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/features/notifications/lib/notifications";
+
+import {
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "@/constants/currencies";
 
 async function requireUser() {
   const session = await auth();
@@ -25,6 +31,7 @@ export async function updateOwnProfileAction(data: {
   email?: string;
   password?: string;
   image?: string | null;
+  defaultCurrency?: string;
 }) {
   try {
     const currentUser = await requireUser();
@@ -45,6 +52,7 @@ export async function updateOwnProfileAction(data: {
         name: true,
         email: true,
         image: true,
+        defaultCurrency: true,
       },
     });
 
@@ -60,6 +68,7 @@ export async function updateOwnProfileAction(data: {
       email?: string;
       password?: string;
       image?: string | null;
+      defaultCurrency?: string;
     } = {};
 
     const changes: string[] = [];
@@ -136,6 +145,33 @@ export async function updateOwnProfileAction(data: {
       changes.push("profile photo");
     }
 
+    /*
+     * Validate and prepare the new default currency.
+     */
+    let newDefaultCurrency: CurrencyCode | undefined;
+
+    if (data.defaultCurrency !== undefined) {
+      const defaultCurrency = data.defaultCurrency.trim().toUpperCase();
+
+      const isSupportedCurrency = SUPPORTED_CURRENCIES.some(
+        (currency) => currency.code === defaultCurrency,
+      );
+
+      if (!isSupportedCurrency) {
+        return {
+          success: false,
+          message: "Please select a supported default currency.",
+        };
+      }
+
+      newDefaultCurrency = defaultCurrency as CurrencyCode;
+
+      if (newDefaultCurrency !== user.defaultCurrency) {
+        updateData.defaultCurrency = newDefaultCurrency;
+        changes.push("default currency");
+      }
+    }
+
     if (changes.length === 0) {
       return {
         success: true,
@@ -152,8 +188,23 @@ export async function updateOwnProfileAction(data: {
         id: true,
         name: true,
         email: true,
+        defaultCurrency: true,
       },
     });
+
+    /*
+     * Update the current NextAuth JWT/session immediately when
+     * the default currency changes.
+     *
+     * This prevents the user from needing to log out and log back in.
+     */
+    if (newDefaultCurrency && newDefaultCurrency !== user.defaultCurrency) {
+      await unstable_update({
+        user: {
+          defaultCurrency: newDefaultCurrency,
+        },
+      });
+    }
 
     await createNotification({
       userId: updatedUser.id,
@@ -164,11 +215,16 @@ export async function updateOwnProfileAction(data: {
         changes,
         performedById: updatedUser.id,
         performedByRole: currentUser.role,
+        defaultCurrency: updatedUser.defaultCurrency ?? DEFAULT_CURRENCY,
       },
     });
 
     revalidatePath("/profile");
     revalidatePath("/dashboard");
+    revalidatePath("/expenses");
+    revalidatePath("/reports");
+    revalidatePath("/analytics");
+    revalidatePath("/approvals");
 
     return {
       success: true,

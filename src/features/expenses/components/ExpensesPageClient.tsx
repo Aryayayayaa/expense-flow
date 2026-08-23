@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Wallet, Calendar, Folder, X, Plus, AlertTriangle } from "lucide-react";
+import { Wallet, Calendar, Folder, Plus, AlertTriangle } from "lucide-react";
 
 import Pagination from "@/components/common/Pagination";
 import Filters from "@/components/common/Filters";
@@ -16,9 +16,13 @@ import {
   type ExpenseReimbursementStatus,
 } from "./StatusFilters";
 
-import { SerializedExpense } from "../types";
+import type { DisplayExpense } from "../types";
 
-import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
+import {
+  ALL_CURRENCIES,
+  type CurrencyCode,
+  type CurrencyFilter,
+} from "@/constants/currencies";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
@@ -52,23 +56,30 @@ type DeletedExpense = {
 };
 
 type ExpensesPageClientProps = {
-  expenses: SerializedExpense[];
+  expenses: DisplayExpense[];
   deletedExpenses: DeletedExpense[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+  defaultCurrency: CurrencyCode;
+  initialPage?: number;
 };
+
+const PAGE_SIZE = 10;
 
 export default function ExpensesPageClient({
   expenses,
   deletedExpenses,
-  pagination,
+  defaultCurrency,
+  initialPage = 1,
 }: ExpensesPageClientProps) {
-  const [editingExpense, setEditingExpense] =
-    useState<SerializedExpense | null>(null);
+  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+    null,
+  );
+
+  /*
+   * Pagination is intentionally local to this page.
+   *
+   * Filtering happens BEFORE pagination.
+   */
+  const [currentPage, setCurrentPage] = useState(Math.max(1, initialPage));
 
   /* ---------------------------------------------------------------------- */
   /* Filters                                                                */
@@ -213,12 +224,26 @@ export default function ExpensesPageClient({
     return expenses.filter((expense) => {
       const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-      const matchesCategory =
-        selectedCategory === "" || expense.category === selectedCategory;
-
+      /*
+       * IMPORTANT:
+       *
+       * Currency filtering uses the ORIGINAL currency stored
+       * on the expense.
+       *
+       * Therefore:
+       *
+       * USD filter → only expenses originally saved as USD
+       * INR filter → only expenses originally saved as INR
+       *
+       * An INR expense converted to USD for display does NOT
+       * become a USD expense.
+       */
       const matchesCurrency =
         selectedCurrency === ALL_CURRENCIES ||
-        expense.currency === selectedCurrency;
+        expense.currency.toUpperCase() === selectedCurrency.toUpperCase();
+
+      const matchesCategory =
+        selectedCategory === "" || expense.category === selectedCategory;
 
       const matchesApprovalStatus =
         approvalStatus === "ALL" || expense.status === approvalStatus;
@@ -349,28 +374,73 @@ export default function ExpensesPageClient({
   ]);
 
   /* ---------------------------------------------------------------------- */
+  /* Pagination                                                             */
+  /* ---------------------------------------------------------------------- */
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredExpenses.length / PAGE_SIZE),
+  );
+
+  /*
+   * Keep the current page valid if filtering reduces the number
+   * of matching expenses.
+   */
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedExpenses = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+
+    return filteredExpenses.slice(startIndex, endIndex);
+  }, [filteredExpenses, safeCurrentPage]);
+
+  function changePage(page: number) {
+    const nextPage = Math.min(Math.max(1, page), totalPages);
+
+    setCurrentPage(nextPage);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  /*
+   * Any filter change starts from page 1.
+   *
+   * This is critical for cases such as:
+   *
+   * ALL CURRENCIES → USD
+   *
+   * where the currently selected page may no longer exist
+   * in the filtered result.
+   */
+  function resetPagination() {
+    setCurrentPage(1);
+  }
+
+  /* ---------------------------------------------------------------------- */
   /* Display amount                                                         */
   /* ---------------------------------------------------------------------- */
 
-  function getDisplayAmount(expense: SerializedExpense) {
-    if (selectedCurrency === ALL_CURRENCIES) {
-      return Number(expense.baseCurrencyAmount ?? expense.amount);
-    }
-
-    return Number(expense.amount);
+  function getDisplayAmount(expense: DisplayExpense) {
+    return Number(expense.displayAmount);
   }
 
   /* ---------------------------------------------------------------------- */
   /* Summary                                                                */
   /* ---------------------------------------------------------------------- */
-
   const summaryCurrency =
-    selectedCurrency === ALL_CURRENCIES ? "INR" : selectedCurrency;
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
-  const totalExpenses = filteredExpenses.reduce(
-    (sum, expense) => sum + getDisplayAmount(expense),
-    0,
-  );
+  const totalExpenses = filteredExpenses.reduce((sum, expense) => {
+    if (selectedCurrency !== ALL_CURRENCIES) {
+      return sum + Number(expense.amount);
+    }
+
+    return sum + getDisplayAmount(expense);
+  }, 0);
 
   const thisMonthExpenses = filteredExpenses
     .filter((expense) => {
@@ -381,7 +451,13 @@ export default function ExpensesPageClient({
         expenseDate.getFullYear() === currentDate.getFullYear()
       );
     })
-    .reduce((sum, expense) => sum + getDisplayAmount(expense), 0);
+    .reduce((sum, expense) => {
+      if (selectedCurrency !== ALL_CURRENCIES) {
+        return sum + Number(expense.amount);
+      }
+
+      return sum + getDisplayAmount(expense);
+    }, 0);
 
   const totalCategories = new Set(
     filteredExpenses.map((expense) => expense.category),
@@ -404,6 +480,8 @@ export default function ExpensesPageClient({
     setReimbursementStatus("ALL");
     setCustomStartDate("");
     setCustomEndDate("");
+
+    resetPagination();
   }
 
   const hasActiveFilters =
@@ -550,25 +628,52 @@ export default function ExpensesPageClient({
 
       <Filters
         selectedCurrency={selectedCurrency}
-        onCurrencyChange={setSelectedCurrency}
+        onCurrencyChange={(value) => {
+          setSelectedCurrency(value);
+          resetPagination();
+        }}
         approvalStatus={approvalStatus}
-        onApprovalStatusChange={setApprovalStatus}
+        onApprovalStatusChange={(value) => {
+          setApprovalStatus(value);
+          resetPagination();
+        }}
         reimbursementStatus={reimbursementStatus}
-        onReimbursementStatusChange={setReimbursementStatus}
+        onReimbursementStatusChange={(value) => {
+          setReimbursementStatus(value);
+          resetPagination();
+        }}
         selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        onCategoryChange={(value) => {
+          setSelectedCategory(value);
+          resetPagination();
+        }}
         categories={categories}
         selectedYear={selectedYear}
-        onYearChange={setSelectedYear}
+        onYearChange={(value) => {
+          setSelectedYear(value);
+          resetPagination();
+        }}
         years={years}
         selectedMonth={selectedMonth}
-        onMonthChange={setSelectedMonth}
+        onMonthChange={(value) => {
+          setSelectedMonth(value);
+          resetPagination();
+        }}
         dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
+        onDateFilterChange={(value) => {
+          setDateFilter(value);
+          resetPagination();
+        }}
         customStartDate={customStartDate}
         customEndDate={customEndDate}
-        onCustomStartDateChange={setCustomStartDate}
-        onCustomEndDateChange={setCustomEndDate}
+        onCustomStartDateChange={(value) => {
+          setCustomStartDate(value);
+          resetPagination();
+        }}
+        onCustomEndDateChange={(value) => {
+          setCustomEndDate(value);
+          resetPagination();
+        }}
         minDate={customMinDate}
         maxDate={customMaxDate}
         disableDatePresets={disableDatePresets}
@@ -576,7 +681,7 @@ export default function ExpensesPageClient({
         onClearFilters={clearFilters}
       />
 
-      {/* Expense count */}
+      {/* Add expense */}
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link
@@ -591,7 +696,7 @@ export default function ExpensesPageClient({
       {/* Expense cards */}
 
       <div className="mt-4">
-        <ExpenseList expenses={filteredExpenses} onEdit={setEditingExpense} />
+        <ExpenseList expenses={paginatedExpenses} onEdit={setEditingExpense} />
       </div>
 
       {/* Edit Expense */}
@@ -617,7 +722,13 @@ export default function ExpensesPageClient({
         </div>
       )}
 
-      <Pagination page={pagination.page} totalPages={pagination.totalPages} />
+      {/* Pagination */}
+
+      <Pagination
+        page={safeCurrentPage}
+        totalPages={totalPages}
+        onPageChange={changePage}
+      />
     </>
   );
 }

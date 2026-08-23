@@ -1,53 +1,76 @@
 "use client";
 
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  XAxis,
+  YAxis,
 } from "recharts";
 
-import { AnalyticsExpense } from "../../types";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
+import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type YearlyTrendChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 export default function YearlyTrendChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: YearlyTrendChartProps) {
-  const yearlyData = expenses.reduce(
-    (acc, expense) => {
-      const date = expense.expenseDate ?? expense.createdAt;
-      const year = date.getFullYear();
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
-      const amount = getReportExpenseAmount(expense, currency);
+  /*
+   * Keep the original expenses belonging to each year.
+   *
+   * The yearly total continues to use getReportExpenseAmount()
+   * so the calculation rules remain unchanged.
+   *
+   * Keeping the underlying expenses also allows CurrencyTooltip
+   * to explain the original-currency values when ALL CURRENCIES
+   * is selected.
+   */
+  const yearlyExpenses = new Map<number, AnalyticsExpense[]>();
 
-      const existingYear = acc.find((item) => item.year === year);
+  expenses.forEach((expense) => {
+    const date = expense.expenseDate ?? expense.createdAt;
+    const year = date.getFullYear();
 
-      if (existingYear) {
-        existingYear.total += amount;
-      } else {
-        acc.push({
-          year,
-          total: amount,
-        });
-      }
+    const existingExpenses = yearlyExpenses.get(year);
 
-      return acc;
-    },
-    [] as { year: number; total: number }[],
-  );
+    if (existingExpenses) {
+      existingExpenses.push(expense);
+    } else {
+      yearlyExpenses.set(year, [expense]);
+    }
+  });
 
-  yearlyData.sort((a, b) => a.year - b.year);
+  const yearlyData = Array.from(yearlyExpenses.entries())
+    .map(([year, yearExpenses]) => ({
+      year,
+      expenses: yearExpenses,
+      total: yearExpenses.reduce(
+        (sum, expense) =>
+          sum +
+          getReportExpenseAmount(expense, {
+            selectedCurrency,
+            defaultCurrency,
+          }),
+        0,
+      ),
+    }))
+    .sort((a, b) => a.year - b.year);
 
   if (yearlyData.length === 0) {
     return (
@@ -66,14 +89,18 @@ export default function YearlyTrendChart({
           <XAxis dataKey="year" />
 
           <YAxis
-            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+            tickFormatter={(value) =>
+              formatCurrency(Number(value), reportCurrency)
+            }
           />
 
           <Tooltip
-            formatter={(value) => [
-              formatCurrency(Number(value), currency),
-              "Total Expenses",
-            ]}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
           <Bar

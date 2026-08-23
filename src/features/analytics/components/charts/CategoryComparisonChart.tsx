@@ -11,12 +11,16 @@ import {
   YAxis,
 } from "recharts";
 
+import { ALL_CURRENCIES } from "@/constants/currencies";
+
 import { AnalyticsExpense } from "../../types";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type CategoryComparisonChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const CATEGORY_COLORS = [
@@ -32,23 +36,50 @@ const CATEGORY_COLORS = [
 
 export default function CategoryComparisonChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: CategoryComparisonChartProps) {
-  const categoryTotals = expenses.reduce<Record<string, number>>(
-    (totals, expense) => {
-      const amount = getReportExpenseAmount(expense, currency);
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
-      totals[expense.category] = (totals[expense.category] ?? 0) + amount;
+  /*
+   * Keep the expenses belonging to each category.
+   *
+   * The total is still calculated using the existing
+   * getReportExpenseAmount() rules:
+   *
+   * Specific currency:
+   *   original transaction amount
+   *
+   * ALL CURRENCIES:
+   *   converted amount in the user's default currency
+   */
+  const categoryExpenses = expenses.reduce<Record<string, AnalyticsExpense[]>>(
+    (groups, expense) => {
+      if (!groups[expense.category]) {
+        groups[expense.category] = [];
+      }
 
-      return totals;
+      groups[expense.category].push(expense);
+
+      return groups;
     },
     {},
   );
 
-  const chartData = Object.entries(categoryTotals)
-    .map(([category, total]) => ({
+  const chartData = Object.entries(categoryExpenses)
+    .map(([category, categoryExpenseList]) => ({
       category,
-      total,
+      expenses: categoryExpenseList,
+      total: categoryExpenseList.reduce(
+        (sum, expense) =>
+          sum +
+          getReportExpenseAmount(expense, {
+            selectedCurrency,
+            defaultCurrency,
+          }),
+        0,
+      ),
     }))
     .sort((a, b) => b.total - a.total);
 
@@ -80,7 +111,7 @@ export default function CategoryComparisonChart({
             tickFormatter={(value) =>
               new Intl.NumberFormat("en-IN", {
                 style: "currency",
-                currency,
+                currency: reportCurrency,
                 maximumFractionDigits: 0,
               }).format(Number(value))
             }
@@ -89,13 +120,12 @@ export default function CategoryComparisonChart({
           <YAxis type="category" dataKey="category" width={100} />
 
           <Tooltip
-            formatter={(value) => [
-              new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency,
-              }).format(Number(value)),
-              "Total Expenses",
-            ]}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
           <Bar dataKey="total" name="Total Expenses" radius={[0, 6, 6, 0]}>

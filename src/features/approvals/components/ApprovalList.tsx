@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
 import { useRouter } from "next/navigation";
 
 import {
@@ -12,10 +11,10 @@ import {
 
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
 
-import type { SerializedExpense } from "@/features/expenses/types";
+import type { DisplayExpense } from "@/features/expenses/types";
 import { formatCurrency } from "@/utils/formatCurrency";
 
-type ApprovalExpense = SerializedExpense & {
+type ApprovalExpense = DisplayExpense & {
   user: {
     id: number;
     name: string;
@@ -39,8 +38,9 @@ export default function ApprovalList({ expenses }: ApprovalListProps) {
   const [selectedExpense, setSelectedExpense] =
     useState<ApprovalExpense | null>(null);
 
-  const [editingExpense, setEditingExpense] =
-    useState<SerializedExpense | null>(null);
+  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+    null,
+  );
 
   const wasEditing = useRef(false);
 
@@ -276,7 +276,6 @@ function ReviewExpenseModal({
       window.location.reload();
     } catch (error) {
       console.error("Approve expense error:", error);
-
       setMessage("Unable to approve expense.");
     } finally {
       setProcessing(false);
@@ -305,7 +304,6 @@ function ReviewExpenseModal({
       window.location.reload();
     } catch (error) {
       console.error("Reject expense error:", error);
-
       setMessage("Unable to reject expense.");
     } finally {
       setProcessing(false);
@@ -342,7 +340,6 @@ function ReviewExpenseModal({
       window.location.reload();
     } catch (error) {
       console.error("Admin delete expense error:", error);
-
       setMessage("Unable to delete expense.");
     } finally {
       setProcessing(false);
@@ -362,7 +359,6 @@ function ReviewExpenseModal({
       window.open(data.url, "_blank");
     } catch (error) {
       console.error("Proof view error:", error);
-
       setMessage(errorMessage);
     }
   }

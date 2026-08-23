@@ -65,17 +65,10 @@ export default function Sidebar({ userRole }: SidebarProps) {
           />
 
           <SidebarLink
-            href="/analytics"
-            label="Analysis"
+            href="/insights"
+            label="Insights"
             icon={<AnalysisIcon />}
-            active={pathname.startsWith("/analytics")}
-          />
-
-          <SidebarLink
-            href="/reports"
-            label="Reports"
-            icon={<ReportIcon />}
-            active={pathname.startsWith("/reports")}
+            active={pathname.startsWith("/insights")}
           />
 
           {userRole === "ADMIN" && (

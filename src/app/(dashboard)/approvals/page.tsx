@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { formatCurrency } from "@/utils/formatCurrency";
+import type { CurrencyCode } from "@/constants/currencies";
+
+import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 
 import {
   getExpenseApprovalHistory,
@@ -42,9 +44,27 @@ export default async function ApprovalsPage({
 
   const userId = Number(session.user.id);
   const role = session.user.role;
+  const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
+
+  /*
+   * Get the exchange rate needed to convert the application's
+   * stored base currency (INR) into the user's current default currency.
+   *
+   * Example:
+   *
+   * defaultCurrency = USD
+   * USD -> INR rate = 92
+   *
+   * INR 188 / 92 = USD 2.04
+   */
+  const displayRateToInr =
+    defaultCurrency === "INR"
+      ? 1
+      : (await getExchangeRate(defaultCurrency, "INR")).rate;
 
   /*
    * ADMIN
+   *
    * Admins review other users' pending expenses
    * and can view the complete approval history.
    */
@@ -81,16 +101,64 @@ export default async function ApprovalsPage({
       getExpenseDeletionHistoryForAdmin(),
     ]);
 
-    const serializedPendingExpenses = pendingExpenses.map((expense) => ({
-      ...expense,
-      amount: Number(expense.amount),
-      baseCurrencyAmount:
+    const serializedPendingExpenses = pendingExpenses.map((expense) => {
+      const amount = Number(expense.amount);
+
+      /*
+       * If the expense was created in the Admin's current
+       * default currency, the original amount can be displayed directly.
+       */
+      if (expense.currency === defaultCurrency) {
+        return {
+          ...expense,
+          amount,
+          baseCurrencyAmount:
+            expense.baseCurrencyAmount !== null
+              ? Number(expense.baseCurrencyAmount)
+              : null,
+          exchangeRate:
+            expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+          displayAmount: amount,
+        };
+      }
+
+      /*
+       * The application's stored base currency is INR.
+       *
+       * Existing INR expenses may not have baseCurrencyAmount,
+       * so for those expenses the original amount itself is the
+       * normalized INR amount.
+       */
+      const baseCurrencyAmount =
         expense.baseCurrencyAmount !== null
           ? Number(expense.baseCurrencyAmount)
-          : null,
-      exchangeRate:
-        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
-    }));
+          : expense.currency === "INR"
+            ? amount
+            : 0;
+
+      /*
+       * getExchangeRate(defaultCurrency, "INR") means:
+       *
+       * 1 defaultCurrency = X INR
+       *
+       * Therefore:
+       *
+       * INR amount / X = defaultCurrency amount
+       */
+      const displayAmount =
+        defaultCurrency === "INR"
+          ? baseCurrencyAmount
+          : baseCurrencyAmount / displayRateToInr;
+
+      return {
+        ...expense,
+        amount,
+        baseCurrencyAmount,
+        exchangeRate:
+          expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+        displayAmount,
+      };
+    });
 
     return (
       <main className="p-6 sm:p-8 lg:p-10">
@@ -178,6 +246,7 @@ export default async function ApprovalsPage({
 
   /*
    * EMPLOYEE / HR
+   *
    * They cannot approve expenses.
    * They only see the status of their own expenses.
    */
@@ -210,6 +279,7 @@ export default async function ApprovalsPage({
     pageSize,
     approvalStatus,
     reimbursementStatus,
+    defaultCurrency,
   );
 
   const expenses = expenseResult.expenses;

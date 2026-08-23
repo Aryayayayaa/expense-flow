@@ -1,20 +1,26 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   Cell,
+  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
+
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
 import { AnalyticsExpense } from "../../types";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type CategoryPieChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const CATEGORY_COLORS = [
@@ -30,23 +36,58 @@ const CATEGORY_COLORS = [
 
 export default function CategoryPieChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: CategoryPieChartProps) {
-  const categoryTotals = expenses.reduce<Record<string, number>>(
-    (totals, expense) => {
-      const amount = getReportExpenseAmount(expense, currency);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-      totals[expense.category] = (totals[expense.category] ?? 0) + amount;
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
-      return totals;
+  /*
+   * Group expenses by category.
+   */
+  const categoryExpenses = expenses.reduce<Record<string, AnalyticsExpense[]>>(
+    (groups, expense) => {
+      if (!groups[expense.category]) {
+        groups[expense.category] = [];
+      }
+
+      groups[expense.category].push(expense);
+
+      return groups;
     },
     {},
   );
 
-  const data = Object.entries(categoryTotals).map(([category, amount]) => ({
-    name: category,
-    value: amount,
-  }));
+  const data = Object.entries(categoryExpenses).map(
+    ([category, categoryExpenseList]) => {
+      /*
+       * When a legend category is selected, the tooltip should
+       * use only that category's expenses.
+       *
+       * Otherwise it uses the expenses belonging to the
+       * currently hovered pie slice.
+       */
+      const tooltipExpenses = selectedCategory
+        ? (categoryExpenses[selectedCategory] ?? [])
+        : categoryExpenseList;
+
+      return {
+        name: category,
+        expenses: tooltipExpenses,
+        value: categoryExpenseList.reduce(
+          (total, expense) =>
+            total +
+            getReportExpenseAmount(expense, {
+              selectedCurrency,
+              defaultCurrency,
+            }),
+          0,
+        ),
+      };
+    },
+  );
 
   const totalExpenses = data.reduce((sum, item) => sum + item.value, 0);
 
@@ -56,6 +97,16 @@ export default function CategoryPieChart({
         No expense data available for the selected filters.
       </p>
     );
+  }
+
+  function handleLegendClick(entry: { value?: string }) {
+    const category = entry.value;
+
+    if (!category) {
+      return;
+    }
+
+    setSelectedCategory((current) => (current === category ? null : category));
   }
 
   return (
@@ -77,21 +128,28 @@ export default function CategoryPieChart({
               <Cell
                 key={entry.name}
                 fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                opacity={
+                  selectedCategory && selectedCategory !== entry.name ? 0.35 : 1
+                }
               />
             ))}
           </Pie>
 
           <Tooltip
-            formatter={(value) => [
-              new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency,
-              }).format(Number(value)),
-              "Expenses",
-            ]}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
-          <Legend />
+          <Legend
+            onClick={handleLegendClick}
+            wrapperStyle={{
+              cursor: "pointer",
+            }}
+          />
 
           <text
             x="50%"
@@ -112,7 +170,7 @@ export default function CategoryPieChart({
           >
             {new Intl.NumberFormat("en-IN", {
               style: "currency",
-              currency,
+              currency: reportCurrency,
             }).format(totalExpenses)}
           </text>
         </PieChart>

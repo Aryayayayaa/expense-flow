@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   CartesianGrid,
   Legend,
@@ -11,14 +13,17 @@ import {
   YAxis,
 } from "recharts";
 
-import { AnalyticsExpense } from "../../types";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
+import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type MonthlyCategoryTrendChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const monthNames = [
@@ -49,8 +54,14 @@ const categoryColors = [
 
 export default function MonthlyCategoryTrendChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: MonthlyCategoryTrendChartProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   const categories = [
     ...new Set(expenses.map((expense) => expense.category)),
   ].sort();
@@ -61,7 +72,8 @@ export default function MonthlyCategoryTrendChart({
       year: number;
       monthNumber: number;
       label: string;
-      [category: string]: string | number;
+      expenses: AnalyticsExpense[];
+      [category: string]: string | number | AnalyticsExpense[] | undefined;
     }
   >();
 
@@ -79,23 +91,51 @@ export default function MonthlyCategoryTrendChart({
         year,
         monthNumber,
         label: `${monthNames[monthNumber - 1]} ${year}`,
+        expenses: [],
       });
     }
 
     const monthData = monthlyData.get(key)!;
 
+    monthData.expenses.push(expense);
+
     monthData[category] =
       Number(monthData[category] ?? 0) +
-      getReportExpenseAmount(expense, currency);
+      getReportExpenseAmount(expense, {
+        selectedCurrency,
+        defaultCurrency,
+      });
   });
 
-  const chartData = Array.from(monthlyData.values()).sort((a, b) => {
-    if (a.year !== b.year) {
-      return a.year - b.year;
-    }
+  const chartData = Array.from(monthlyData.values())
+    .map((monthData) => {
+      /*
+       * When a category is selected through the legend,
+       * restrict the tooltip's underlying expenses to that
+       * category only.
+       */
+      const tooltipExpenses = selectedCategory
+        ? monthData.expenses.filter(
+            (expense) => expense.category === selectedCategory,
+          )
+        : monthData.expenses;
 
-    return a.monthNumber - b.monthNumber;
-  });
+      return {
+        ...monthData,
+        name: selectedCategory
+          ? `${monthData.label} — ${selectedCategory}`
+          : monthData.label,
+        category: selectedCategory ?? undefined,
+        expenses: tooltipExpenses,
+      };
+    })
+    .sort((a, b) => {
+      if (a.year !== b.year) {
+        return a.year - b.year;
+      }
+
+      return a.monthNumber - b.monthNumber;
+    });
 
   if (chartData.length === 0) {
     return (
@@ -103,6 +143,16 @@ export default function MonthlyCategoryTrendChart({
         No expense data available for the selected filters.
       </div>
     );
+  }
+
+  function handleLegendClick(entry: { value?: string }) {
+    const category = entry.value;
+
+    if (!category) {
+      return;
+    }
+
+    setSelectedCategory((current) => (current === category ? null : category));
   }
 
   return (
@@ -122,17 +172,27 @@ export default function MonthlyCategoryTrendChart({
           <XAxis dataKey="label" />
 
           <YAxis
-            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+            tickFormatter={(value) =>
+              formatCurrency(Number(value), reportCurrency)
+            }
           />
 
           <Tooltip
-            formatter={(value) => [
-              formatCurrency(Number(value), currency),
-              "Expenses",
-            ]}
+            shared={false}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
-          <Legend />
+          <Legend
+            onClick={handleLegendClick}
+            wrapperStyle={{
+              cursor: "pointer",
+            }}
+          />
 
           {categories.map((category, index) => (
             <Line
@@ -141,8 +201,11 @@ export default function MonthlyCategoryTrendChart({
               dataKey={category}
               name={category}
               stroke={categoryColors[index % categoryColors.length]}
-              strokeWidth={2}
-              dot={{ r: 3 }}
+              strokeWidth={selectedCategory === category ? 4 : 2}
+              strokeOpacity={
+                selectedCategory && selectedCategory !== category ? 0.2 : 1
+              }
+              dot={{ r: selectedCategory === category ? 5 : 3 }}
               connectNulls
             />
           ))}

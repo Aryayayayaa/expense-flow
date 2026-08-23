@@ -3,54 +3,61 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import AnalyticsTabs from "./AnalyticsTabs";
 import Filters from "@/components/common/Filters";
 
-import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
+import AnalyticsTabs from "@/features/analytics/components/AnalyticsTabs";
+
+import CategoryPieChart from "@/features/analytics/components/charts/CategoryPieChart";
+import CategoryComparisonChart from "@/features/analytics/components/charts/CategoryComparisonChart";
+import MonthlyTrendChart from "@/features/analytics/components/charts/MonthlyTrendChart";
+import MonthlyCategoryTrendChart from "@/features/analytics/components/charts/MonthlyCategoryTrendChart";
+import YearlyTrendChart from "@/features/analytics/components/charts/YearlyTrendChart";
+import YearlyCategoryChart from "@/features/analytics/components/charts/YearlyCategoryChart";
+
+import ReportSummary from "@/features/analytics/components/reports/ReportSummary";
+import LargestExpenses from "@/features/analytics/components/reports/LargestExpenses";
+import TopCategories from "@/features/analytics/components/reports/TopCategories";
+
+import type { AnalyticsExpense } from "@/features/analytics/types";
 
 import {
   type ExpenseApprovalStatus,
   type ExpenseReimbursementStatus,
 } from "@/features/expenses/components/StatusFilters";
 
-import CategoryPieChart from "./charts/CategoryPieChart";
-import MonthlyTrendChart from "./charts/MonthlyTrendChart";
-import YearlyTrendChart from "./charts/YearlyTrendChart";
-import MonthlyCategoryTrendChart from "./charts/MonthlyCategoryTrendChart";
-import YearlyCategoryChart from "./charts/YearlyCategoryChart";
-import CategoryComparisonChart from "./charts/CategoryComparisonChart";
-
-import { AnalyticsExpense } from "../types";
+import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
 
 type AnalyticsScope = "OWN" | "ALL" | "EMPLOYEES";
 
-type AnalyticsPageClientProps = {
+type AnalyticsTab = "analysis" | "reports";
+
+type InsightsPageClientProps = {
   expenses: AnalyticsExpense[];
   scope: AnalyticsScope;
   role: "ADMIN" | "HR" | "EMPLOYEE";
+  canChooseScope: boolean;
   defaultCurrency: string;
 };
 
-type AnalyticsTab = "categories" | "monthly" | "yearly";
-
-export default function AnalyticsPageClient({
+export default function InsightsPageClient({
   expenses,
   scope,
   role,
+  canChooseScope,
   defaultCurrency,
-}: AnalyticsPageClientProps) {
+}: InsightsPageClientProps) {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<AnalyticsTab>("categories");
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("analysis");
+
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyFilter>(
+    defaultCurrency as CurrencyFilter,
+  );
 
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
-
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyFilter>(
-    defaultCurrency as CurrencyFilter,
-  );
 
   const [approvalStatus, setApprovalStatus] =
     useState<ExpenseApprovalStatus>("ALL");
@@ -87,13 +94,13 @@ export default function AnalyticsPageClient({
   ].sort((a, b) => b - a);
 
   const isYearSelected = selectedYear !== "";
+  const isMonthSelected = selectedMonth !== "";
+
   const selectedYearNumber = Number(selectedYear);
+  const selectedMonthNumber = Number(selectedMonth);
 
   const isCurrentYearSelected =
     isYearSelected && selectedYearNumber === currentYear;
-
-  const isMonthSelected = selectedMonth !== "";
-  const selectedMonthNumber = Number(selectedMonth);
 
   const earliestExpenseDate = expenses.reduce<Date | null>(
     (earliest, expense) => {
@@ -171,12 +178,12 @@ export default function AnalyticsPageClient({
   const filteredExpenses = expenses.filter((expense) => {
     const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-    const matchesCategory =
-      selectedCategory === "" || expense.category === selectedCategory;
-
     const matchesCurrency =
       selectedCurrency === ALL_CURRENCIES ||
       expense.currency === selectedCurrency;
+
+    const matchesCategory =
+      selectedCategory === "" || expense.category === selectedCategory;
 
     const matchesApprovalStatus =
       approvalStatus === "ALL" || expense.status === approvalStatus;
@@ -186,11 +193,11 @@ export default function AnalyticsPageClient({
       expense.reimbursementStatus === reimbursementStatus;
 
     const matchesYear =
-      selectedYear === "" || expenseDate.getFullYear() === Number(selectedYear);
+      selectedYear === "" || expenseDate.getFullYear() === selectedYearNumber;
 
     const matchesMonth =
       selectedMonth === "" ||
-      expenseDate.getMonth() + 1 === Number(selectedMonth);
+      expenseDate.getMonth() + 1 === selectedMonthNumber;
 
     let matchesDate = true;
 
@@ -275,8 +282,8 @@ export default function AnalyticsPageClient({
     }
 
     return (
-      matchesCategory &&
       matchesCurrency &&
+      matchesCategory &&
       matchesApprovalStatus &&
       matchesReimbursementStatus &&
       matchesYear &&
@@ -301,15 +308,12 @@ export default function AnalyticsPageClient({
 
   function clearFilters() {
     setSelectedCurrency(defaultCurrency as CurrencyFilter);
-
     setSelectedCategory("");
     setSelectedYear("");
     setSelectedMonth("");
     setDateFilter("all");
-
     setApprovalStatus("ALL");
     setReimbursementStatus("ALL");
-
     setCustomStartDate("");
     setCustomEndDate("");
   }
@@ -329,20 +333,20 @@ export default function AnalyticsPageClient({
 
   return (
     <div>
-      {(role === "ADMIN" || role === "HR") && (
+      {(role === "ADMIN" || role === "HR") && canChooseScope && (
         <div className="mb-6 max-w-xs">
           <label
-            htmlFor="analytics-scope"
+            htmlFor="insights-scope"
             className="text-sm font-medium text-slate-600"
           >
             Expense Scope
           </label>
 
           <select
-            id="analytics-scope"
+            id="insights-scope"
             value={scope}
             onChange={(event) => {
-              router.push(`/analytics?scope=${event.target.value}`);
+              router.push(`/insights?scope=${event.target.value}`);
             }}
             className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
           >
@@ -354,8 +358,8 @@ export default function AnalyticsPageClient({
       )}
 
       <Filters
-        title="Filter Analytics"
-        description="Filter analytics by currency, status, category, and date."
+        title="Filter Insights"
+        description="Filter insights by currency, status, category, and date."
         selectedCurrency={selectedCurrency}
         onCurrencyChange={setSelectedCurrency}
         approvalStatus={approvalStatus}
@@ -383,6 +387,75 @@ export default function AnalyticsPageClient({
         onClearFilters={clearFilters}
       />
 
+      <div className="mt-6">
+        <div className="mb-6 flex items-center gap-2 border-b border-slate-200">
+          <button
+            type="button"
+            onClick={() => setActiveTab("analysis")}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
+              activeTab === "analysis"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Analysis
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("reports")}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
+              activeTab === "reports"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Reports
+          </button>
+        </div>
+
+        {activeTab === "analysis" && (
+          <InsightsAnalysis
+            expenses={filteredExpenses}
+            selectedCurrency={selectedCurrency}
+            defaultCurrency={defaultCurrency}
+          />
+        )}
+
+        {activeTab === "reports" && (
+          <InsightsReports
+            expenses={filteredExpenses}
+            selectedCurrency={selectedCurrency}
+            defaultCurrency={defaultCurrency}
+            reportCurrency={reportCurrency}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Analysis                                                                  */
+/* -------------------------------------------------------------------------- */
+
+type InsightsAnalysisProps = {
+  expenses: AnalyticsExpense[];
+  selectedCurrency: string;
+  defaultCurrency: string;
+};
+
+function InsightsAnalysis({
+  expenses,
+  selectedCurrency,
+  defaultCurrency,
+}: InsightsAnalysisProps) {
+  const [activeTab, setActiveTab] = useState<
+    "categories" | "monthly" | "yearly"
+  >("categories");
+
+  return (
+    <div>
       <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="rounded-lg border bg-white p-8 shadow">
@@ -398,7 +471,7 @@ export default function AnalyticsPageClient({
 
             <div className="mt-6">
               <CategoryPieChart
-                expenses={filteredExpenses}
+                expenses={expenses}
                 selectedCurrency={selectedCurrency}
                 defaultCurrency={defaultCurrency}
               />
@@ -415,7 +488,7 @@ export default function AnalyticsPageClient({
 
               <div className="mt-6">
                 <CategoryComparisonChart
-                  expenses={filteredExpenses}
+                  expenses={expenses}
                   selectedCurrency={selectedCurrency}
                   defaultCurrency={defaultCurrency}
                 />
@@ -440,7 +513,7 @@ export default function AnalyticsPageClient({
               </h3>
 
               <MonthlyTrendChart
-                expenses={filteredExpenses}
+                expenses={expenses}
                 selectedCurrency={selectedCurrency}
                 defaultCurrency={defaultCurrency}
               />
@@ -456,7 +529,7 @@ export default function AnalyticsPageClient({
               </p>
 
               <MonthlyCategoryTrendChart
-                expenses={filteredExpenses}
+                expenses={expenses}
                 selectedCurrency={selectedCurrency}
                 defaultCurrency={defaultCurrency}
               />
@@ -480,7 +553,7 @@ export default function AnalyticsPageClient({
               </h3>
 
               <YearlyTrendChart
-                expenses={filteredExpenses}
+                expenses={expenses}
                 selectedCurrency={selectedCurrency}
                 defaultCurrency={defaultCurrency}
               />
@@ -496,7 +569,7 @@ export default function AnalyticsPageClient({
               </p>
 
               <YearlyCategoryChart
-                expenses={filteredExpenses}
+                expenses={expenses}
                 selectedCurrency={selectedCurrency}
                 defaultCurrency={defaultCurrency}
               />
@@ -504,6 +577,48 @@ export default function AnalyticsPageClient({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reports                                                                    */
+/* -------------------------------------------------------------------------- */
+
+type InsightsReportsProps = {
+  expenses: AnalyticsExpense[];
+  selectedCurrency: string;
+  defaultCurrency: string;
+  reportCurrency: string;
+};
+
+function InsightsReports({
+  expenses,
+  selectedCurrency,
+  defaultCurrency,
+  reportCurrency,
+}: InsightsReportsProps) {
+  return (
+    <div className="space-y-6">
+      <ReportSummary expenses={expenses} currency={reportCurrency} />
+
+      <CategoryComparisonChart
+        expenses={expenses}
+        selectedCurrency={selectedCurrency}
+        defaultCurrency={defaultCurrency}
+      />
+
+      <LargestExpenses
+        expenses={expenses}
+        selectedCurrency={selectedCurrency}
+        defaultCurrency={defaultCurrency}
+      />
+
+      <TopCategories
+        expenses={expenses}
+        selectedCurrency={selectedCurrency}
+        defaultCurrency={defaultCurrency}
+      />
     </div>
   );
 }

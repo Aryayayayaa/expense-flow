@@ -3,6 +3,8 @@ import { ExpenseStatus, Prisma, ReimbursementStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 import type { AdminModification } from "../types";
+import { getDisplayExpenseAmount } from "./display-currency";
+import { CurrencyCode, DEFAULT_CURRENCY } from "@/constants/currencies";
 
 function serializeExpenseAmounts<
   T extends {
@@ -71,6 +73,8 @@ export async function getExpenses(
   pageSize: number = 10,
   approvalStatus: ExpenseStatus | "ALL" = "ALL",
   reimbursementStatus: ReimbursementStatus | "ALL" = "ALL",
+  defaultCurrency: CurrencyCode = DEFAULT_CURRENCY,
+  paginate: boolean = true,
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
@@ -143,8 +147,12 @@ export async function getExpenses(
 
       orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
 
-      skip: (safePage - 1) * safePageSize,
-      take: safePageSize,
+      ...(paginate
+        ? {
+            skip: (safePage - 1) * safePageSize,
+            take: safePageSize,
+          }
+        : {}),
     }),
 
     prisma.expense.count({
@@ -152,8 +160,8 @@ export async function getExpenses(
     }),
   ]);
 
-  return {
-    expenses: expenses.map((expense) => {
+  const serializedExpenses = await Promise.all(
+    expenses.map(async (expense) => {
       const latestAdminModification = expense.auditLogs[0];
 
       let adminModification: AdminModification | null = null;
@@ -187,24 +195,169 @@ export async function getExpenses(
         };
       }
 
+      const amount = Number(expense.amount);
+
+      const baseCurrencyAmount =
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null;
+
+      const exchangeRate =
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null;
+
+      const displayAmount = await getDisplayExpenseAmount(
+        {
+          amount,
+          currency: expense.currency,
+          baseCurrencyAmount,
+          exchangeRate,
+        },
+        defaultCurrency,
+      );
+
       return {
         ...expense,
-        amount: Number(expense.amount),
-        baseCurrencyAmount:
-          expense.baseCurrencyAmount !== null
-            ? Number(expense.baseCurrencyAmount)
-            : null,
-        exchangeRate:
-          expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+        amount,
+        baseCurrencyAmount,
+        exchangeRate,
+        displayAmount,
         adminModification,
       };
     }),
+  );
 
+  return {
+    expenses: serializedExpenses,
     total,
     page: safePage,
     pageSize: safePageSize,
-    totalPages: Math.ceil(total / safePageSize),
+    totalPages: paginate ? Math.ceil(total / safePageSize) : 1,
   };
+}
+
+export async function getAllExpensesForUser(
+  userId: number,
+  defaultCurrency: CurrencyCode = DEFAULT_CURRENCY,
+) {
+  const expenses = await prisma.expense.findMany({
+    where: {
+      userId,
+    },
+
+    include: {
+      decidedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+
+      reimbursementBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+
+      auditLogs: {
+        where: {
+          action: "UPDATED",
+          actor: {
+            role: "ADMIN",
+          },
+        },
+
+        include: {
+          actor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+
+        take: 1,
+      },
+    },
+
+    orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
+  });
+
+  return Promise.all(
+    expenses.map(async (expense) => {
+      const latestAdminModification = expense.auditLogs[0];
+
+      let adminModification: AdminModification | null = null;
+
+      if (latestAdminModification?.actor) {
+        const metadata = latestAdminModification.metadata;
+
+        let changes: AdminModification["changes"] = {};
+
+        if (
+          metadata &&
+          typeof metadata === "object" &&
+          !Array.isArray(metadata) &&
+          "changes" in metadata
+        ) {
+          const metadataChanges = metadata.changes;
+
+          if (
+            metadataChanges &&
+            typeof metadataChanges === "object" &&
+            !Array.isArray(metadataChanges)
+          ) {
+            changes = metadataChanges as AdminModification["changes"];
+          }
+        }
+
+        adminModification = {
+          admin: latestAdminModification.actor,
+          modifiedAt: latestAdminModification.createdAt,
+          changes,
+        };
+      }
+
+      const amount = Number(expense.amount);
+
+      const baseCurrencyAmount =
+        expense.baseCurrencyAmount !== null
+          ? Number(expense.baseCurrencyAmount)
+          : null;
+
+      const exchangeRate =
+        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null;
+
+      const displayAmount = await getDisplayExpenseAmount(
+        {
+          amount,
+          currency: expense.currency,
+          baseCurrencyAmount,
+          exchangeRate,
+        },
+        defaultCurrency,
+      );
+
+      return {
+        ...expense,
+        amount,
+        baseCurrencyAmount,
+        exchangeRate,
+        displayAmount,
+        adminModification,
+      };
+    }),
+  );
 }
 
 export async function getExpense(id: number, userId: number) {
@@ -227,13 +380,14 @@ export async function createExpense(data: {
   exchangeRate: number;
   exchangeRateAt: Date;
 }) {
-  const actionStart = performance.now();
   const sessionStart = performance.now();
 
   console.log("Saving to Prisma:", data);
+
   console.log(
     `[Expense Performance] expense create: ${(performance.now() - sessionStart).toFixed(2)}ms`,
   );
+
   return prisma.expense.create({
     data,
   });
@@ -356,7 +510,7 @@ export async function getAllExpensesForAdmin() {
   }));
 }
 
-//Get expenses that are currently waiting for admin approval.
+// Get expenses that are currently waiting for admin approval.
 
 export async function getPendingExpensesForAdmin(
   adminId: number,
@@ -413,7 +567,6 @@ export async function getPendingExpensesForAdmin(
       expense.baseCurrencyAmount !== null
         ? Number(expense.baseCurrencyAmount)
         : null,
-
     exchangeRate:
       expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
   }));
@@ -736,7 +889,7 @@ export async function getDeletedExpensesForUser(userId: number) {
   }));
 }
 
-//HR Reimbursement Functions
+// HR Reimbursement Functions
 
 /**
  * Get approved expenses that are still waiting for HR reimbursement

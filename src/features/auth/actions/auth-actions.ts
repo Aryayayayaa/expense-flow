@@ -17,17 +17,17 @@ export async function registerUserAction(
   prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  // Convert FormData to a normal object
+  // Convert FormData to a normal object.
   const values = {
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
+    defaultCurrency: formData.get("defaultCurrency"),
   };
 
-  // Validating the input ising safeParse to avoid runtime errors
+  // Validate the registration data on the server.
   const result = registerSchema.safeParse(values);
 
-  // when validation fails: converts resulting errors into a cleaner format using .flatten()
   if (!result.success) {
     return {
       success: false,
@@ -36,7 +36,7 @@ export async function registerUserAction(
     };
   }
 
-  // Check if email already exists
+  // Check if email already exists.
   const existingUser = await getUserByEmail(result.data.email);
 
   if (existingUser) {
@@ -48,17 +48,17 @@ export async function registerUserAction(
     };
   }
 
-  // Hash password
-  //10 = 2^10 = 1024 = number of rounds of hashing
+  // Hash password.
+  // 10 = 2^10 = 1024 rounds of hashing.
   const hashedPassword = await bcrypt.hash(result.data.password, 10);
 
-  // Save user
+  // Save user including their selected default currency.
   const newUser = await createUser({
     ...result.data,
     password: hashedPassword,
   });
 
-  // Notify HR and Admin
+  // Notify HR and Admin.
   const reviewers = await prisma.user.findMany({
     where: {
       role: {
@@ -81,6 +81,7 @@ export async function registerUserAction(
           employeeId: newUser.id,
           employeeName: newUser.name,
           employeeEmail: newUser.email,
+          defaultCurrency: newUser.defaultCurrency,
         },
       }),
     ),

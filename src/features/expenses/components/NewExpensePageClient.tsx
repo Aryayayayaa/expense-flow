@@ -4,21 +4,26 @@ import { useState } from "react";
 
 import AddExpenseForm from "./AddExpenseForm";
 
-import { SerializedExpense } from "../types";
-//import type { OcrResult } from "../types/ocr";
+import type { DisplayExpense } from "../types";
+import type { CurrencyCode } from "@/constants/currencies";
 
-export default function NewExpensePageClient() {
-  const [editingExpense, setEditingExpense] =
-    useState<SerializedExpense | null>(null);
+type NewExpensePageClientProps = {
+  defaultCurrency: CurrencyCode;
+};
 
-  //const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+export default function NewExpensePageClient({
+  defaultCurrency,
+}: NewExpensePageClientProps) {
+  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+    null,
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl">
       <AddExpenseForm
         editingExpense={editingExpense}
         setEditingExpense={setEditingExpense}
-        // ocrResult={ocrResult}
+        defaultCurrency={defaultCurrency}
       />
     </div>
   );

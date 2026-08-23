@@ -21,15 +21,17 @@ import Card from "@/components/common/Card";
 
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
 
-import { SerializedExpense } from "../types";
+import type { DisplayExpense } from "../types";
 import type { OcrResult } from "../types/ocr";
+
 import ReceiptOcrUpload from "./ReceiptOcrUpload";
 
 type AddExpenseFormProps = {
-  editingExpense: SerializedExpense | null;
+  editingExpense: DisplayExpense | null;
   setEditingExpense: React.Dispatch<
-    React.SetStateAction<SerializedExpense | null>
+    React.SetStateAction<DisplayExpense | null>
   >;
+  defaultCurrency?: CurrencyCode;
 };
 
 const initialState = {
@@ -42,6 +44,7 @@ const initialState = {
 export default function AddExpenseForm({
   editingExpense,
   setEditingExpense,
+  defaultCurrency = DEFAULT_CURRENCY,
 }: AddExpenseFormProps) {
   const router = useRouter();
 
@@ -52,7 +55,7 @@ export default function AddExpenseForm({
   const [title, setTitle] = useState("");
 
   const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
+  const [currency, setCurrency] = useState<CurrencyCode>(defaultCurrency);
 
   const [customCategory, setCustomCategory] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
@@ -83,7 +86,7 @@ export default function AddExpenseForm({
     formRef.current?.reset();
     setState(initialState);
 
-    setCurrency(DEFAULT_CURRENCY);
+    setCurrency(defaultCurrency);
   }
 
   useEffect(() => {
@@ -111,7 +114,7 @@ export default function AddExpenseForm({
     setCurrency(
       SUPPORTED_CURRENCIES.some((item) => item.code === editingExpense.currency)
         ? (editingExpense.currency as CurrencyCode)
-        : DEFAULT_CURRENCY,
+        : defaultCurrency,
     );
 
     const date = new Date(
@@ -135,7 +138,7 @@ export default function AddExpenseForm({
       behavior: "smooth",
       block: "start",
     });
-  }, [editingExpense]);
+  }, [editingExpense, defaultCurrency]);
 
   /*
    * Apply OCR results to the form.
@@ -256,10 +259,15 @@ export default function AddExpenseForm({
              */
             result = await createExpenseAction(null, formData);
 
+            console.log("starting");
+
             if (!result.success) {
               setState(result);
+              console.log("error!!!");
               return;
             }
+
+            console.log("success and finished!!!");
 
             /*
              * -------------------------------------------------------
@@ -302,11 +310,8 @@ export default function AddExpenseForm({
              * CREATION SUCCESS
              * -------------------------------------------------------
              *
-             * The mentor requirement is to redirect the user to the
-             * expenses page after a successful expense creation.
-             *
-             * Do not reset the form first because the user is leaving
-             * this page immediately.
+             * Redirect the user to the expenses page after
+             * successful expense creation.
              */
             setState(result);
 

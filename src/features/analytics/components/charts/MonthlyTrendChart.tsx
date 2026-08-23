@@ -10,14 +10,17 @@ import {
   YAxis,
 } from "recharts";
 
-import { AnalyticsExpense } from "../../types";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
+import { AnalyticsExpense } from "../../types";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import CurrencyTooltip from "./CurrencyTooltip";
 
 type MonthlyTrendChartProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 const monthNames = [
@@ -37,38 +40,64 @@ const monthNames = [
 
 export default function MonthlyTrendChart({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: MonthlyTrendChartProps) {
-  const monthlyTotals = new Map<string, number>();
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
+  /*
+   * Keep the original expenses for every month so the tooltip
+   * can explain the original-currency values when ALL CURRENCIES
+   * is selected.
+   */
+  const monthlyExpenses = new Map<
+    string,
+    {
+      year: number;
+      monthNumber: number;
+      expenses: AnalyticsExpense[];
+    }
+  >();
 
   expenses.forEach((expense) => {
     const expenseDate = expense.expenseDate ?? expense.createdAt;
 
     const year = expenseDate.getFullYear();
-    const month = expenseDate.getMonth();
+    const monthNumber = expenseDate.getMonth() + 1;
 
-    const key = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const key = `${year}-${String(monthNumber).padStart(2, "0")}`;
 
-    const currentTotal = monthlyTotals.get(key) ?? 0;
+    const existing = monthlyExpenses.get(key);
 
-    monthlyTotals.set(
-      key,
-      currentTotal + getReportExpenseAmount(expense, currency),
-    );
+    if (existing) {
+      existing.expenses.push(expense);
+    } else {
+      monthlyExpenses.set(key, {
+        year,
+        monthNumber,
+        expenses: [expense],
+      });
+    }
   });
 
-  const chartData = Array.from(monthlyTotals.entries())
-    .map(([key, total]) => {
-      const [year, month] = key.split("-").map(Number);
-
-      return {
-        key,
-        month: `${monthNames[month - 1]} ${year}`,
-        total,
-        year,
-        monthNumber: month,
-      };
-    })
+  const chartData = Array.from(monthlyExpenses.entries())
+    .map(([key, monthData]) => ({
+      key,
+      month: `${monthNames[monthData.monthNumber - 1]} ${monthData.year}`,
+      year: monthData.year,
+      monthNumber: monthData.monthNumber,
+      expenses: monthData.expenses,
+      total: monthData.expenses.reduce(
+        (sum, expense) =>
+          sum +
+          getReportExpenseAmount(expense, {
+            selectedCurrency,
+            defaultCurrency,
+          }),
+        0,
+      ),
+    }))
     .sort((a, b) => {
       if (a.year !== b.year) {
         return a.year - b.year;
@@ -102,14 +131,18 @@ export default function MonthlyTrendChart({
           <XAxis dataKey="month" />
 
           <YAxis
-            tickFormatter={(value) => formatCurrency(Number(value), currency)}
+            tickFormatter={(value) =>
+              formatCurrency(Number(value), reportCurrency)
+            }
           />
 
           <Tooltip
-            formatter={(value) => [
-              formatCurrency(Number(value), currency),
-              "Total Expenses",
-            ]}
+            content={
+              <CurrencyTooltip
+                selectedCurrency={selectedCurrency}
+                defaultCurrency={defaultCurrency}
+              />
+            }
           />
 
           <Line

@@ -27,6 +27,7 @@ export default async function ProfilePage() {
       email: true,
       role: true,
       image: true,
+      defaultCurrency: true,
       createdAt: true,
     },
   });
@@ -80,6 +81,16 @@ export default async function ProfilePage() {
             </div>
 
             <div>
+              <p className="text-sm font-medium text-slate-500">
+                Default Currency
+              </p>
+
+              <p className="mt-1 text-lg font-medium text-slate-900">
+                {user.defaultCurrency}
+              </p>
+            </div>
+
+            <div>
               <p className="text-sm font-medium text-slate-500">Member Since</p>
 
               <p className="mt-1 text-lg text-slate-900">
@@ -93,7 +104,12 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <ProfileEditor name={user.name} email={user.email} role={user.role} />
+        <ProfileEditor
+          name={user.name}
+          email={user.email}
+          role={user.role}
+          defaultCurrency={user.defaultCurrency}
+        />
 
         {user.role === "EMPLOYEE" && (
           <NameChangeRequest currentName={user.name} />

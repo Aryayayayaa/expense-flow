@@ -1,8 +1,9 @@
 import ExpensesPageClient from "@/features/expenses/components/ExpensesPageClient";
+import type { CurrencyCode } from "@/constants/currencies";
 
 import {
+  getAllExpensesForUser,
   getDeletedExpensesForUser,
-  getExpenses,
 } from "@/features/expenses/lib/expenses";
 
 import { auth } from "@/auth";
@@ -31,17 +32,40 @@ export default async function ExpensesPage({
   const page =
     Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-  const pageSize = 10;
+  const defaultCurrency = session.user.defaultCurrency as CurrencyCode;
 
-  const [expenseResult, deletedExpenses] = await Promise.all([
-    getExpenses(userId, page, pageSize),
+  /*
+   * IMPORTANT:
+   *
+   * The Expenses page intentionally loads ALL expenses here.
+   *
+   * Pagination must happen AFTER the client-side filters are applied.
+   *
+   * Otherwise:
+   *
+   *   DB pagination
+   *        ↓
+   *   current page only
+   *        ↓
+   *   filtering
+   *
+   * causes filtered expenses and summary cards to incorrectly
+   * depend on which database page happens to be displayed.
+   *
+   * The correct flow is:
+   *
+   *   ALL expenses
+   *        ↓
+   *   filters
+   *        ↓
+   *   summary calculations
+   *        ↓
+   *   pagination
+   */
+  const [expenses, deletedExpenses] = await Promise.all([
+    getAllExpensesForUser(userId, defaultCurrency),
     getDeletedExpensesForUser(userId),
   ]);
-
-  const serializedExpenses = expenseResult.expenses.map((expense) => ({
-    ...expense,
-    amount: Number(expense.amount),
-  }));
 
   const serializedDeletedExpenses = deletedExpenses.map((expense) => ({
     ...expense,
@@ -51,14 +75,10 @@ export default async function ExpensesPage({
   return (
     <main className="mx-auto w-full max-w-7xl space-y-8 p-8">
       <ExpensesPageClient
-        expenses={serializedExpenses}
+        expenses={expenses}
         deletedExpenses={serializedDeletedExpenses}
-        pagination={{
-          page: expenseResult.page,
-          pageSize: expenseResult.pageSize,
-          total: expenseResult.total,
-          totalPages: expenseResult.totalPages,
-        }}
+        defaultCurrency={defaultCurrency}
+        initialPage={page}
       />
     </main>
   );

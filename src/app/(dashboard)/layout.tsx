@@ -6,6 +6,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
+import UserProvider from "@/context/UserProvider";
+import type { CurrencyCode } from "@/constants/currencies";
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{
@@ -31,23 +34,27 @@ export default async function DashboardLayout({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <MobileSidebar
-        userName={session?.user?.name}
-        userRole={session?.user?.role}
-      />
+    <UserProvider
+      defaultCurrency={(session.user.defaultCurrency ?? "INR") as CurrencyCode}
+    >
+      <main className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <MobileSidebar
+          userName={session?.user?.name}
+          userRole={session?.user?.role}
+        />
 
-      <div className="flex min-h-screen">
-        <Sidebar userRole={session?.user?.role} />
+        <div className="flex min-h-screen">
+          <Sidebar userRole={session?.user?.role} />
 
-        <div className="min-w-0 flex-1">
-          <header className="flex h-16 items-center justify-end border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
-            <DashboardHeaderActions />
-          </header>
+          <div className="min-w-0 flex-1">
+            <header className="flex h-16 items-center justify-end border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
+              <DashboardHeaderActions />
+            </header>
 
-          {children}
+            {children}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </UserProvider>
   );
 }

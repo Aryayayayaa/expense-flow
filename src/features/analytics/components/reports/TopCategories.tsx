@@ -3,19 +3,25 @@
 import { AnalyticsExpense } from "../../types";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
 import { formatCurrency } from "@/utils/formatCurrency";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
 type TopCategoriesProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 export default function TopCategories({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: TopCategoriesProps) {
   const categoryTotals = expenses.reduce<Record<string, number>>(
     (totals, expense) => {
-      const amount = getReportExpenseAmount(expense, currency);
+      const amount = getReportExpenseAmount(expense, {
+        selectedCurrency,
+        defaultCurrency,
+      });
 
       totals[expense.category] = (totals[expense.category] ?? 0) + amount;
 
@@ -41,6 +47,20 @@ export default function TopCategories({
 
   const maxAmount = categories[0].amount;
 
+  /*
+   * Display currency:
+   *
+   * Specific currency:
+   *   Use the selected currency.
+   *
+   * ALL CURRENCIES:
+   *   All values have been converted into the authenticated
+   *   user's current default currency, so display using
+   *   the default currency instead of "ALL".
+   */
+  const displayCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   return (
     <div className="rounded-lg border bg-white p-6">
       <h3 className="text-lg font-semibold text-gray-900">
@@ -64,7 +84,7 @@ export default function TopCategories({
                 </span>
 
                 <span className="text-sm font-semibold text-gray-900">
-                  {formatCurrency(item.amount, currency)}
+                  {formatCurrency(item.amount, displayCurrency)}
                 </span>
               </div>
 

@@ -6,12 +6,14 @@ import { formatCurrency } from "@/utils/formatCurrency";
 
 type SpendingSummaryProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
 
 export default function SpendingSummary({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: SpendingSummaryProps) {
   if (expenses.length === 0) {
     return (
@@ -22,7 +24,10 @@ export default function SpendingSummary({
   }
 
   const amounts = expenses.map((expense) =>
-    getReportExpenseAmount(expense, currency),
+    getReportExpenseAmount(expense, {
+      selectedCurrency,
+      defaultCurrency,
+    }),
   );
 
   const totalExpenses = amounts.reduce((sum, amount) => sum + amount, 0);
@@ -46,7 +51,7 @@ export default function SpendingSummary({
           <p className="text-sm text-gray-500">Total Expenses</p>
 
           <p className="mt-2 text-2xl font-bold text-gray-900">
-            {formatCurrency(totalExpenses, currency)}
+            {formatCurrency(totalExpenses, selectedCurrency)}
           </p>
         </div>
 
@@ -54,7 +59,7 @@ export default function SpendingSummary({
           <p className="text-sm text-gray-500">Average Expense</p>
 
           <p className="mt-2 text-2xl font-bold text-gray-900">
-            {formatCurrency(averageExpense, currency)}
+            {formatCurrency(averageExpense, selectedCurrency)}
           </p>
         </div>
 
@@ -62,7 +67,7 @@ export default function SpendingSummary({
           <p className="text-sm text-gray-500">Highest Expense</p>
 
           <p className="mt-2 text-2xl font-bold text-gray-900">
-            {formatCurrency(highestExpense, currency)}
+            {formatCurrency(highestExpense, selectedCurrency)}
           </p>
         </div>
 
@@ -70,7 +75,7 @@ export default function SpendingSummary({
           <p className="text-sm text-gray-500">Lowest Expense</p>
 
           <p className="mt-2 text-2xl font-bold text-gray-900">
-            {formatCurrency(lowestExpense, currency)}
+            {formatCurrency(lowestExpense, selectedCurrency)}
           </p>
         </div>
       </div>

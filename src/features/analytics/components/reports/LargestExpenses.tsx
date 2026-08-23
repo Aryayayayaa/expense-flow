@@ -1,56 +1,48 @@
 "use client";
 
-import { SUPPORTED_CURRENCIES } from "@/constants/currencies";
-
 import { AnalyticsExpense } from "../../types";
 import { getReportExpenseAmount } from "../../lib/getReportExpenseAmount";
+import { ALL_CURRENCIES } from "@/constants/currencies";
 
 type LargestExpensesProps = {
   expenses: AnalyticsExpense[];
-  currency: string;
+  selectedCurrency: string;
+  defaultCurrency: string;
 };
-
-function getCurrencySymbol(currencyCode: string) {
-  const currency = SUPPORTED_CURRENCIES.find(
-    (currency) => currency.code === currencyCode,
-  );
-
-  return currency?.symbol ?? currencyCode;
-}
-
-function formatInrAmount(amount: number | string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(amount));
-}
-
-function formatOriginalAmount(amount: number | string, currencyCode: string) {
-  const numericAmount = Number(amount);
-  const symbol = getCurrencySymbol(currencyCode);
-
-  return `${symbol}${numericAmount.toFixed(2)}`;
-}
 
 export default function LargestExpenses({
   expenses,
-  currency,
+  selectedCurrency,
+  defaultCurrency,
 }: LargestExpensesProps) {
+  const reportCurrency =
+    selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
+
   const largestExpenses = [...expenses]
     .sort(
       (a, b) =>
-        getReportExpenseAmount(b, currency) -
-        getReportExpenseAmount(a, currency),
+        getReportExpenseAmount(b, {
+          selectedCurrency,
+          defaultCurrency,
+        }) -
+        getReportExpenseAmount(a, {
+          selectedCurrency,
+          defaultCurrency,
+        }),
     )
     .slice(0, 5);
 
   if (largestExpenses.length === 0) {
     return (
-      <p className="text-gray-500">
-        No expense data available for the selected filters.
-      </p>
+      <div className="rounded-lg border bg-white p-6">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Largest Expenses
+        </h3>
+
+        <p className="mt-4 text-center text-gray-500">
+          No expense data available for the selected filters.
+        </p>
+      </div>
     );
   }
 
@@ -72,9 +64,7 @@ export default function LargestExpenses({
 
               <th className="pb-3 pr-4 font-medium">Date</th>
 
-              <th className="pb-3 pr-4 text-right font-medium">INR Amount</th>
-
-              <th className="pb-3 text-right font-medium">Original Amount</th>
+              <th className="pb-3 text-right font-medium">Amount</th>
             </tr>
           </thead>
 
@@ -82,11 +72,10 @@ export default function LargestExpenses({
             {largestExpenses.map((expense) => {
               const expenseDate = expense.expenseDate ?? expense.createdAt;
 
-              const inrAmount = Number(
-                expense.baseCurrencyAmount ?? expense.amount,
-              );
-
-              const isInr = expense.currency === "INR";
+              const amount = getReportExpenseAmount(expense, {
+                selectedCurrency,
+                defaultCurrency,
+              });
 
               return (
                 <tr key={expense.id} className="border-b last:border-b-0">
@@ -102,14 +91,11 @@ export default function LargestExpenses({
                     {expenseDate.toLocaleDateString("en-IN")}
                   </td>
 
-                  <td className="py-4 pr-4 text-right font-semibold text-gray-900">
-                    {formatInrAmount(inrAmount)}
-                  </td>
-
                   <td className="py-4 text-right font-semibold text-gray-900">
-                    {isInr
-                      ? "—"
-                      : formatOriginalAmount(expense.amount, expense.currency)}
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: reportCurrency,
+                    }).format(amount)}
                   </td>
                 </tr>
               );
