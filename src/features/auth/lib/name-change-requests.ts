@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getRequestDeadline } from "./request-deadlines";
 
 export async function createNameChangeRequest(data: {
   userId: number;
@@ -9,7 +10,10 @@ export async function createNameChangeRequest(data: {
   proofPath?: string;
 }) {
   return prisma.nameChangeRequest.create({
-    data,
+    data: {
+      ...data,
+      deadlineAt: getRequestDeadline(),
+    },
   });
 }
 

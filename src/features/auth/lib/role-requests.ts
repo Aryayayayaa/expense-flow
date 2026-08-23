@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getRequestDeadline } from "./request-deadlines";
 
 export async function createRoleVerificationRequest(data: {
   userId: number;
@@ -7,7 +8,10 @@ export async function createRoleVerificationRequest(data: {
   proofPath?: string;
 }) {
   return prisma.roleVerificationRequest.create({
-    data,
+    data: {
+      ...data,
+      deadlineAt: getRequestDeadline(),
+    },
   });
 }
 

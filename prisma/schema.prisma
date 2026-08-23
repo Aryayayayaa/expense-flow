@@ -190,9 +190,13 @@ model RoleVerificationRequest {
   reviewedById Int?
 
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
-  userId    Int
+
+  // Request deadline / reminder tracking
+  deadlineAt     DateTime?
+  reminderSentAt DateTime?
+
+  userId Int
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -215,11 +219,46 @@ model EmployeeVerificationRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Request deadline / reminder tracking
+  deadlineAt     DateTime?
+  reminderSentAt DateTime?
+
   userId Int
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy User? @relation("EmployeeVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+}
+
+model NameChangeRequest {
+  id Int @id @default(autoincrement())
+
+  currentName   String
+  requestedName String
+  reason        String
+
+  proofUrl  String?
+  proofPath String?
+
+  status NameChangeRequestStatus @default(PENDING)
+
+  rejectionReason String?
+
+  reviewedAt   DateTime?
+  reviewedById Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Request deadline / reminder tracking
+  deadlineAt     DateTime?
+  reminderSentAt DateTime?
+
+  userId Int
+
+  user User @relation("NameChangeRequester", fields: [userId], references: [id], onDelete: Cascade)
+
+  reviewedBy User? @relation("NameChangeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 }
 
 model ExpenseAuditLog {
@@ -292,29 +331,3 @@ model Notification {
   @@index([userId, createdAt])
 }
 
-model NameChangeRequest {
-  id Int @id @default(autoincrement())
-
-  currentName   String
-  requestedName String
-  reason        String
-
-  proofUrl  String?
-  proofPath String?
-
-  status NameChangeRequestStatus @default(PENDING)
-
-  rejectionReason String?
-
-  reviewedAt   DateTime?
-  reviewedById Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userId Int
-
-  user User @relation("NameChangeRequester", fields: [userId], references: [id], onDelete: Cascade)
-
-  reviewedBy User? @relation("NameChangeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-}

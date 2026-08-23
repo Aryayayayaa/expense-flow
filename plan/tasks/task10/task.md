@@ -181,29 +181,29 @@ Branch: `feature/profile-flow`
 
 ## 10.10 — Request Deadlines, Reminders & Auto-Rejection
 
-### STATUS: NOT STARTED
+### STATUS: COMPLETED
 
-- [ ] Define request deadline duration
-- [ ] Add request deadline tracking
-- [ ] Ensure deadline is assigned when a request is created
-- [ ] Prevent invalid/missing deadlines
-- [ ] Implement pending-request reminder logic
-- [ ] Notify eligible reviewers about approaching deadlines
-- [ ] Prevent unnecessary duplicate reminders
-- [ ] Implement automatic rejection after deadline expiry
-- [ ] Store auto-rejection reason
-- [ ] Store automatic review timestamp
-- [ ] Mark expired requests as rejected
-- [ ] Notify the requester when a request is automatically rejected
-- [ ] Notify eligible reviewers when a request is automatically rejected
-- [ ] Ensure already-reviewed requests are not auto-rejected
-- [ ] Ensure already-rejected requests are not reminded
-- [ ] Ensure expired requests cannot be manually approved/rejected
-- [ ] Ensure auto-rejection is idempotent
-- [ ] Preserve request history after auto-rejection
-- [ ] Verify Name Change deadline workflow
-- [ ] Verify Role Verification deadline workflow
-- [ ] Verify Identity Verification deadline workflow
+- [x] Define request deadline duration
+- [x] Add request deadline tracking
+- [x] Ensure deadline is assigned when a request is created
+- [x] Prevent invalid/missing deadlines
+- [x] Implement pending-request reminder logic
+- [x] Notify eligible reviewers about approaching deadlines
+- [x] Prevent unnecessary duplicate reminders
+- [x] Implement automatic rejection after deadline expiry
+- [x] Store auto-rejection reason
+- [x] Store automatic review timestamp
+- [x] Mark expired requests as rejected
+- [x] Notify the requester when a request is automatically rejected
+- [x] Notify eligible reviewers when a request is automatically rejected
+- [x] Ensure already-reviewed requests are not auto-rejected
+- [x] Ensure already-rejected requests are not reminded
+- [x] Ensure expired requests cannot be manually approved/rejected
+- [x] Ensure auto-rejection is idempotent
+- [x] Preserve request history after auto-rejection
+- [x] Verify Name Change deadline workflow
+- [x] Verify Role Verification deadline workflow
+- [x] Verify Identity Verification deadline workflow
 
 ---
 
