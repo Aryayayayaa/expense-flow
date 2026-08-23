@@ -67,7 +67,7 @@ Branch: `feature/profile-flow`
 
 ## 10.4 — Create Requests Flow / Routing
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Establish the Requests entry point
 - [x] Establish request selection/navigation
@@ -77,9 +77,9 @@ Branch: `feature/profile-flow`
 - [x] Support browser back/forward navigation
 - [x] Handle missing request selection
 - [x] Handle invalid request selection
-- [ ] Handle unavailable request selection for the current role
-- [ ] Support notification navigation to the relevant request
-- [ ] Support approved/rejected request notification navigation
+- [x] Handle unavailable request selection for the current role
+- [x] Support notification navigation to the relevant request
+- [x] Support approved/rejected request notification navigation
 - [x] Preserve the selected request after navigation
 
 ---
@@ -231,16 +231,16 @@ Branch: `feature/profile-flow`
 
 ## 10.12 — Request State and UX
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Display appropriate request state
 - [x] Handle pending requests
 - [x] Handle approved requests
 - [x] Handle rejected requests
-- [ ] Prevent invalid duplicate submissions where existing logic requires it
+- [x] Prevent invalid duplicate submissions where existing logic requires it
 - [x] Provide appropriate empty states
-- [ ] Provide appropriate error states
-- [ ] Ensure no blank/broken UI occurs for invalid request selections
+- [x] Provide appropriate error states
+- [x] Ensure no blank/broken UI occurs for invalid request selections
 
 ---
 
@@ -304,7 +304,7 @@ Branch: `feature/profile-flow`
 
 ## 10.15 — Quality Checks
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Run `npm run lint`
 - [x] Resolve Task 10-related lint errors

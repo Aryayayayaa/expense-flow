@@ -9,7 +9,7 @@ import {
   markNotificationAsReadAction,
 } from "@/features/notifications/actions/notification-actions";
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Role } from "@prisma/client";
 
 type NotificationItem = {
   id: number;
@@ -25,6 +25,7 @@ type NotificationItem = {
 type NotificationBellProps = {
   notifications: NotificationItem[];
   unreadCount: number;
+  userRole: Role;
 };
 
 type RequestType =
@@ -183,24 +184,101 @@ function getRequestTypeFromNotification(
 
 function getNotificationDestination(
   notification: NotificationItem,
-): string | null {
+  userRole: Role,
+) {
   /*
    * ------------------------------------------------------------------------
-   * Deleted expenses
+   * Name Change
    * ------------------------------------------------------------------------
-   *
-   * The original Expense record no longer exists, so navigate to
-   * the deleted-expense history instead.
    */
-  if (notification.type === "EXPENSE_DELETED") {
-    return "/approvals";
+
+  if (
+    notification.type === "EMPLOYEE_ACCOUNT_UPDATED" &&
+    notification.metadata &&
+    typeof notification.metadata === "object" &&
+    !Array.isArray(notification.metadata)
+  ) {
+    const metadata = notification.metadata as Record<string, unknown>;
+
+    if (
+      metadata.action === "NAME_CHANGE_REQUESTED" ||
+      metadata.action === "NAME_CHANGE_APPROVED" ||
+      metadata.action === "NAME_CHANGE_REJECTED" ||
+      metadata.action === "NAME_CHANGE_AUTO_REJECTED"
+    ) {
+      if (userRole === "HR") {
+        return "/hr?section=name-change";
+      }
+
+      if (userRole === "ADMIN") {
+        return "/admin?view=name-change";
+      }
+
+      if (userRole === "EMPLOYEE") {
+        return "/requests?type=name-change";
+      }
+    }
   }
 
   /*
    * ------------------------------------------------------------------------
-   * Expense notifications
+   * Employee / Identity Verification
    * ------------------------------------------------------------------------
    */
+
+  if (notification.type === "EMPLOYEE_VERIFICATION_PENDING") {
+    if (userRole === "HR") {
+      return "/hr?section=verification";
+    }
+
+    if (userRole === "ADMIN") {
+      return "/admin?view=employee-verification";
+    }
+  }
+
+  if (
+    notification.type === "EMPLOYEE_VERIFICATION_APPROVED" ||
+    notification.type === "EMPLOYEE_VERIFICATION_REJECTED"
+  ) {
+    if (userRole === "EMPLOYEE") {
+      return "/requests?type=identity-verification";
+    }
+  }
+
+  /*
+   * ------------------------------------------------------------------------
+   * Role Verification
+   * ------------------------------------------------------------------------
+   */
+
+  if (
+    notification.type === "ROLE_VERIFICATION_PENDING" ||
+    notification.type === "ROLE_VERIFICATION_APPROVED" ||
+    notification.type === "ROLE_VERIFICATION_REJECTED"
+  ) {
+    if (userRole === "EMPLOYEE") {
+      return "/requests?type=role-verification";
+    }
+
+    if (userRole === "HR") {
+      return "/hr?section=role-verification";
+    }
+
+    if (userRole === "ADMIN") {
+      return "/admin?view=role-verification";
+    }
+  }
+
+  /*
+   * ------------------------------------------------------------------------
+   * Existing expense navigation
+   * ------------------------------------------------------------------------
+   */
+
+  if (notification.type === "EXPENSE_DELETED") {
+    return "/approvals";
+  }
+
   if (canNavigateToExpense(notification)) {
     const expenseId = getExpenseId(notification);
 
@@ -209,21 +287,6 @@ function getNotificationDestination(
     }
   }
 
-  /*
-   * ------------------------------------------------------------------------
-   * Request notifications
-   * ------------------------------------------------------------------------
-   */
-  const requestType = getRequestTypeFromNotification(notification);
-
-  if (requestType) {
-    return `/requests?type=${requestType}`;
-  }
-
-  /*
-   * Missing or invalid destination information means the
-   * notification remains informational.
-   */
   return null;
 }
 
@@ -256,6 +319,7 @@ function getNavigationLabel(notification: NotificationItem) {
 export default function NotificationBell({
   notifications,
   unreadCount,
+  userRole,
 }: NotificationBellProps) {
   const router = useRouter();
 
@@ -354,7 +418,7 @@ export default function NotificationBell({
       return;
     }
 
-    const destination = getNotificationDestination(notification);
+    const destination = getNotificationDestination(notification, userRole);
 
     /*
      * No destination means this is an informational notification.
@@ -437,7 +501,11 @@ export default function NotificationBell({
               </div>
             ) : (
               items.map((notification) => {
-                const destination = getNotificationDestination(notification);
+                const destination = getNotificationDestination(
+                  notification,
+                  userRole,
+                );
+
                 const navigationLabel = getNavigationLabel(notification);
 
                 const navigable = destination !== null;

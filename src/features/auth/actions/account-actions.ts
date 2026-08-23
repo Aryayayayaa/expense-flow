@@ -326,6 +326,7 @@ export async function requestNameChangeAction(
       where: {
         id: userId,
       },
+
       select: {
         id: true,
         name: true,
@@ -355,6 +356,9 @@ export async function requestNameChangeAction(
       };
     }
 
+    /*
+     * Only one pending name-change request is allowed at a time.
+     */
     const existingRequest = await prisma.nameChangeRequest.findFirst({
       where: {
         userId,
@@ -369,6 +373,50 @@ export async function requestNameChangeAction(
       };
     }
 
+    /*
+     * A name change can only be requested once every 365 days
+     * after an APPROVED name change.
+     *
+     * Rejected requests do not start the restriction period.
+     */
+    const latestApprovedRequest = await prisma.nameChangeRequest.findFirst({
+      where: {
+        userId,
+        status: "APPROVED",
+        reviewedAt: {
+          not: null,
+        },
+      },
+
+      orderBy: {
+        reviewedAt: "desc",
+      },
+
+      select: {
+        reviewedAt: true,
+      },
+    });
+
+    if (latestApprovedRequest?.reviewedAt) {
+      const nextEligibleDate = new Date(latestApprovedRequest.reviewedAt);
+
+      nextEligibleDate.setDate(nextEligibleDate.getDate() + 365);
+
+      if (new Date() < nextEligibleDate) {
+        return {
+          success: false,
+          message: `You can request another name change after ${nextEligibleDate.toLocaleDateString(
+            "en-IN",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            },
+          )}.`,
+        };
+      }
+    }
+
     const request = await createNameChangeRequest({
       userId,
       currentName: user.name,
@@ -379,16 +427,25 @@ export async function requestNameChangeAction(
     });
 
     /*
-     * Both HR and Admin can review name change requests.
-     * Therefore both roles must be notified when a request is submitted.
+     * Both HR and Admin can review name-change requests.
      */
     const reviewers = await prisma.user.findMany({
       where: {
         role: {
           in: ["ADMIN", "HR"],
         },
+
         isActive: true,
+
+        /*
+         * A user must never receive a reviewer notification
+         * for their own request.
+         */
+        id: {
+          not: userId,
+        },
       },
+
       select: {
         id: true,
       },
@@ -414,6 +471,7 @@ export async function requestNameChangeAction(
       ),
     );
 
+    revalidatePath("/requests");
     revalidatePath("/profile");
     revalidatePath("/admin");
     revalidatePath("/hr");

@@ -4,19 +4,24 @@ import { auth } from "@/auth";
 
 import {
   getEmployeeVerificationHistory,
+  getEmployeeVerificationAttemptCount,
+  getLatestEmployeeVerificationRequest,
   getPendingEmployeeVerificationRequests,
+  getEmployeeVerificationRequestsForUser,
 } from "@/features/auth/lib/employee-verification";
 
 import Pagination from "@/components/common/Pagination";
 
 import EmployeeVerificationTable from "@/features/auth/components/EmployeeVerificationTable";
 import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
+import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
 
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
 import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
 
 import HrManagementSelector from "@/features/auth/components/HrManagementSelector";
 
+import NameChangeRequest from "@/features/auth/components/NameChangeRequest";
 import NameChangeRequestHistoryTable from "@/features/auth/components/NameChangeRequestHistoryTable";
 import NameChangeRequestTable from "@/features/auth/components/NameChangeRequestTable";
 
@@ -25,6 +30,7 @@ import RoleVerificationHistoryTable from "@/features/auth/components/RoleVerific
 
 import {
   getNameChangeRequestHistory,
+  getNameChangeRequestsForUser,
   getPendingNameChangeRequests,
 } from "@/features/auth/lib/name-change-requests";
 
@@ -97,21 +103,30 @@ export default async function HrPage({
   const [
     employeeVerificationRequests,
     employeeVerificationHistory,
+    ownIdentityRequests,
+    latestOwnIdentityRequest,
+    ownIdentityAttemptCount,
     approvedExpenses,
     reimbursementHistory,
     nameChangeRequests,
     nameChangeRequestHistory,
+    ownNameChangeRequests,
     roleVerificationRequests,
     roleVerificationHistory,
   ] = await Promise.all([
-    getPendingEmployeeVerificationRequests(),
-    getEmployeeVerificationHistory(),
+    getPendingEmployeeVerificationRequests(hrId),
+    getEmployeeVerificationHistory(hrId),
+
+    getEmployeeVerificationRequestsForUser(hrId),
+    getLatestEmployeeVerificationRequest(hrId),
+    getEmployeeVerificationAttemptCount(hrId),
 
     getApprovedExpensesForHR(hrId, reimbursementPage, pageSize),
     getReimbursementHistory(reimbursementHistoryPage, pageSize),
 
-    getPendingNameChangeRequests(),
-    getNameChangeRequestHistory(),
+    getPendingNameChangeRequests(hrId),
+    getNameChangeRequestHistory(hrId),
+    getNameChangeRequestsForUser(hrId),
 
     getPendingRoleRequests(),
     getRoleRequestHistory(),
@@ -135,21 +150,56 @@ export default async function HrPage({
           </div>
         </div>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Employee Verification                                            */}
-        {/* ---------------------------------------------------------------- */}
+        {/* Employee Verification */}
 
         {section === "verification" && (
           <>
             <section>
               <div className="mb-5">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Employee Verification
+                  Identity Verification
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Review employee identity and employment verification
-                  documents.
+                  Submit your own identity verification request and review
+                  employee verification requests.
+                </p>
+              </div>
+
+              <EmployeeVerificationRequest
+                requestId={latestOwnIdentityRequest?.id}
+                status={latestOwnIdentityRequest?.status ?? "NOT_SUBMITTED"}
+                rejectionReason={latestOwnIdentityRequest?.rejectionReason}
+                attemptCount={ownIdentityAttemptCount}
+              />
+            </section>
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  My Identity Verification History
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review your previously submitted identity verification
+                  requests.
+                </p>
+              </div>
+
+              <EmployeeVerificationHistoryTable
+                requests={ownIdentityRequests}
+              />
+            </section>
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Employee Verification Requests
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review identity and employment verification requests from
+                  other employees.
                 </p>
               </div>
 
@@ -177,20 +227,48 @@ export default async function HrPage({
           </>
         )}
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Name Change Requests                                             */}
-        {/* ---------------------------------------------------------------- */}
+        {/* Name Change Requests */}
 
         {section === "name-change" && (
           <>
             <section>
               <div className="mb-5">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Name Change Requests
+                  Request Name Change
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Review employee requests to change their account name.
+                  Submit your own name change request. Another HR or Admin
+                  account must review it.
+                </p>
+              </div>
+
+              <NameChangeRequest currentName={session.user.name ?? ""} />
+            </section>
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  My Name Change History
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review your previously submitted name change requests.
+                </p>
+              </div>
+
+              <NameChangeRequestHistoryTable requests={ownNameChangeRequests} />
+            </section>
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Pending Name Change Requests
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review name change requests submitted by other employees, HR
+                  members, and Admins.
                 </p>
               </div>
 
@@ -215,9 +293,7 @@ export default async function HrPage({
           </>
         )}
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Role Verification Requests                                      */}
-        {/* ---------------------------------------------------------------- */}
+        {/* Role Verification Requests */}
 
         {section === "role-verification" && (
           <>
@@ -257,9 +333,7 @@ export default async function HrPage({
           </>
         )}
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Reimbursements                                                   */}
-        {/* ---------------------------------------------------------------- */}
+        {/* Reimbursements */}
 
         {section === "reimbursement" && (
           <>

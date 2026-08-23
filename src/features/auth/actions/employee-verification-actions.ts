@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { createEmployeeVerificationRequest } from "../lib/employee-verification";
 import { createNotification } from "@/features/notifications/lib/notifications";
 
+const MAX_VERIFICATION_ATTEMPTS = 5;
+
 export async function createEmployeeVerificationAction(
   proofUrl?: string,
   proofPath?: string,
@@ -41,17 +43,65 @@ export async function createEmployeeVerificationAction(
       };
     }
 
-    const existingRequest = await prisma.employeeVerificationRequest.findFirst({
+    /*
+     * Once identity verification has been approved, no further
+     * verification request is required.
+     */
+    const approvedRequest = await prisma.employeeVerificationRequest.findFirst({
+      where: {
+        userId,
+        status: "APPROVED",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (approvedRequest) {
+      return {
+        success: false,
+        message: "Your identity has already been verified.",
+      };
+    }
+
+    /*
+     * Only one request can be pending at a time.
+     */
+    const pendingRequest = await prisma.employeeVerificationRequest.findFirst({
       where: {
         userId,
         status: "PENDING",
       },
+      select: {
+        id: true,
+      },
     });
 
-    if (existingRequest) {
+    if (pendingRequest) {
       return {
         success: false,
         message: "You already have a pending verification request.",
+      };
+    }
+
+    /*
+     * A user gets a maximum of 5 verification attempts.
+     *
+     * Rejected requests count as attempts.
+     * Approved requests are handled above and permanently complete
+     * the verification workflow.
+     */
+    const attemptCount = await prisma.employeeVerificationRequest.count({
+      where: {
+        userId,
+      },
+    });
+
+    if (attemptCount >= MAX_VERIFICATION_ATTEMPTS) {
+      return {
+        success: false,
+        message:
+          "You have reached the maximum of 5 identity verification attempts.",
       };
     }
 
@@ -63,8 +113,7 @@ export async function createEmployeeVerificationAction(
 
     /*
      * HR and Admin can review identity verification requests.
-     * The submitter is excluded from the reviewer notifications so that
-     * a user does not receive a notification for their own request.
+     * The submitter is excluded from reviewer notifications.
      */
     const reviewers = await prisma.user.findMany({
       where: {
@@ -119,7 +168,7 @@ export async function createEmployeeVerificationAction(
 
 /*
  * HR and Admin are allowed to review employee identity verification
- * requests.
+ * requests, but cannot review their own request.
  */
 async function requireHrOrAdmin() {
   const session = await auth();
@@ -215,6 +264,7 @@ export async function approveEmployeeVerificationAction(requestId: number) {
       },
     });
 
+    revalidatePath("/requests");
     revalidatePath("/hr");
     revalidatePath("/admin");
     revalidatePath("/profile");
@@ -310,6 +360,7 @@ export async function rejectEmployeeVerificationAction(
       },
     });
 
+    revalidatePath("/requests");
     revalidatePath("/hr");
     revalidatePath("/admin");
     revalidatePath("/profile");

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { auth } from "@/auth";
+
 import { getDashboardData } from "@/features/dashboard/lib/getDashboardData";
 
 import {
@@ -10,6 +12,12 @@ import {
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 
 export default async function DashboardPage() {
+  const session = await auth();
+
+  if (!session?.user?.id || !session.user.role) {
+    return null;
+  }
+
   const data = await getDashboardData();
 
   const [notifications, unreadNotificationCount] = await Promise.all([
@@ -31,6 +39,7 @@ export default async function DashboardPage() {
           <NotificationBell
             notifications={notifications}
             unreadCount={unreadNotificationCount}
+            userRole={session.user.role}
           />
 
           <Link
@@ -199,6 +208,7 @@ export default async function DashboardPage() {
                               data.defaultCurrency,
                             )}
                           </div>
+
                           {expense.currency !== data.defaultCurrency && (
                             <div className="mt-1 text-xs font-normal text-slate-500 dark:text-slate-400">
                               (

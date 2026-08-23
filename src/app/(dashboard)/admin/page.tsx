@@ -7,11 +7,15 @@ import { getReimbursementHistory } from "@/features/expenses/lib/expenses";
 
 import {
   getEmployeeVerificationHistory,
+  getEmployeeVerificationAttemptCount,
+  getEmployeeVerificationRequestsForUser,
+  getLatestEmployeeVerificationRequest,
   getPendingEmployeeVerificationRequests,
 } from "@/features/auth/lib/employee-verification";
 
 import {
   getNameChangeRequestHistory,
+  getNameChangeRequestsForUser,
   getPendingNameChangeRequests,
 } from "@/features/auth/lib/name-change-requests";
 
@@ -33,24 +37,35 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
+  const adminId = Number(session.user.id);
+
   const [
     overview,
     reimbursementHistory,
     employeeVerificationRequests,
     employeeVerificationHistory,
+    ownIdentityRequests,
+    latestOwnIdentityRequest,
+    ownIdentityAttemptCount,
     nameChangeRequests,
     nameChangeRequestHistory,
+    ownNameChangeRequests,
     roleRequests,
     roleRequestHistory,
   ] = await Promise.all([
     getAdminOverview(),
     getReimbursementHistory(),
 
-    getPendingEmployeeVerificationRequests(),
-    getEmployeeVerificationHistory(),
+    getPendingEmployeeVerificationRequests(adminId),
+    getEmployeeVerificationHistory(adminId),
 
-    getPendingNameChangeRequests(),
-    getNameChangeRequestHistory(),
+    getEmployeeVerificationRequestsForUser(adminId),
+    getLatestEmployeeVerificationRequest(adminId),
+    getEmployeeVerificationAttemptCount(adminId),
+
+    getPendingNameChangeRequests(adminId),
+    getNameChangeRequestHistory(adminId),
+    getNameChangeRequestsForUser(adminId),
 
     getPendingRoleRequests(),
     getRoleRequestHistory(),
@@ -70,7 +85,6 @@ export default async function AdminPage() {
           </p>
         </div>
 
-        {/* Overview */}
         <div className="grid gap-4 sm:grid-cols-2">
           <OverviewCard label="Total Users" value={overview.totalUsers} />
 
@@ -80,14 +94,18 @@ export default async function AdminPage() {
           />
         </div>
 
-        {/* Administration Views */}
         <AdminManagementSelector
+          userName={session.user.name ?? ""}
           users={overview.users}
           reimbursementExpenses={reimbursementHistory.expenses}
           employeeVerificationRequests={employeeVerificationRequests}
           employeeVerificationHistory={employeeVerificationHistory}
+          ownIdentityRequests={ownIdentityRequests}
+          latestOwnIdentityRequest={latestOwnIdentityRequest}
+          ownIdentityAttemptCount={ownIdentityAttemptCount}
           nameChangeRequests={nameChangeRequests}
           nameChangeRequestHistory={nameChangeRequestHistory}
+          ownNameChangeRequests={ownNameChangeRequests}
           roleRequests={roleRequests}
           roleRequestHistory={roleRequestHistory}
         />

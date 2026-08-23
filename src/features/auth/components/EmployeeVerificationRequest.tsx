@@ -11,19 +11,31 @@ type Props = {
   requestId?: number;
   status: VerificationStatus;
   rejectionReason?: string | null;
+  attemptCount?: number;
 };
+
+const MAX_VERIFICATION_ATTEMPTS = 5;
 
 export default function EmployeeVerificationRequest({
   requestId,
   status,
   rejectionReason,
+  attemptCount = 0,
 }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [viewingProof, setViewingProof] = useState(false);
   const [message, setMessage] = useState("");
 
-  const canSubmit = status === "NOT_SUBMITTED" || status === "REJECTED";
+  const attemptsRemaining = Math.max(
+    MAX_VERIFICATION_ATTEMPTS - attemptCount,
+    0,
+  );
+
+  const hasReachedMaximumAttempts = attemptCount >= MAX_VERIFICATION_ATTEMPTS;
+
+  const canSubmit =
+    !hasReachedMaximumAttempts && status !== "APPROVED" && status !== "PENDING";
 
   async function handleViewProof() {
     if (!requestId) {
@@ -150,12 +162,13 @@ export default function EmployeeVerificationRequest({
             <p className="font-medium text-green-800">Identity verified</p>
 
             <p className="mt-1 text-sm text-green-700">
-              Your employee identity has been verified by HR or Admin.
+              Your employee identity has been verified. No further identity
+              verification is required.
             </p>
           </div>
         )}
 
-        {status === "REJECTED" && (
+        {status === "REJECTED" && !hasReachedMaximumAttempts && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4">
             <p className="font-medium text-red-800">Verification rejected</p>
 
@@ -166,12 +179,29 @@ export default function EmployeeVerificationRequest({
             )}
 
             <p className="mt-3 text-sm text-red-700">
-              You may submit a new document for verification.
+              You may submit another document.
+            </p>
+
+            <p className="mt-1 text-xs text-red-600">
+              {attemptsRemaining} verification attempt
+              {attemptsRemaining === 1 ? "" : "s"} remaining.
             </p>
           </div>
         )}
 
-        {/* Existing proof */}
+        {hasReachedMaximumAttempts && status !== "APPROVED" && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="font-medium text-red-800">
+              Maximum verification attempts reached
+            </p>
+
+            <p className="mt-1 text-sm text-red-700">
+              You have used all {MAX_VERIFICATION_ATTEMPTS} identity
+              verification attempts.
+            </p>
+          </div>
+        )}
+
         {requestId && status !== "NOT_SUBMITTED" && (
           <div className="mt-5">
             <button
@@ -185,7 +215,6 @@ export default function EmployeeVerificationRequest({
           </div>
         )}
 
-        {/* New submission */}
         {canSubmit && (
           <div className="mt-5 space-y-4">
             <div>
@@ -222,6 +251,11 @@ export default function EmployeeVerificationRequest({
             >
               {submitting ? "Submitting..." : "Submit Verification"}
             </button>
+
+            <p className="text-xs text-slate-500">
+              {attemptsRemaining} verification attempt
+              {attemptsRemaining === 1 ? "" : "s"} remaining.
+            </p>
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+
 import { getRequestDeadline } from "./request-deadlines";
 
 export async function createNameChangeRequest(data: {
@@ -17,11 +18,20 @@ export async function createNameChangeRequest(data: {
   });
 }
 
-export async function getPendingNameChangeRequests() {
+export async function getPendingNameChangeRequests(excludedUserId?: number) {
   return prisma.nameChangeRequest.findMany({
     where: {
       status: "PENDING",
+
+      ...(excludedUserId !== undefined
+        ? {
+            userId: {
+              not: excludedUserId,
+            },
+          }
+        : {}),
     },
+
     include: {
       user: {
         select: {
@@ -31,6 +41,7 @@ export async function getPendingNameChangeRequests() {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -40,19 +51,29 @@ export async function getPendingNameChangeRequests() {
         },
       },
     },
+
     orderBy: {
       createdAt: "asc",
     },
   });
 }
 
-export async function getNameChangeRequestHistory() {
+export async function getNameChangeRequestHistory(excludedUserId?: number) {
   return prisma.nameChangeRequest.findMany({
     where: {
       status: {
         in: ["APPROVED", "REJECTED"],
       },
+
+      ...(excludedUserId !== undefined
+        ? {
+            userId: {
+              not: excludedUserId,
+            },
+          }
+        : {}),
     },
+
     include: {
       user: {
         select: {
@@ -62,6 +83,7 @@ export async function getNameChangeRequestHistory() {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -71,6 +93,7 @@ export async function getNameChangeRequestHistory() {
         },
       },
     },
+
     orderBy: {
       reviewedAt: "desc",
     },
@@ -82,6 +105,7 @@ export async function getNameChangeRequestsForUser(userId: number) {
     where: {
       userId,
     },
+
     include: {
       user: {
         select: {
@@ -91,6 +115,7 @@ export async function getNameChangeRequestsForUser(userId: number) {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -100,8 +125,29 @@ export async function getNameChangeRequestsForUser(userId: number) {
         },
       },
     },
+
     orderBy: {
       createdAt: "desc",
+    },
+  });
+}
+
+export async function getLatestApprovedNameChangeRequest(userId: number) {
+  return prisma.nameChangeRequest.findFirst({
+    where: {
+      userId,
+      status: "APPROVED",
+      reviewedAt: {
+        not: null,
+      },
+    },
+
+    orderBy: {
+      reviewedAt: "desc",
+    },
+
+    select: {
+      reviewedAt: true,
     },
   });
 }

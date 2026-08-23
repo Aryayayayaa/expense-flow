@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+
 import { getRequestDeadline } from "./request-deadlines";
 
 export async function createEmployeeVerificationRequest(data: {
@@ -14,11 +15,21 @@ export async function createEmployeeVerificationRequest(data: {
   });
 }
 
-export async function getPendingEmployeeVerificationRequests() {
+export async function getPendingEmployeeVerificationRequests(
+  excludedUserId?: number,
+) {
   return prisma.employeeVerificationRequest.findMany({
     where: {
       status: "PENDING",
+      ...(excludedUserId !== undefined
+        ? {
+            userId: {
+              not: excludedUserId,
+            },
+          }
+        : {}),
     },
+
     include: {
       user: {
         select: {
@@ -28,6 +39,7 @@ export async function getPendingEmployeeVerificationRequests() {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -37,6 +49,7 @@ export async function getPendingEmployeeVerificationRequests() {
         },
       },
     },
+
     orderBy: {
       createdAt: "asc",
     },
@@ -48,6 +61,7 @@ export async function getEmployeeVerificationRequestsForUser(userId: number) {
     where: {
       userId,
     },
+
     include: {
       user: {
         select: {
@@ -57,6 +71,7 @@ export async function getEmployeeVerificationRequestsForUser(userId: number) {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -66,6 +81,7 @@ export async function getEmployeeVerificationRequestsForUser(userId: number) {
         },
       },
     },
+
     orderBy: {
       createdAt: "desc",
     },
@@ -77,6 +93,7 @@ export async function getLatestEmployeeVerificationRequest(userId: number) {
     where: {
       userId,
     },
+
     include: {
       user: {
         select: {
@@ -86,6 +103,7 @@ export async function getLatestEmployeeVerificationRequest(userId: number) {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -95,19 +113,51 @@ export async function getLatestEmployeeVerificationRequest(userId: number) {
         },
       },
     },
+
     orderBy: {
       createdAt: "desc",
     },
   });
 }
 
-export async function getEmployeeVerificationHistory() {
+export async function getEmployeeVerificationAttemptCount(userId: number) {
+  return prisma.employeeVerificationRequest.count({
+    where: {
+      userId,
+    },
+  });
+}
+
+export async function hasApprovedEmployeeVerification(userId: number) {
+  const request = await prisma.employeeVerificationRequest.findFirst({
+    where: {
+      userId,
+      status: "APPROVED",
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return Boolean(request);
+}
+
+export async function getEmployeeVerificationHistory(excludedUserId?: number) {
   return prisma.employeeVerificationRequest.findMany({
     where: {
       status: {
         in: ["APPROVED", "REJECTED"],
       },
+
+      ...(excludedUserId !== undefined
+        ? {
+            userId: {
+              not: excludedUserId,
+            },
+          }
+        : {}),
     },
+
     include: {
       user: {
         select: {
@@ -117,6 +167,7 @@ export async function getEmployeeVerificationHistory() {
           role: true,
         },
       },
+
       reviewedBy: {
         select: {
           id: true,
@@ -126,6 +177,7 @@ export async function getEmployeeVerificationHistory() {
         },
       },
     },
+
     orderBy: {
       reviewedAt: "desc",
     },
