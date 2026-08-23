@@ -62,10 +62,10 @@ export default function ReceiptOcrUpload({
       const result = await response.json();
 
       /*
-       * Always give the selected file back to the parent.
+       * Always return the selected file to the parent.
        *
-       * Even if OCR fails, the original receipt can still be
-       * uploaded and stored as proof for the expense.
+       * OCR failure must not prevent the original receipt from being
+       * stored as proof.
        */
       if (!response.ok || !result.success) {
         onOcrComplete(null, file);
@@ -79,16 +79,28 @@ export default function ReceiptOcrUpload({
 
       onOcrComplete(result.data, file);
 
-      setMessage(
-        "Receipt details extracted successfully. The original receipt will be saved with this expense.",
-      );
+      const extractedFields = [
+        result.data?.vendor ? "vendor" : null,
+        result.data?.amount !== null && result.data?.amount !== undefined
+          ? "amount"
+          : null,
+        result.data?.expenseDate ? "date/time" : null,
+      ].filter(Boolean);
+
+      if (extractedFields.length > 0) {
+        setMessage(
+          `Receipt details extracted successfully (${extractedFields.join(
+            ", ",
+          )}). The original receipt will be saved with this expense.`,
+        );
+      } else {
+        setMessage(
+          "Receipt uploaded successfully, but no expense details could be extracted. You can enter them manually.",
+        );
+      }
     } catch (error) {
       console.error("OCR upload error:", error);
 
-      /*
-       * OCR may fail, but the original receipt should still
-       * be available to AddExpenseForm for storage.
-       */
       onOcrComplete(null, file);
 
       setMessage(

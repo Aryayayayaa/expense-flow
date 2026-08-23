@@ -11,7 +11,10 @@ export const expenseSchema = z.object({
 
   expenseDate: z.coerce
     .date()
-    .max(new Date(), "Expense date and time cannot be in the future."),
+    .refine(
+      (date) => date.getTime() <= Date.now(),
+      "Expense date and time cannot be in the future.",
+    ),
 });
 
 export type ExpenseFormData = z.infer<typeof expenseSchema>;

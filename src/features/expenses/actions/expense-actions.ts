@@ -68,7 +68,7 @@ export async function createExpenseAction(
 
     const validationStart = performance.now();
 
-    const selectedCategory = String(formData.get("category"));
+    const selectedCategory = String(formData.get("category") ?? "");
 
     const customCategory = String(formData.get("customCategory") ?? "").trim();
 
@@ -77,14 +77,27 @@ export async function createExpenseAction(
         ? capitalize(customCategory)
         : capitalize(selectedCategory);
 
-    const expenseDate = formData.get("expenseDate");
+    const rawExpenseDate = String(formData.get("expenseDate") ?? "").trim();
+
+    /*
+     * The browser sends datetime-local as:
+     *
+     *   2026-08-23T23:57
+     *
+     * There is no timezone information in that value.
+     *
+     * Convert it on the client before it reaches this action.
+     *
+     * If it is already an ISO timestamp, leave it untouched.
+     */
+    const expenseDate = rawExpenseDate;
 
     const currency = String(formData.get("currency") ?? "INR")
       .trim()
       .toUpperCase();
 
     const values = {
-      title: capitalize(String(formData.get("title"))),
+      title: capitalize(String(formData.get("title") ?? "")),
       amount: formData.get("amount"),
       currency,
       category,
@@ -101,7 +114,7 @@ export async function createExpenseAction(
       return {
         success: false,
         errors: result.error.flatten().fieldErrors,
-        message: "",
+        message: "Please correct the highlighted fields.",
         expenseId: undefined,
       };
     }
@@ -142,11 +155,6 @@ export async function createExpenseAction(
     /* ------------------------------------------------------------------ */
     /* Audit + reviewer lookup                                            */
     /* ------------------------------------------------------------------ */
-    /*
-     * These operations are independent after the expense has been
-     * successfully created, so there is no reason to wait for one
-     * before starting the other.
-     */
 
     const auditStart = performance.now();
     const reviewersStart = performance.now();
@@ -171,7 +179,6 @@ export async function createExpenseAction(
               in: ["ADMIN", "HR"],
             },
           },
-
           select: {
             id: true,
           },
@@ -185,25 +192,11 @@ export async function createExpenseAction(
         }),
     ]);
 
-    /*
-     * Explicitly reference the audit result so the operation remains
-     * part of the awaited Promise.all above.
-     */
     void auditResult;
 
     /* ------------------------------------------------------------------ */
     /* Create notifications                                               */
     /* ------------------------------------------------------------------ */
-    /*
-     * There is currently one ADMIN and one HR reviewer.
-     *
-     * Previously each notification was inserted separately with
-     * Promise.all(), which still means Prisma performs multiple
-     * database operations.
-     *
-     * createMany() sends all reviewer notifications as one database
-     * operation.
-     */
 
     const notificationsStart = performance.now();
 
@@ -264,7 +257,8 @@ export async function createExpenseAction(
     return {
       success: false,
       errors: {},
-      message: "Unable to create expense.",
+      message:
+        error instanceof Error ? error.message : "Unable to create expense.",
       expenseId: undefined,
     };
   }
@@ -339,7 +333,7 @@ export async function updateExpenseAction(
   formData: FormData,
 ): Promise<ExpenseActionState> {
   try {
-    const selectedCategory = String(formData.get("category"));
+    const selectedCategory = String(formData.get("category") ?? "");
 
     const customCategory = String(formData.get("customCategory") ?? "").trim();
 
@@ -348,12 +342,14 @@ export async function updateExpenseAction(
         ? capitalize(customCategory)
         : capitalize(selectedCategory);
 
+    const rawExpenseDate = String(formData.get("expenseDate") ?? "").trim();
+
     const values = {
-      title: capitalize(String(formData.get("title"))),
+      title: capitalize(String(formData.get("title") ?? "")),
       amount: formData.get("amount"),
       currency: String(formData.get("currency") ?? "INR").toUpperCase(),
       category,
-      expenseDate: formData.get("expenseDate"),
+      expenseDate: rawExpenseDate,
     };
 
     const result = expenseSchema.safeParse(values);
@@ -362,7 +358,7 @@ export async function updateExpenseAction(
       return {
         success: false,
         errors: result.error.flatten().fieldErrors,
-        message: "",
+        message: "Please correct the highlighted fields.",
         expenseId: undefined,
       };
     }
@@ -522,7 +518,8 @@ export async function updateExpenseAction(
     return {
       success: false,
       errors: {},
-      message: "Unable to update expense.",
+      message:
+        error instanceof Error ? error.message : "Unable to update expense.",
       expenseId: undefined,
     };
   }

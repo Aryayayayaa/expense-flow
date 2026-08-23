@@ -61,14 +61,48 @@ export default function AddExpenseForm({
   const [expenseDate, setExpenseDate] = useState("");
 
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
+
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
 
+  /*
+   * Return the current browser-local date/time in the exact format
+   * required by <input type="datetime-local">.
+   */
   function getCurrentDateTime() {
-    return new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16);
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  /*
+   * Convert the browser-local datetime-local value into an ISO
+   * timestamp that contains the correct timezone offset.
+   *
+   * Example in India:
+   *
+   * 2026-08-23T23:57
+   *
+   * becomes approximately:
+   *
+   * 2026-08-23T18:27:00.000Z
+   */
+  function toIsoDateTime(value: string): string {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toISOString();
   }
 
   function resetForm() {
@@ -83,7 +117,9 @@ export default function AddExpenseForm({
     setExpenseDate(getCurrentDateTime());
 
     setEditingExpense(null);
+
     formRef.current?.reset();
+
     setState(initialState);
 
     setCurrency(defaultCurrency);
@@ -91,6 +127,14 @@ export default function AddExpenseForm({
 
   useEffect(() => {
     if (!editingExpense) {
+      /*
+       * When opening the create form, initialize the date/time
+       * once instead of waiting for the input fallback.
+       */
+      if (!expenseDate) {
+        setExpenseDate(getCurrentDateTime());
+      }
+
       return;
     }
 
@@ -163,9 +207,6 @@ export default function AddExpenseForm({
 
   /*
    * Upload the original receipt and save its metadata.
-   * This is deliberately kept separate from OCR extraction.
-   *
-   * OCR can fail while the original receipt can still be saved.
    */
   async function saveOriginalReceipt(
     expenseId: number,
@@ -209,13 +250,6 @@ export default function AddExpenseForm({
       <form
         ref={formRef}
         action={async (formData) => {
-          /*
-           * Prevent duplicate submissions.
-           *
-           * The button is disabled while pending, but this additional
-           * guard also protects the action handler from being triggered
-           * again while the previous submission is still running.
-           */
           if (pending) {
             return;
           }
@@ -224,14 +258,23 @@ export default function AddExpenseForm({
           setState(initialState);
 
           try {
+            /*
+             * IMPORTANT:
+             *
+             * datetime-local has no timezone.
+             *
+             * Convert it before sending it to the server action.
+             */
+            if (expenseDate) {
+              formData.set("expenseDate", toIsoDateTime(expenseDate));
+            }
+
             let result;
 
             /*
              * ---------------------------------------------------------
              * EDIT EXISTING EXPENSE
              * ---------------------------------------------------------
-             *
-             * Editing never changes or uploads an OCR receipt.
              */
             if (editingExpense) {
               result = await updateExpenseAction(editingExpense.id, formData);
@@ -242,9 +285,6 @@ export default function AddExpenseForm({
                 return;
               }
 
-              /*
-               * Reset the form after a successful update.
-               */
               setTimeout(() => {
                 resetForm();
               }, 1000);
@@ -259,30 +299,15 @@ export default function AddExpenseForm({
              */
             result = await createExpenseAction(null, formData);
 
-            console.log("starting");
-
             if (!result.success) {
               setState(result);
-              console.log("error!!!");
               return;
             }
-
-            console.log("success and finished!!!");
 
             /*
              * -------------------------------------------------------
              * SAVE ORIGINAL RECEIPT
              * -------------------------------------------------------
-             *
-             * The expense is created first.
-             *
-             * If a receipt was selected, save the original receipt
-             * before considering the complete creation flow successful.
-             *
-             * This means the user is redirected only after:
-             *
-             *   1. Expense creation succeeds
-             *   2. Original receipt storage succeeds, if applicable
              */
             if (result.expenseId && receiptFile) {
               try {
@@ -309,9 +334,6 @@ export default function AddExpenseForm({
              * -------------------------------------------------------
              * CREATION SUCCESS
              * -------------------------------------------------------
-             *
-             * Redirect the user to the expenses page after
-             * successful expense creation.
              */
             setState(result);
 
@@ -322,7 +344,10 @@ export default function AddExpenseForm({
             setState({
               success: false,
               errors: {},
-              message: "Unable to submit expense.",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Unable to submit expense.",
               expenseId: undefined,
             });
           } finally {
@@ -452,18 +477,44 @@ export default function AddExpenseForm({
           )}
         </div>
 
-        <div>
+        <div className="space-y-1">
           <label className="mb-1 block">Expense Date & Time</label>
 
           <input
             disabled={pending}
             name="expenseDate"
             type="datetime-local"
-            value={expenseDate || getCurrentDateTime()}
+            value={expenseDate}
             max={getCurrentDateTime()}
-            onChange={(e) => setExpenseDate(e.target.value)}
+            onChange={(e) => {
+              setExpenseDate(e.target.value);
+
+              /*
+               * Clear the previous date validation error as soon
+               * as the user changes the value.
+               */
+              if (state.errors?.expenseDate) {
+                setState((previous) => ({
+                  ...previous,
+                  errors: {
+                    ...previous.errors,
+                    expenseDate: [],
+                  },
+                }));
+              }
+            }}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
+
+          {state.errors?.expenseDate && (
+            <p className="text-sm text-red-500">
+              {state.errors.expenseDate[0]}
+            </p>
+          )}
+
+          <p className="text-xs text-gray-500">
+            Expense date and time cannot be in the future.
+          </p>
         </div>
 
         <Button

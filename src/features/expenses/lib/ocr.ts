@@ -21,6 +21,49 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function extractRawText(inference: unknown): string {
+  if (!inference || typeof inference !== "object" || !("result" in inference)) {
+    return "";
+  }
+
+  const result = (inference as { result?: unknown }).result;
+
+  if (!result || typeof result !== "object" || !("pages" in result)) {
+    return "";
+  }
+
+  const pages = (result as { pages?: unknown }).pages;
+
+  if (!Array.isArray(pages)) {
+    return "";
+  }
+
+  return pages
+    .map((page) => {
+      if (!page || typeof page !== "object") {
+        return "";
+      }
+
+      const content = (page as { content?: unknown }).content;
+
+      return typeof content === "string" ? content : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function parseInferenceResult(inference: unknown): OcrResult {
+  const rawText = extractRawText(inference);
+
+  if (!rawText) {
+    throw new Error("Mindee OCR returned no readable receipt text.");
+  }
+
+  console.log("Mindee OCR raw text received.");
+  console.log(rawText);
+  return parseReceiptText(rawText);
+}
+
 export async function extractReceiptData(
   fileData: string,
   fileName: string,
@@ -152,14 +195,7 @@ export async function extractReceiptData(
       if (inference?.result?.pages) {
         console.log("Mindee OCR processing completed.");
 
-        const rawText = inference.result.pages
-          .map((page: { content?: string }) => page?.content ?? "")
-          .filter(Boolean)
-          .join("\n");
-
-        console.log("Mindee OCR raw text received.");
-
-        return parseReceiptText(rawText);
+        return parseInferenceResult(inference);
       }
 
       /*
@@ -265,17 +301,12 @@ export async function extractReceiptData(
         const resultInference = resultData?.inference;
 
         if (resultInference?.result?.pages) {
-          const rawText = resultInference.result.pages
-            .map((page: { content?: string }) => page?.content ?? "")
-            .filter(Boolean)
-            .join("\n");
-
-          console.log("Mindee OCR raw text received.");
-
-          return parseReceiptText(rawText);
+          return parseInferenceResult(resultInference);
         }
 
-        return resultInference ?? resultData;
+        throw new Error(
+          "Mindee completed OCR but returned an unexpected result.",
+        );
       }
 
       /*
