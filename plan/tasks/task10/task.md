@@ -142,7 +142,7 @@ Branch: `feature/profile-flow`
 - [x] Verify HR request options
 - [x] Verify Admin request options
 - [x] Ensure Admin has all rights available to HR
-- [x] Ensure HR cannot access Admin-only functionality
+- [x] Ensure HR cannot access functionality outside HR/Admin permissions
 - [x] Ensure Employee cannot access HR/Admin-only functionality
 - [x] Verify direct URL authorization
 - [x] Verify server-side authorization
@@ -158,7 +158,78 @@ Branch: `feature/profile-flow`
 
 ---
 
-## 10.9 — Request State and UX
+## 10.9 — HR/Admin Self Request Workflows
+
+### STATUS: COMPLETED
+
+- [x] Allow HR users to submit Name Change requests
+- [x] Allow Admin users to submit Name Change requests
+- [x] Allow HR users to submit Identity Verification requests
+- [x] Allow Admin users to submit Identity Verification requests
+- [x] Allow HR users to submit Role Verification requests
+- [x] Allow Admin users to submit Role Verification requests
+- [x] Ensure request submitters cannot approve their own requests
+- [x] Ensure request submitters cannot reject their own requests
+- [x] Enforce self-review prevention server-side
+- [x] Notify eligible HR/Admin reviewers when a request is submitted
+- [x] Exclude the request submitter from reviewer notifications
+- [x] Preserve existing role-specific review permissions
+- [x] Preserve existing Employee request workflows
+- [x] Verify request authorization through server actions
+
+---
+
+## 10.10 — Request Deadlines, Reminders & Auto-Rejection
+
+### STATUS: NOT STARTED
+
+- [ ] Define request deadline duration
+- [ ] Add request deadline tracking
+- [ ] Ensure deadline is assigned when a request is created
+- [ ] Prevent invalid/missing deadlines
+- [ ] Implement pending-request reminder logic
+- [ ] Notify eligible reviewers about approaching deadlines
+- [ ] Prevent unnecessary duplicate reminders
+- [ ] Implement automatic rejection after deadline expiry
+- [ ] Store auto-rejection reason
+- [ ] Store automatic review timestamp
+- [ ] Mark expired requests as rejected
+- [ ] Notify the requester when a request is automatically rejected
+- [ ] Notify eligible reviewers when a request is automatically rejected
+- [ ] Ensure already-reviewed requests are not auto-rejected
+- [ ] Ensure already-rejected requests are not reminded
+- [ ] Ensure expired requests cannot be manually approved/rejected
+- [ ] Ensure auto-rejection is idempotent
+- [ ] Preserve request history after auto-rejection
+- [ ] Verify Name Change deadline workflow
+- [ ] Verify Role Verification deadline workflow
+- [ ] Verify Identity Verification deadline workflow
+
+---
+
+## 10.11 — Notification Navigation
+
+### STATUS: NOT STARTED
+
+- [ ] Identify all Task 10 request-related notification types
+- [ ] Define destination for pending request notifications
+- [ ] Define destination for approved request notifications
+- [ ] Define destination for rejected request notifications
+- [ ] Navigate to the relevant Requests section when a notification is clicked
+- [ ] Preserve the relevant request type in the destination URL
+- [ ] Support Name Change notification navigation
+- [ ] Support Role Verification notification navigation
+- [ ] Support Identity Verification notification navigation
+- [ ] Support HR/Admin review notification navigation
+- [ ] Support Employee result notification navigation
+- [ ] Handle notifications referencing already-reviewed requests
+- [ ] Handle invalid/missing request IDs gracefully
+- [ ] Verify notification navigation on desktop
+- [ ] Verify notification navigation on mobile
+
+---
+
+## 10.12 — Request State and UX
 
 ### STATUS: IN PROGRESS
 
@@ -173,7 +244,7 @@ Branch: `feature/profile-flow`
 
 ---
 
-## 10.10 — Responsive Requests Navigation
+## 10.13 — Responsive Requests Navigation
 
 ### STATUS: COMPLETED
 
@@ -186,7 +257,7 @@ Branch: `feature/profile-flow`
 
 ---
 
-## 10.11 — Profile and Requests Integration Testing
+## 10.14 — Profile and Requests Integration Testing
 
 ### STATUS: COMPLETED
 
@@ -231,7 +302,7 @@ Branch: `feature/profile-flow`
 
 ---
 
-## 10.12 — Quality Checks
+## 10.15 — Quality Checks
 
 ### STATUS: IN PROGRESS
 
@@ -246,7 +317,7 @@ Branch: `feature/profile-flow`
 
 ---
 
-## 10.13 — Final Task 10 Review
+## 10.16 — Final Task 10 Review
 
 - [x] Review all changed files
 - [x] Review role-aware behavior

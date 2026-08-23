@@ -21,14 +21,25 @@ export async function createEmployeeVerificationAction(
       };
     }
 
-    if (session.user.role !== "EMPLOYEE") {
+    if (
+      session.user.role !== "EMPLOYEE" &&
+      session.user.role !== "HR" &&
+      session.user.role !== "ADMIN"
+    ) {
       return {
         success: false,
-        message: "Only employees can submit identity verification.",
+        message: "You are not authorized to submit identity verification.",
       };
     }
 
     const userId = Number(session.user.id);
+
+    if (!proofUrl && !proofPath) {
+      return {
+        success: false,
+        message: "Verification proof is required.",
+      };
+    }
 
     const existingRequest = await prisma.employeeVerificationRequest.findFirst({
       where: {
@@ -51,8 +62,9 @@ export async function createEmployeeVerificationAction(
     });
 
     /*
-     * Both HR and Admin can review identity verification requests.
-     * Therefore both roles must be notified when a request is submitted.
+     * HR and Admin can review identity verification requests.
+     * The submitter is excluded from the reviewer notifications so that
+     * a user does not receive a notification for their own request.
      */
     const reviewers = await prisma.user.findMany({
       where: {
@@ -60,6 +72,9 @@ export async function createEmployeeVerificationAction(
           in: ["ADMIN", "HR"],
         },
         isActive: true,
+        id: {
+          not: userId,
+        },
       },
       select: {
         id: true,
@@ -72,22 +87,25 @@ export async function createEmployeeVerificationAction(
           userId: reviewer.id,
           type: "EMPLOYEE_VERIFICATION_PENDING",
           title: "Employee Verification Request",
-          message: `${session.user.name ?? "An employee"} has submitted an identity verification request.`,
+          message: `${session.user.name ?? "A user"} has submitted an identity verification request.`,
           metadata: {
             requestId: request.id,
             employeeId: userId,
+            submittedByRole: session.user.role,
           },
         }),
       ),
     );
 
-    revalidatePath("/profile");
+    revalidatePath("/requests");
     revalidatePath("/hr");
     revalidatePath("/admin");
+    revalidatePath("/profile");
 
     return {
       success: true,
       message: "Identity verification request submitted successfully.",
+      requestId: request.id,
     };
   } catch (error) {
     console.error("Create employee verification error:", error);

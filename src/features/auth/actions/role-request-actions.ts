@@ -34,6 +34,7 @@ export async function createRoleRequestAction(
       },
       select: {
         role: true,
+        isActive: true,
       },
     });
 
@@ -44,10 +45,21 @@ export async function createRoleRequestAction(
       };
     }
 
-    if (user.role !== "EMPLOYEE") {
+    if (!user.isActive) {
       return {
         success: false,
-        message: "Only employees can request role verification.",
+        message: "Your account is deactivated.",
+      };
+    }
+
+    if (
+      user.role !== "EMPLOYEE" &&
+      user.role !== "HR" &&
+      user.role !== "ADMIN"
+    ) {
+      return {
+        success: false,
+        message: "You are not authorized to request role verification.",
       };
     }
 
@@ -87,10 +99,18 @@ export async function createRoleRequestAction(
       proofPath,
     });
 
+    /*
+     * HR and Admin can receive role verification requests.
+     * The requester is excluded because they cannot review their own request.
+     */
     const reviewers = await prisma.user.findMany({
       where: {
         role: {
           in: ["ADMIN", "HR"],
+        },
+        isActive: true,
+        id: {
+          not: userId,
         },
       },
       select: {
@@ -104,18 +124,21 @@ export async function createRoleRequestAction(
           userId: reviewer.id,
           type: "ROLE_VERIFICATION_PENDING",
           title: "Role Verification Request",
-          message: `${session.user.name ?? "An employee"} has requested verification for the ${requestedRole} role.`,
+          message: `${session.user.name ?? "A user"} has requested verification for the ${requestedRole} role.`,
           metadata: {
             requestId: request.id,
             requestedRole,
             employeeId: userId,
+            submittedByRole: session.user.role,
           },
         }),
       ),
     );
 
-    revalidatePath("/profile");
+    revalidatePath("/requests");
     revalidatePath("/admin");
+    revalidatePath("/hr");
+    revalidatePath("/profile");
 
     return {
       success: true,

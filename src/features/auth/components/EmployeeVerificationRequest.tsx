@@ -140,7 +140,7 @@ export default function EmployeeVerificationRequest({
             <p className="font-medium text-amber-800">Verification pending</p>
 
             <p className="mt-1 text-sm text-amber-700">
-              HR is currently reviewing your submitted document.
+              HR or Admin is currently reviewing your submitted document.
             </p>
           </div>
         )}
@@ -150,7 +150,7 @@ export default function EmployeeVerificationRequest({
             <p className="font-medium text-green-800">Identity verified</p>
 
             <p className="mt-1 text-sm text-green-700">
-              Your employee identity has been verified by HR.
+              Your employee identity has been verified by HR or Admin.
             </p>
           </div>
         )}

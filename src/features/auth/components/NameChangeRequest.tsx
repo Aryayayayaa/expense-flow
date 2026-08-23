@@ -65,7 +65,7 @@ export default function NameChangeRequest({ currentName }: Props) {
         <p className="mt-1 text-sm text-slate-500">
           Your current name is{" "}
           <span className="font-medium text-slate-700">{currentName}</span>.
-          Name changes require HR approval.
+          Name changes require approval from another HR or Admin account.
         </p>
       </div>
 
@@ -104,7 +104,7 @@ export default function NameChangeRequest({ currentName }: Props) {
             required
             rows={4}
             placeholder="Explain why you need to change your name."
-            className="mt-2 w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:text-slate-900"
           />
 
           <p className="mt-1 text-xs text-slate-500">
@@ -127,7 +127,7 @@ export default function NameChangeRequest({ currentName }: Props) {
             value={proofUrl}
             onChange={(event) => setProofUrl(event.target.value)}
             placeholder="https://..."
-            className="mt-2 w-full text-slate-500 dark:text-slate-900 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:text-slate-900"
           />
         </div>
 
@@ -146,7 +146,7 @@ export default function NameChangeRequest({ currentName }: Props) {
             value={proofPath}
             onChange={(event) => setProofPath(event.target.value)}
             placeholder="Optional proof storage path"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:text-slate-900"
           />
         </div>
       </div>
