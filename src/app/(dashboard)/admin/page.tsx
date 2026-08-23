@@ -1,8 +1,24 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+
 import { getAdminOverview } from "@/features/admin/lib/admin";
 import { getReimbursementHistory } from "@/features/expenses/lib/expenses";
+
+import {
+  getEmployeeVerificationHistory,
+  getPendingEmployeeVerificationRequests,
+} from "@/features/auth/lib/employee-verification";
+
+import {
+  getNameChangeRequestHistory,
+  getPendingNameChangeRequests,
+} from "@/features/auth/lib/name-change-requests";
+
+import {
+  getPendingRoleRequests,
+  getRoleRequestHistory,
+} from "@/features/auth/lib/role-requests";
 
 import AdminManagementSelector from "@/features/admin/components/AdminManagementSelector";
 
@@ -17,9 +33,27 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
-  const [overview, reimbursementHistory] = await Promise.all([
+  const [
+    overview,
+    reimbursementHistory,
+    employeeVerificationRequests,
+    employeeVerificationHistory,
+    nameChangeRequests,
+    nameChangeRequestHistory,
+    roleRequests,
+    roleRequestHistory,
+  ] = await Promise.all([
     getAdminOverview(),
     getReimbursementHistory(),
+
+    getPendingEmployeeVerificationRequests(),
+    getEmployeeVerificationHistory(),
+
+    getPendingNameChangeRequests(),
+    getNameChangeRequestHistory(),
+
+    getPendingRoleRequests(),
+    getRoleRequestHistory(),
   ]);
 
   return (
@@ -27,11 +61,12 @@ export default async function AdminPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-            Admin
+            Administration
           </h1>
 
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Manage users, role verification requests, and expense approvals.
+            Manage users, verification requests, role requests, and
+            administrative activities.
           </p>
         </div>
 
@@ -45,10 +80,16 @@ export default async function AdminPage() {
           />
         </div>
 
-        {/* Management Views */}
+        {/* Administration Views */}
         <AdminManagementSelector
           users={overview.users}
           reimbursementExpenses={reimbursementHistory.expenses}
+          employeeVerificationRequests={employeeVerificationRequests}
+          employeeVerificationHistory={employeeVerificationHistory}
+          nameChangeRequests={nameChangeRequests}
+          nameChangeRequestHistory={nameChangeRequestHistory}
+          roleRequests={roleRequests}
+          roleRequestHistory={roleRequestHistory}
         />
       </div>
     </main>
@@ -58,11 +99,11 @@ export default async function AdminPage() {
 function OverviewCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-sm font-medium text-slate-500 dark:text-black">
+      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
         {label}
       </p>
 
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-black">
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
         {value}
       </p>
     </div>
