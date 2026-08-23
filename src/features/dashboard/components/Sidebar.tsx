@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -39,6 +40,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <SidebarLink
             href="/dashboard"
             label="Dashboard"
+            tooltip="View your expense overview and spending summary"
             icon={<DashboardIcon />}
             active={pathname === "/dashboard"}
           />
@@ -46,6 +48,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <SidebarLink
             href="/expenses"
             label="My Expenses"
+            tooltip="View and manage your submitted expenses"
             icon={<ExpenseIcon />}
             active={pathname === "/expenses"}
           />
@@ -53,6 +56,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <SidebarLink
             href="/expenses/new"
             label="New Expense"
+            tooltip="Create and submit a new expense"
             icon={<PlusIcon />}
             active={pathname === "/expenses/new"}
           />
@@ -60,6 +64,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <SidebarLink
             href="/approvals"
             label="Approvals"
+            tooltip="Review and manage expense approvals"
             icon={<CheckIcon />}
             active={pathname.startsWith("/approvals")}
           />
@@ -67,6 +72,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <SidebarLink
             href="/insights"
             label="Insights"
+            tooltip="Analyze spending trends, categories, and reports"
             icon={<AnalysisIcon />}
             active={pathname.startsWith("/insights")}
           />
@@ -75,6 +81,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
             <SidebarLink
               href="/admin"
               label="Admin"
+              tooltip="Manage users, expenses, and system settings"
               icon={<SettingsIcon />}
               active={pathname.startsWith("/admin")}
             />
@@ -84,6 +91,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
             <SidebarLink
               href="/hr"
               label="HR"
+              tooltip="Manage employee reimbursements and HR activities"
               icon={<SettingsIcon />}
               active={pathname.startsWith("/hr")}
             />
@@ -93,6 +101,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
             <SidebarLink
               href="/role-verification"
               label="Role Verification"
+              tooltip="Review and verify user roles"
               icon={<VerificationIcon />}
               active={pathname.startsWith("/role-verification")}
             />
@@ -101,6 +110,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           <SidebarLink
             href="/profile"
             label="Profile"
+            tooltip="View and update your profile settings"
             icon={<ProfileIcon />}
             active={pathname.startsWith("/profile")}
           />
@@ -112,36 +122,55 @@ export default function Sidebar({ userRole }: SidebarProps) {
         <div className="mb-2">
           <ThemeToggle />
         </div>
+
         <LogoutButton />
       </div>
     </aside>
   );
 }
 
-//* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
 /* Sidebar Link                                                               */
 /* -------------------------------------------------------------------------- */
 
 type SidebarLinkProps = {
   href: string;
   label: string;
+  tooltip: string;
   icon: React.ReactNode;
   active?: boolean;
 };
 
-function SidebarLink({ href, label, icon, active = false }: SidebarLinkProps) {
+function SidebarLink({
+  href,
+  label,
+  tooltip,
+  icon,
+  active = false,
+}: SidebarLinkProps) {
   return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-        active
-          ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-      }`}
-    >
-      {icon}
-      {label}
-    </Link>
+    <div className="group relative">
+      <Link
+        href={href}
+        aria-label={label}
+        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+          active
+            ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        }`}
+      >
+        {icon}
+        {label}
+      </Link>
+
+      {/* Tooltip */}
+      <div
+        role="tooltip"
+        className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-slate-700"
+      >
+        {tooltip}
+      </div>
+    </div>
   );
 }
 
@@ -297,7 +326,7 @@ function SettingsIcon() {
       strokeLinejoin="round"
     >
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2.6V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4v-2.6h.2a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V5h2.6v.2a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v2.6H21a1.7 1.7 0 0 0-1.6 1Z" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2.6V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4v-2.6h.2a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V5h2.6v.2a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0-1.6 1h.2v2.6H21a1.7 1.7 0 0 0-1.6 1Z" />
     </svg>
   );
 }
