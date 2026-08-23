@@ -22,8 +22,6 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { formatDate, formatTime } from "@/utils/formatDate";
 import { getCategoryColor } from "@/utils/categoryColor";
 
-import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
-
 import type { DisplayExpense } from "../types";
 
 import Card from "@/components/common/Card";
@@ -49,8 +47,6 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
 
   const canModify = expense.status === "PENDING";
 
-  const deleteAction = deleteExpenseAction.bind(null, expense.id);
-
   const hasOcrReceipt = Boolean(expense.ocrReceiptUrl);
   const hasBillProof = Boolean(expense.billProofUrl);
   const hasProof = hasOcrReceipt || hasBillProof;
@@ -62,6 +58,34 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
   const isPending = expense.status === "PENDING";
 
   const hasAdminModification = Boolean(expense.adminModification);
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this expense?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/expenses/${expense.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message ?? "Unable to delete expense.");
+        return;
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Delete expense error:", error);
+      alert("Unable to delete expense.");
+    }
+  }
 
   return (
     <Card className="flex min-h-60 flex-col text-black">
@@ -465,24 +489,15 @@ export default function ExpenseCard({ expense, onEdit }: ExpenseCardProps) {
         )}
 
         {canModify && (
-          <form
-            action={deleteAction}
-            className="w-full"
-            onSubmit={(event) => {
-              if (!confirm("Are you sure you want to delete this expense?")) {
-                event.preventDefault();
-              }
-            }}
+          <Button
+            type="button"
+            variant="danger"
+            className="flex w-full items-center justify-center gap-2"
+            onClick={handleDelete}
           >
-            <Button
-              type="submit"
-              variant="danger"
-              className="flex w-full items-center justify-center gap-2"
-            >
-              <Trash2 size={18} />
-              Delete
-            </Button>
-          </form>
+            <Trash2 size={18} />
+            Delete
+          </Button>
         )}
       </div>
     </Card>

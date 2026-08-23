@@ -54,10 +54,10 @@ Confirm that the corresponding deletion event is still present in `ExpenseAuditL
 
 ## Completion Criteria
 
-- [ ] Expense deletion uses HTTP DELETE.
-- [ ] Expense deletion works successfully.
-- [ ] Network tab shows DELETE.
-- [ ] ExpenseAuditLog still records the deletion.
-- [ ] Authorization behavior is unchanged.
-- [ ] `npx tsc --noEmit` passes.
-- [ ] Git working tree is clean after commit.
+- [x] Expense deletion uses HTTP DELETE.
+- [x] Expense deletion works successfully.
+- [x] Network tab shows DELETE.
+- [x] ExpenseAuditLog still records the deletion.
+- [x] Authorization behavior is unchanged.
+- [x] `npx tsc --noEmit` passes.
+- [x] Git working tree is clean after commit.
