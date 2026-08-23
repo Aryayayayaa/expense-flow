@@ -14,27 +14,31 @@ The existing notification behavior, styling, unread/read state, and notification
 
 ## 09.1 — Review Existing Notification Implementation
 
-- [ ] Identify the existing notification component(s)
-- [ ] Identify where notification data is fetched/generated
-- [ ] Identify the existing notification types/categories
-- [ ] Identify whether notifications already contain a destination/path/reference
-- [ ] Identify the current click behavior of notification items
-- [ ] Identify all pages/resources that notifications are expected to navigate to
-- [ ] Confirm whether any notification currently has missing or incorrect navigation behavior
+#### STATUS: COMPLETED
+
+- [x] Identify the existing notification component(s)
+- [x] Identify where notification data is fetched/generated
+- [x] Identify the existing notification types/categories
+- [x] Identify whether notifications already contain a destination/path/reference
+- [x] Identify the current click behavior of notification items
+- [x] Identify all pages/resources that notifications are expxcted to navigate to
+- [x] Confirm whether any notification currently has missing or incorrect navigation behavior
 
 ### Localhost Test — Existing Notification Behavior
 
-- [ ] Open the application on localhost
-- [ ] Log in with a user account that has notifications
-- [ ] Open the notification UI
-- [ ] Verify existing notifications are displayed correctly
-- [ ] Verify unread/read state still works
-- [ ] Verify notification content is unchanged
-- [ ] Verify no existing notification behavior is broken
+- [x] Open the application on localhost
+- [x] Log in with a user account that has notifications
+- [x] Open the notification UI
+- [x] Verify existing notifications are displayed correctly
+- [x] Verify unread/read state still works
+- [x] Verify notification content is unchanged
+- [x] Verify no existing notification behavior is broken
 
 ---
 
 ## 09.2 — Define Notification Navigation Rules
+
+### STATUS: NEXT
 
 - [ ] Define the destination for each existing notification type
 - [ ] Ensure expense-related notifications navigate to the appropriate expense page
