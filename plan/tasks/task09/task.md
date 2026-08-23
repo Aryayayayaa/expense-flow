@@ -118,13 +118,15 @@ SYSTEM unknown needs inspection
 
 ## 09.6 — Edge Cases and Error Handling
 
-- [ ] Handle notifications referencing deleted expenses/resources
-- [ ] Handle notifications referencing unavailable resources
-- [ ] Handle notifications with missing destination information
-- [ ] Handle notifications with invalid resource IDs
-- [ ] Verify navigation does not crash when the target resource no longer exists
-- [ ] Verify an appropriate fallback behavior is shown when navigation is unavailable
-- [ ] Verify no console errors occur during notification interaction
+### STATUS: COMPLETED
+
+- [x] Handle notifications referencing deleted expenses/resources
+- [x] Handle notifications referencing unavailable resources
+- [x] Handle notifications with missing destination information
+- [x] Handle notifications with invalid resource IDs
+- [x] Verify navigation does not crash when the target resource no longer exists
+- [x] Verify an appropriate fallback behavior is shown when navigation is unavailable
+- [x] Verify no console errors occur during notification interaction
 
 ---
 
@@ -162,11 +164,11 @@ After completing the implementation:
 
 ### Edge-Case Test
 
-- [ ] Test a notification whose referenced resource no longer exists
-- [ ] Test a notification with missing/invalid destination data
-- [ ] Verify the application does not crash
-- [ ] Verify an appropriate fallback behavior occurs
-- [ ] Verify there are no unexpected console errors
+- [x] Test a notification whose referenced resource no longer exists
+- [x] Test a notification with missing/invalid destination data
+- [x] Verify the application does not crash
+- [x] Verify an appropriate fallback behavior occurs
+- [x] Verify there are no unexpected console errors
 
 ---
 

@@ -10,11 +10,13 @@ type DeletedExpense = {
   expenseDate: Date | null;
   deletionReason: string;
   deletedAt: Date;
+
   user: {
     id: number;
     name: string;
     email: string;
   };
+
   deletedBy: {
     id: number;
     name: string;
@@ -24,10 +26,21 @@ type DeletedExpense = {
 
 type ApprovalDeleteHistoryProps = {
   expenses: DeletedExpense[];
+
+  /**
+   * ADMIN / HR:
+   * Show the employee who originally owned the deleted expense.
+   *
+   * EMPLOYEE:
+   * Hide the employee column because the table already contains
+   * only the currently logged-in employee's deleted expenses.
+   */
+  showEmployee?: boolean;
 };
 
 export default function ApprovalDeleteHistory({
   expenses,
+  showEmployee = true,
 }: ApprovalDeleteHistoryProps) {
   if (expenses.length === 0) {
     return (
@@ -37,7 +50,9 @@ export default function ApprovalDeleteHistory({
         </h2>
 
         <p className="mt-1 text-sm text-slate-500">
-          No expenses have been deleted by an Admin yet.
+          {showEmployee
+            ? "No expenses have been deleted by an Admin yet."
+            : "You do not have any deleted expenses."}
         </p>
       </div>
     );
@@ -46,12 +61,18 @@ export default function ApprovalDeleteHistory({
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1100px] text-left">
+        <table
+          className={`w-full text-left ${
+            showEmployee ? "min-w-[1100px]" : "min-w-[950px]"
+          }`}
+        >
           <thead className="border-b border-slate-200 bg-slate-50">
             <tr>
-              <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Employee
-              </th>
+              {showEmployee && (
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Employee
+                </th>
+              )}
 
               <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Expense
@@ -82,13 +103,17 @@ export default function ApprovalDeleteHistory({
           <tbody className="divide-y divide-slate-100">
             {expenses.map((expense) => (
               <tr key={expense.id} className="transition hover:bg-slate-50">
-                <td className="px-5 py-4">
-                  <p className="font-medium text-slate-900">
-                    {expense.user.name}
-                  </p>
+                {showEmployee && (
+                  <td className="px-5 py-4">
+                    <p className="font-medium text-slate-900">
+                      {expense.user.name}
+                    </p>
 
-                  <p className="text-xs text-slate-500">{expense.user.email}</p>
-                </td>
+                    <p className="text-xs text-slate-500">
+                      {expense.user.email}
+                    </p>
+                  </td>
+                )}
 
                 <td className="px-5 py-4">
                   <p className="font-medium text-slate-900">{expense.title}</p>

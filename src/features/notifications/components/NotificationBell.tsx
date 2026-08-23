@@ -9,14 +9,17 @@ import {
   markNotificationAsReadAction,
 } from "@/features/notifications/actions/notification-actions";
 
+import type { Prisma } from "@prisma/client";
+
 type NotificationItem = {
   id: number;
+  type: string;
   title: string;
   message: string;
-  type: string;
   isRead: boolean;
   createdAt: Date;
-  expenseId?: number | null;
+  expenseId: number | null;
+  metadata: Prisma.JsonValue;
 };
 
 type NotificationBellProps = {
@@ -35,57 +38,77 @@ function formatNotificationTime(date: Date) {
   });
 }
 
+/*
+ * Notification types that can potentially point to an
+ * existing Expense resource.
+ *
+ * EXPENSE_DELETED is intentionally excluded because the
+ * original Expense record no longer exists.
+ */
+const EXPENSE_NAVIGATION_TYPES = new Set([
+  "EXPENSE_SUBMITTED",
+  "EXPENSE_APPROVED",
+  "EXPENSE_REJECTED",
+  "EXPENSE_MODIFIED",
+  "REIMBURSEMENT_PENDING",
+  "EXPENSE_REIMBURSED",
+  "REIMBURSEMENT_REJECTED",
+]);
+
+function getExpenseId(notification: NotificationItem) {
+  /*
+   * Prefer the direct relational expenseId.
+   *
+   * This is safer than trying to extract an ID from arbitrary
+   * notification metadata.
+   */
+  if (
+    typeof notification.expenseId === "number" &&
+    Number.isInteger(notification.expenseId) &&
+    notification.expenseId > 0
+  ) {
+    return notification.expenseId;
+  }
+
+  return null;
+}
+
+function canNavigateToExpense(notification: NotificationItem) {
+  if (!EXPENSE_NAVIGATION_TYPES.has(notification.type)) {
+    return false;
+  }
+
+  return getExpenseId(notification) !== null;
+}
+
 function getNotificationDestination(notification: NotificationItem) {
-  if (notification.expenseId) {
-    switch (notification.type) {
-      case "EXPENSE_SUBMITTED":
-        return "/approvals";
+  /*
+   * Deleted expenses no longer exist as Expense records.
+   *
+   * Therefore the user is taken to /approvals where the
+   * deleted-expense history can be displayed.
+   */
+  if (notification.type === "EXPENSE_DELETED") {
+    return "/approvals";
+  }
 
-      case "EXPENSE_APPROVED":
-      case "EXPENSE_REJECTED":
-      case "EXPENSE_MODIFIED":
-      case "EXPENSE_DELETED":
-      case "REIMBURSEMENT_PENDING":
-      case "EXPENSE_REIMBURSED":
-      case "REIMBURSEMENT_REJECTED":
-        return `/expenses/${notification.expenseId}`;
+  /*
+   * Only navigate to an Expense when this notification type
+   * is allowed to navigate and contains a valid expense ID.
+   */
+  if (canNavigateToExpense(notification)) {
+    const expenseId = getExpenseId(notification);
 
-      case "EXPENSE_DELETED":
-        return "/expenses";
-      default:
-        return null;
+    if (expenseId !== null) {
+      return `/expenses/${expenseId}`;
     }
   }
 
-  switch (notification.type) {
-    case "EMPLOYEE_VERIFICATION_PENDING":
-      return "/hr";
-
-    case "EMPLOYEE_VERIFICATION_APPROVED":
-    case "EMPLOYEE_VERIFICATION_REJECTED":
-      return "/profile";
-
-    case "ROLE_VERIFICATION_PENDING":
-      return "/role-verification";
-
-    case "ROLE_VERIFICATION_APPROVED":
-    case "ROLE_VERIFICATION_REJECTED":
-    case "ROLE_UPGRADED":
-    case "ROLE_DOWNGRADED":
-    case "ROLE_CHANGED":
-      return "/profile";
-
-    case "EMPLOYEE_ACCOUNT_CREATED":
-    case "EMPLOYEE_ACCOUNT_ACTIVATED":
-    case "EMPLOYEE_ACCOUNT_DEACTIVATED":
-      return "/admin";
-
-    case "EMPLOYEE_ACCOUNT_UPDATED":
-      return "/profile";
-
-    default:
-      return null;
-  }
+  /*
+   * Missing or invalid destination information means the
+   * notification remains informational.
+   */
+  return null;
 }
 
 export default function NotificationBell({
@@ -100,33 +123,48 @@ export default function NotificationBell({
 
   const [count, setCount] = useState(unreadCount);
 
-  async function handleNotificationClick(notification: NotificationItem) {
-    const destination = getNotificationDestination(notification);
+  /*
+   * Mark one notification as read.
+   *
+   * IMPORTANT:
+   * This function only handles the read state.
+   * Navigation is handled separately by handleNotificationClick().
+   */
+  async function handleMarkAsRead(notificationId: number) {
+    const notification = items.find((item) => item.id === notificationId);
 
-    if (!notification.isRead) {
-      const result = await markNotificationAsReadAction(notification.id);
-
-      if (result.success) {
-        setItems((current) =>
-          current.map((item) =>
-            item.id === notification.id
-              ? {
-                  ...item,
-                  isRead: true,
-                }
-              : item,
-          ),
-        );
-
-        setCount((current) => Math.max(0, current - 1));
-      }
+    if (!notification) {
+      return false;
     }
 
-    setOpen(false);
-
-    if (destination) {
-      router.push(destination);
+    /*
+     * Already-read notifications do not need another
+     * database operation.
+     */
+    if (notification.isRead) {
+      return true;
     }
+
+    const result = await markNotificationAsReadAction(notificationId);
+
+    if (!result.success) {
+      return false;
+    }
+
+    setItems((current) =>
+      current.map((item) =>
+        item.id === notificationId
+          ? {
+              ...item,
+              isRead: true,
+            }
+          : item,
+      ),
+    );
+
+    setCount((current) => Math.max(0, current - 1));
+
+    return true;
   }
 
   async function handleMarkAllAsRead() {
@@ -148,6 +186,42 @@ export default function NotificationBell({
     );
 
     setCount(0);
+  }
+
+  async function handleNotificationClick(notification: NotificationItem) {
+    /*
+     * Always mark the clicked notification as read first.
+     */
+    const markedAsRead = await handleMarkAsRead(notification.id);
+
+    /*
+     * Do not navigate if marking the notification as read failed.
+     */
+    if (!markedAsRead) {
+      return;
+    }
+
+    const destination = getNotificationDestination(notification);
+
+    /*
+     * No destination means this is an informational notification.
+     *
+     * This safely handles:
+     * - missing expenseId
+     * - invalid expenseId
+     * - notification types without navigation
+     * - unavailable resources
+     */
+    if (!destination) {
+      return;
+    }
+
+    /*
+     * Close the notification dropdown before navigation.
+     */
+    setOpen(false);
+
+    router.push(destination);
   }
 
   return (
@@ -209,48 +283,61 @@ export default function NotificationBell({
                 </p>
               </div>
             ) : (
-              items.map((notification) => (
-                <button
-                  key={notification.id}
-                  type="button"
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`w-full border-b border-slate-100 px-4 py-4 text-left transition last:border-b-0 hover:bg-slate-50 ${
-                    notification.isRead ? "bg-white" : "bg-blue-50/50"
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    <div className="mt-1 shrink-0">
-                      {notification.isRead ? (
-                        <Check size={16} className="text-slate-300" />
-                      ) : (
-                        <span className="block h-2.5 w-2.5 rounded-full bg-blue-600" />
-                      )}
-                    </div>
+              items.map((notification) => {
+                const navigable =
+                  getNotificationDestination(notification) !== null;
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <p
-                          className={`text-sm ${
-                            notification.isRead
-                              ? "font-medium text-slate-700"
-                              : "font-semibold text-slate-900"
-                          }`}
-                        >
-                          {notification.title}
-                        </p>
-
-                        <span className="shrink-0 text-[10px] text-slate-400">
-                          {formatNotificationTime(notification.createdAt)}
-                        </span>
+                return (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`w-full border-b border-slate-100 px-4 py-4 text-left transition last:border-b-0 hover:bg-slate-50 ${
+                      notification.isRead ? "bg-white" : "bg-blue-50/50"
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <div className="mt-1 shrink-0">
+                        {notification.isRead ? (
+                          <Check size={16} className="text-slate-300" />
+                        ) : (
+                          <span className="block h-2.5 w-2.5 rounded-full bg-blue-600" />
+                        )}
                       </div>
 
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {notification.message}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <p
+                            className={`text-sm ${
+                              notification.isRead
+                                ? "font-medium text-slate-700"
+                                : "font-semibold text-slate-900"
+                            }`}
+                          >
+                            {notification.title}
+                          </p>
+
+                          <span className="shrink-0 text-[10px] text-slate-400">
+                            {formatNotificationTime(notification.createdAt)}
+                          </span>
+                        </div>
+
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          {notification.message}
+                        </p>
+
+                        {navigable && (
+                          <p className="mt-2 text-[11px] font-medium text-blue-600">
+                            {notification.type === "EXPENSE_DELETED"
+                              ? "View deleted expense history"
+                              : "View expense"}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
           </div>
         </div>

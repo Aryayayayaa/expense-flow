@@ -6,6 +6,8 @@ import type { AdminModification } from "../types";
 import { getDisplayExpenseAmount } from "./display-currency";
 import { CurrencyCode, DEFAULT_CURRENCY } from "@/constants/currencies";
 
+import { createNotification } from "@/features/notifications/lib/notifications";
+
 function serializeExpenseAmounts<
   T extends {
     amount: Prisma.Decimal;
@@ -794,7 +796,7 @@ export async function deleteExpenseAsAdmin(
 
   const ownerId = expense.userId;
 
-  return prisma.$transaction(async (tx) => {
+  const deletedExpense = await prisma.$transaction(async (tx) => {
     /*
      * Preserve the complete expense information before deleting
      * the original Expense record.
@@ -849,6 +851,27 @@ export async function deleteExpenseAsAdmin(
 
     return deletedExpense;
   });
+
+  /*
+   * Notify the employee who originally owned the expense.
+   *
+   * The original Expense record no longer exists, so the notification
+   * points to the deleted-expense history instead of /expenses/[id].
+   */
+  await createNotification({
+    userId: ownerId,
+    type: "EXPENSE_DELETED",
+    title: "Expense Deleted",
+    message: `Your expense "${deletedExpense.title}" was deleted by an Admin.`,
+    metadata: {
+      deletedExpenseId: deletedExpense.id,
+      originalExpenseId: deletedExpense.originalExpenseId,
+      deletionReason: deletedExpense.deletionReason,
+      action: "EXPENSE_DELETED",
+    },
+  });
+
+  return deletedExpense;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -868,6 +891,28 @@ export async function getDeletedExpensesForUser(userId: number) {
     },
 
     include: {
+      /*
+       * Include the original owner of the deleted expense.
+       *
+       * For an employee this will always be the currently
+       * authenticated user because the query is restricted
+       * by userId above.
+       *
+       * The same data shape is also used by
+       * ApprovalDeleteHistory.
+       */
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+
+      /*
+       * Include the Admin who deleted the expense so the user
+       * can see who performed the deletion.
+       */
       deletedBy: {
         select: {
           id: true,

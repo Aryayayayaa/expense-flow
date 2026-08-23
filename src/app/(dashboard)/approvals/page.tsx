@@ -10,6 +10,7 @@ import {
   getExpenses,
   getPendingExpensesForAdmin,
   getExpenseDeletionHistoryForAdmin,
+  getDeletedExpensesForUser,
 } from "@/features/expenses/lib/expenses";
 
 import type {
@@ -282,6 +283,8 @@ export default async function ApprovalsPage({
     defaultCurrency,
   );
 
+  const deletedExpenses = await getDeletedExpensesForUser(userId);
+
   const expenses = expenseResult.expenses;
 
   return (
@@ -315,6 +318,23 @@ export default async function ApprovalsPage({
       </div>
 
       <MyExpenseStatusTable expenses={expenses} />
+
+      <section className="mt-10">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+            Deleted Expenses History
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Expenses deleted by an Admin that originally belonged to you.
+          </p>
+        </div>
+
+        <ApprovalDeleteHistory
+          expenses={deletedExpenses}
+          showEmployee={false}
+        />
+      </section>
 
       <Pagination
         page={expenseResult.page}
