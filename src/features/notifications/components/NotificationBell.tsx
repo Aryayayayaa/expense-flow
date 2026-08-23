@@ -27,6 +27,11 @@ type NotificationBellProps = {
   unreadCount: number;
 };
 
+type RequestType =
+  | "name-change"
+  | "role-verification"
+  | "identity-verification";
+
 function formatNotificationTime(date: Date) {
   const notificationDate = new Date(date);
 
@@ -39,12 +44,11 @@ function formatNotificationTime(date: Date) {
 }
 
 /*
- * Notification types that can potentially point to an
- * existing Expense resource.
- *
- * EXPENSE_DELETED is intentionally excluded because the
- * original Expense record no longer exists.
+ * --------------------------------------------------------------------------
+ * Expense notification navigation
+ * --------------------------------------------------------------------------
  */
+
 const EXPENSE_NAVIGATION_TYPES = new Set([
   "EXPENSE_SUBMITTED",
   "EXPENSE_APPROVED",
@@ -81,20 +85,121 @@ function canNavigateToExpense(notification: NotificationItem) {
   return getExpenseId(notification) !== null;
 }
 
-function getNotificationDestination(notification: NotificationItem) {
+/*
+ * --------------------------------------------------------------------------
+ * Request notification navigation
+ * --------------------------------------------------------------------------
+ */
+
+const REQUEST_ACTION_TO_TYPE: Record<string, RequestType> = {
   /*
-   * Deleted expenses no longer exist as Expense records.
+   * Name change
+   */
+  NAME_CHANGE_REQUESTED: "name-change",
+  NAME_CHANGE_APPROVED: "name-change",
+  NAME_CHANGE_REJECTED: "name-change",
+  NAME_CHANGE_REMINDER: "name-change",
+  NAME_CHANGE_AUTO_REJECTED: "name-change",
+
+  /*
+   * Role verification
+   */
+  ROLE_VERIFICATION_PENDING: "role-verification",
+  ROLE_VERIFICATION_APPROVED: "role-verification",
+  ROLE_VERIFICATION_REJECTED: "role-verification",
+  ROLE_VERIFICATION_REMINDER: "role-verification",
+  ROLE_VERIFICATION_AUTO_REJECTED: "role-verification",
+
+  /*
+   * Identity verification
+   */
+  IDENTITY_VERIFICATION_PENDING: "identity-verification",
+  IDENTITY_VERIFICATION_APPROVED: "identity-verification",
+  IDENTITY_VERIFICATION_REJECTED: "identity-verification",
+  IDENTITY_VERIFICATION_REMINDER: "identity-verification",
+  IDENTITY_VERIFICATION_AUTO_REJECTED: "identity-verification",
+};
+
+function getNotificationMetadata(
+  notification: NotificationItem,
+): Record<string, Prisma.JsonValue> | null {
+  if (
+    typeof notification.metadata !== "object" ||
+    notification.metadata === null ||
+    Array.isArray(notification.metadata)
+  ) {
+    return null;
+  }
+
+  return notification.metadata as Record<string, Prisma.JsonValue>;
+}
+
+function getRequestTypeFromNotification(
+  notification: NotificationItem,
+): RequestType | null {
+  const metadata = getNotificationMetadata(notification);
+
+  /*
+   * Request notifications created by the request workflows
+   * contain an explicit action in metadata.
+   */
+  const action = metadata?.action;
+
+  if (typeof action === "string") {
+    const requestType = REQUEST_ACTION_TO_TYPE[action];
+
+    if (requestType) {
+      return requestType;
+    }
+  }
+
+  /*
+   * Fallback for notifications whose type itself identifies
+   * the request workflow.
+   */
+  if (
+    notification.type === "ROLE_VERIFICATION_PENDING" ||
+    notification.type === "ROLE_VERIFICATION_APPROVED" ||
+    notification.type === "ROLE_VERIFICATION_REJECTED"
+  ) {
+    return "role-verification";
+  }
+
+  if (
+    notification.type === "EMPLOYEE_VERIFICATION_PENDING" ||
+    notification.type === "EMPLOYEE_VERIFICATION_APPROVED" ||
+    notification.type === "EMPLOYEE_VERIFICATION_REJECTED"
+  ) {
+    return "identity-verification";
+  }
+
+  /*
+   * Name-change notifications currently use
+   * EMPLOYEE_ACCOUNT_UPDATED, so metadata.action is the
+   * reliable identifier for those notifications.
+   */
+  return null;
+}
+
+function getNotificationDestination(
+  notification: NotificationItem,
+): string | null {
+  /*
+   * ------------------------------------------------------------------------
+   * Deleted expenses
+   * ------------------------------------------------------------------------
    *
-   * Therefore the user is taken to /approvals where the
-   * deleted-expense history can be displayed.
+   * The original Expense record no longer exists, so navigate to
+   * the deleted-expense history instead.
    */
   if (notification.type === "EXPENSE_DELETED") {
     return "/approvals";
   }
 
   /*
-   * Only navigate to an Expense when this notification type
-   * is allowed to navigate and contains a valid expense ID.
+   * ------------------------------------------------------------------------
+   * Expense notifications
+   * ------------------------------------------------------------------------
    */
   if (canNavigateToExpense(notification)) {
     const expenseId = getExpenseId(notification);
@@ -105,9 +210,46 @@ function getNotificationDestination(notification: NotificationItem) {
   }
 
   /*
+   * ------------------------------------------------------------------------
+   * Request notifications
+   * ------------------------------------------------------------------------
+   */
+  const requestType = getRequestTypeFromNotification(notification);
+
+  if (requestType) {
+    return `/requests?type=${requestType}`;
+  }
+
+  /*
    * Missing or invalid destination information means the
    * notification remains informational.
    */
+  return null;
+}
+
+function getNavigationLabel(notification: NotificationItem) {
+  if (notification.type === "EXPENSE_DELETED") {
+    return "View deleted expense history";
+  }
+
+  if (canNavigateToExpense(notification)) {
+    return "View expense";
+  }
+
+  const requestType = getRequestTypeFromNotification(notification);
+
+  if (requestType === "name-change") {
+    return "View name change request";
+  }
+
+  if (requestType === "role-verification") {
+    return "View role verification";
+  }
+
+  if (requestType === "identity-verification") {
+    return "View identity verification";
+  }
+
   return null;
 }
 
@@ -124,9 +266,10 @@ export default function NotificationBell({
   const [count, setCount] = useState(unreadCount);
 
   /*
-   * Mark one notification as read.
+   * ------------------------------------------------------------------------
+   * Mark one notification as read
+   * ------------------------------------------------------------------------
    *
-   * IMPORTANT:
    * This function only handles the read state.
    * Navigation is handled separately by handleNotificationClick().
    */
@@ -167,6 +310,11 @@ export default function NotificationBell({
     return true;
   }
 
+  /*
+   * ------------------------------------------------------------------------
+   * Mark all notifications as read
+   * ------------------------------------------------------------------------
+   */
   async function handleMarkAllAsRead() {
     if (count === 0) {
       return;
@@ -188,6 +336,11 @@ export default function NotificationBell({
     setCount(0);
   }
 
+  /*
+   * ------------------------------------------------------------------------
+   * Notification click
+   * ------------------------------------------------------------------------
+   */
   async function handleNotificationClick(notification: NotificationItem) {
     /*
      * Always mark the clicked notification as read first.
@@ -210,7 +363,7 @@ export default function NotificationBell({
      * - missing expenseId
      * - invalid expenseId
      * - notification types without navigation
-     * - unavailable resources
+     * - unrelated system notifications
      */
     if (!destination) {
       return;
@@ -284,8 +437,10 @@ export default function NotificationBell({
               </div>
             ) : (
               items.map((notification) => {
-                const navigable =
-                  getNotificationDestination(notification) !== null;
+                const destination = getNotificationDestination(notification);
+                const navigationLabel = getNavigationLabel(notification);
+
+                const navigable = destination !== null;
 
                 return (
                   <button
@@ -326,11 +481,9 @@ export default function NotificationBell({
                           {notification.message}
                         </p>
 
-                        {navigable && (
+                        {navigable && navigationLabel && (
                           <p className="mt-2 text-[11px] font-medium text-blue-600">
-                            {notification.type === "EXPENSE_DELETED"
-                              ? "View deleted expense history"
-                              : "View expense"}
+                            {navigationLabel}
                           </p>
                         )}
                       </div>

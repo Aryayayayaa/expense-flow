@@ -209,23 +209,23 @@ Branch: `feature/profile-flow`
 
 ## 10.11 — Notification Navigation
 
-### STATUS: NOT STARTED
+### STATUS: COMPLETED
 
-- [ ] Identify all Task 10 request-related notification types
-- [ ] Define destination for pending request notifications
-- [ ] Define destination for approved request notifications
-- [ ] Define destination for rejected request notifications
-- [ ] Navigate to the relevant Requests section when a notification is clicked
-- [ ] Preserve the relevant request type in the destination URL
-- [ ] Support Name Change notification navigation
-- [ ] Support Role Verification notification navigation
-- [ ] Support Identity Verification notification navigation
-- [ ] Support HR/Admin review notification navigation
-- [ ] Support Employee result notification navigation
-- [ ] Handle notifications referencing already-reviewed requests
-- [ ] Handle invalid/missing request IDs gracefully
-- [ ] Verify notification navigation on desktop
-- [ ] Verify notification navigation on mobile
+- [x] Identify all Task 10 request-related notification types
+- [x] Define destination for pending request notifications
+- [x] Define destination for approved request notifications
+- [x] Define destination for rejected request notifications
+- [x] Navigate to the relevant Requests section when a notification is clicked
+- [x] Preserve the relevant request type in the destination URL
+- [x] Support Name Change notification navigation
+- [x] Support Role Verification notification navigation
+- [x] Support Identity Verification notification navigation
+- [x] Support HR/Admin review notification navigation
+- [x] Support Employee result notification navigation
+- [x] Handle notifications referencing already-reviewed requests
+- [x] Handle invalid/missing request IDs gracefully
+- [x] Verify notification navigation on desktop
+- [x] Verify notification navigation on mobile
 
 ---
 
