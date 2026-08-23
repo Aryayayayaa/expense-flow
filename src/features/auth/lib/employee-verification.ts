@@ -24,6 +24,14 @@ export async function getPendingEmployeeVerificationRequests() {
           role: true,
         },
       },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "asc",
@@ -37,6 +45,14 @@ export async function getEmployeeVerificationRequestsForUser(userId: number) {
       userId,
     },
     include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
       reviewedBy: {
         select: {
           id: true,
@@ -56,6 +72,24 @@ export async function getLatestEmployeeVerificationRequest(userId: number) {
   return prisma.employeeVerificationRequest.findFirst({
     where: {
       userId,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

@@ -25,6 +25,14 @@ export async function getPendingRoleRequests() {
           role: true,
         },
       },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "asc",
@@ -50,12 +58,18 @@ export async function getAllRoleRequests(
             role: true,
           },
         },
+        reviewedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
       },
-
       orderBy: {
         createdAt: "desc",
       },
-
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     }),
@@ -78,6 +92,14 @@ export async function getRoleRequestsForUser(userId: number) {
       userId,
     },
     include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
       reviewedBy: {
         select: {
           id: true,
@@ -89,6 +111,37 @@ export async function getRoleRequestsForUser(userId: number) {
     },
     orderBy: {
       createdAt: "desc",
+    },
+  });
+}
+
+export async function getRoleRequestHistory() {
+  return prisma.roleVerificationRequest.findMany({
+    where: {
+      status: {
+        in: ["APPROVED", "REJECTED"],
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      reviewedAt: "desc",
     },
   });
 }

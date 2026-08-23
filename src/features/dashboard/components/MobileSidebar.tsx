@@ -137,7 +137,7 @@ export default function MobileSidebar({
             {userRole === "ADMIN" && (
               <MobileNavLink
                 href="/admin"
-                label="Admin"
+                label="Administration"
                 onClick={closeMenu}
                 icon={<SettingsIcon />}
               />
@@ -146,20 +146,18 @@ export default function MobileSidebar({
             {userRole === "HR" && (
               <MobileNavLink
                 href="/hr"
-                label="HR"
+                label="People Management"
                 onClick={closeMenu}
                 icon={<SettingsIcon />}
               />
             )}
 
-            {(userRole === "ADMIN" || userRole === "HR") && (
-              <MobileNavLink
-                href="/role-verification"
-                label="Role Verification"
-                onClick={closeMenu}
-                icon={<VerificationIcon />}
-              />
-            )}
+            <MobileNavLink
+              href="/requests"
+              label="Requests"
+              onClick={closeMenu}
+              icon={<RequestsIcon />}
+            />
 
             <MobileNavLink
               href="/profile"
@@ -432,6 +430,26 @@ function VerificationIcon() {
     >
       <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function RequestsIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 3h12v18H6z" />
+      <path d="M9 7h6" />
+      <path d="M9 11h6" />
+      <path d="M9 15h4" />
     </svg>
   );
 }

@@ -80,8 +80,8 @@ export default function Sidebar({ userRole }: SidebarProps) {
           {userRole === "ADMIN" && (
             <SidebarLink
               href="/admin"
-              label="Admin"
-              tooltip="Manage users, expenses, and system settings"
+              label="Administration"
+              tooltip="Manage users, expenses, and administrative activities"
               icon={<SettingsIcon />}
               active={pathname.startsWith("/admin")}
             />
@@ -90,22 +90,20 @@ export default function Sidebar({ userRole }: SidebarProps) {
           {userRole === "HR" && (
             <SidebarLink
               href="/hr"
-              label="HR"
-              tooltip="Manage employee reimbursements and HR activities"
+              label="People Management"
+              tooltip="Manage employee verification, requests, and HR activities"
               icon={<SettingsIcon />}
               active={pathname.startsWith("/hr")}
             />
           )}
 
-          {(userRole === "ADMIN" || userRole === "HR") && (
-            <SidebarLink
-              href="/role-verification"
-              label="Role Verification"
-              tooltip="Review and verify user roles"
-              icon={<VerificationIcon />}
-              active={pathname.startsWith("/role-verification")}
-            />
-          )}
+          <SidebarLink
+            href="/requests"
+            label="Requests"
+            tooltip="Submit and manage account-related requests"
+            icon={<RequestsIcon />}
+            active={pathname.startsWith("/requests")}
+          />
 
           <SidebarLink
             href="/profile"
@@ -364,6 +362,26 @@ function VerificationIcon() {
     >
       <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function RequestsIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 3h12v18H6z" />
+      <path d="M9 7h6" />
+      <path d="M9 11h6" />
+      <path d="M9 15h4" />
     </svg>
   );
 }

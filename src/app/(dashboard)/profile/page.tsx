@@ -3,13 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-import RoleVerificationRequest from "@/features/auth/components/RoleVerificationRequest";
-import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
 import ProfileEditor from "@/features/auth/components/ProfileEditor";
 import ProfileImageEditor from "@/features/auth/components/ProfileImageEditor";
-import NameChangeRequest from "@/features/auth/components/NameChangeRequest";
-
-import { getLatestEmployeeVerificationRequest } from "@/features/auth/lib/employee-verification";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -36,11 +31,6 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const verificationRequest =
-    user.role === "EMPLOYEE"
-      ? await getLatestEmployeeVerificationRequest(Number(session.user.id))
-      : null;
-
   return (
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-4xl">
@@ -49,51 +39,72 @@ export default async function ProfilePage() {
             Profile
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
-            View your account information and role.
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            View and manage your profile information.
           </p>
         </div>
 
         <ProfileImageEditor currentImage={user.image} />
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        {/* Profile Details */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Profile Details
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Your current account information.
+            </p>
+          </div>
+
           <div className="space-y-6">
             <div>
-              <p className="text-sm font-medium text-slate-500">Name</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Name
+              </p>
 
-              <p className="mt-1 text-lg font-medium text-slate-900">
+              <p className="mt-1 text-lg font-medium text-slate-900 dark:text-white">
                 {user.name}
               </p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-slate-500">Email</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Email
+              </p>
 
-              <p className="mt-1 text-lg text-slate-900">{user.email}</p>
+              <p className="mt-1 text-lg text-slate-900 dark:text-white">
+                {user.email}
+              </p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-slate-500">Role</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Role
+              </p>
 
-              <p className="mt-1 text-lg font-medium text-slate-900">
+              <p className="mt-1 text-lg font-medium text-slate-900 dark:text-white">
                 {user.role}
               </p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Default Currency
               </p>
 
-              <p className="mt-1 text-lg font-medium text-slate-900">
+              <p className="mt-1 text-lg font-medium text-slate-900 dark:text-white">
                 {user.defaultCurrency}
               </p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-slate-500">Member Since</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Member Since
+              </p>
 
-              <p className="mt-1 text-lg text-slate-900">
+              <p className="mt-1 text-lg text-slate-900 dark:text-white">
                 {user.createdAt.toLocaleDateString("en-GB", {
                   day: "2-digit",
                   month: "long",
@@ -102,28 +113,15 @@ export default async function ProfilePage() {
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
+        {/* Profile Editing */}
         <ProfileEditor
           name={user.name}
           email={user.email}
           role={user.role}
           defaultCurrency={user.defaultCurrency}
         />
-
-        {user.role === "EMPLOYEE" && (
-          <NameChangeRequest currentName={user.name} />
-        )}
-
-        <RoleVerificationRequest currentRole={user.role} />
-
-        {user.role === "EMPLOYEE" && (
-          <EmployeeVerificationRequest
-            requestId={verificationRequest?.id}
-            status={verificationRequest?.status ?? "NOT_SUBMITTED"}
-            rejectionReason={verificationRequest?.rejectionReason}
-          />
-        )}
       </div>
     </main>
   );

@@ -4,72 +4,97 @@ Branch: `feature/profile-flow`
 
 ---
 
-## 10.1 — Review Existing Profile and Request Architecture
+## 10.1 — Profile / Requests Separation & History
 
 ### STATUS: COMPLETED
 
-- [x] Inspect the current `/profile` page
-- [x] Identify all profile-related components
-- [x] Identify all request-related components currently rendered on `/profile`
-- [x] Inspect existing Name Change Request workflow
-- [x] Inspect existing Role Verification workflow
-- [x] Inspect existing Identity Verification workflow
-- [x] Inspect corresponding server actions
-- [x] Inspect existing role/permission checks
-- [x] Identify reusable components and avoid unnecessary rewrites
-- [x] Document the current architecture before modifying it
+- [x] Keep `/profile` limited to profile details and profile editing
+- [x] Remove request components from `/profile`
+- [x] Add `Requests` entry to desktop sidebar
+- [x] Add `Requests` entry to mobile sidebar
+- [x] Remove standalone `Role Verification` sidebar entry
+- [x] Employee: show own name-change request history
+- [x] Employee: show own role-verification request history
+- [x] Employee: show own identity-verification request history
+- [x] HR: show pending + history for name-change requests
+- [x] HR: show pending + history for role-verification requests
+- [x] HR: show pending + history for identity-verification requests
+- [x] Admin: show pending + history for name-change requests
+- [x] Admin: show pending + history for role-verification requests
+- [x] Admin: show pending + history for identity-verification requests
+- [x] Ensure employee history is restricted to the logged-in employee
+- [x] Restore existing historical records after moving the UI
+- [x] Verify role-aware visibility
+- [x] Run lint
+- [x] Run TypeScript check
 
 ---
 
 ## 10.2 — Refactor `/profile` Page
 
-### STATUS: NEXT
+### STATUS: COMPLETED
 
-- [ ] Keep profile details on `/profile`
-- [ ] Keep profile editing functionality on `/profile`
-- [ ] Remove request workflow UI from `/profile`
-- [ ] Ensure profile editing still works
-- [ ] Ensure profile page remains role-aware where applicable
-- [ ] Verify Employee profile
-- [ ] Verify HR profile
-- [ ] Verify Admin profile
+- [x] Keep profile details on `/profile`
+- [x] Keep profile editing functionality on `/profile`
+- [x] Remove request workflow UI from `/profile`
+- [x] Ensure profile editing still works
+- [x] Ensure profile page remains role-aware where applicable
+- [x] Verify Employee profile
+- [x] Verify HR profile
+- [x] Verify Admin profile
+- [x] Remove Role Verification from Admin/HR sidebar + mobile sidebar
+- [x] Employee sees own request history
+- [x] Name-change history preserved
+- [x] Role-verification history preserved
+- [x] Identity-verification history preserved
+- [x] HR/Admin see pending + history for each request type
+- [x] Existing historical records remain visible after moving components
 
 ---
 
 ## 10.3 — Create Requests Navigation
 
-- [ ] Add `Requests` to the desktop Sidebar
-- [ ] Add `Requests` to the MobileSidebar
-- [ ] Add the request options under Requests
+### STATUS: IN PROGRESS
+
+- [x] Add `Requests` to the desktop Sidebar
+- [x] Add `Requests` to the MobileSidebar
+- [x] Add the request options under Requests
 - [ ] Ensure navigation styling matches the existing dashboard navigation
-- [ ] Ensure selected request state is visually clear
-- [ ] Ensure desktop and mobile behavior remain consistent
+- [x] Ensure selected request state is visually clear
+- [x] Ensure desktop and mobile behavior remain consistent
 
 ---
 
 ## 10.4 — Create Requests Flow / Routing
 
-- [ ] Establish the Requests entry point
-- [ ] Establish request selection/navigation
-- [ ] Render the selected request component
-- [ ] Support direct navigation to a request
-- [ ] Support browser refresh
-- [ ] Support browser back/forward navigation
-- [ ] Handle missing request selection
-- [ ] Handle invalid request selection
+### STATUS: IN PROGRESS
+
+- [x] Establish the Requests entry point
+- [x] Establish request selection/navigation
+- [x] Render the selected request component
+- [x] Support direct navigation to a request
+- [x] Support browser refresh
+- [x] Support browser back/forward navigation
+- [x] Handle missing request selection
+- [x] Handle invalid request selection
 - [ ] Handle unavailable request selection for the current role
+- [ ] Support notification navigation to the relevant request
+- [ ] Support approved/rejected request notification navigation
+- [x] Preserve the selected request after navigation
 
 ---
 
 ## 10.5 — Integrate Name Change Request
 
-- [ ] Move/reuse the existing Name Change Request component
-- [ ] Render it through the Requests flow
-- [ ] Preserve existing submission behavior
-- [ ] Preserve existing validation
-- [ ] Preserve existing approval/rejection workflow
-- [ ] Preserve existing notifications
-- [ ] Verify request status handling
+### STATUS: IN PROGRESS
+
+- [x] Move/reuse the existing Name Change Request component
+- [x] Render it through the Requests flow
+- [x] Preserve existing submission behavior
+- [x] Preserve existing validation
+- [x] Preserve existing approval/rejection workflow
+- [x] Preserve existing notifications
+- [x] Verify request status handling
 - [ ] Verify Employee behavior
 - [ ] Verify HR/Admin behavior where applicable
 
@@ -77,13 +102,15 @@ Branch: `feature/profile-flow`
 
 ## 10.6 — Integrate Role Verification Request
 
-- [ ] Move/reuse the existing Role Verification Request component
-- [ ] Render it through the Requests flow
-- [ ] Preserve existing submission behavior
-- [ ] Preserve existing validation
-- [ ] Preserve existing approval/rejection workflow
-- [ ] Preserve existing notifications
-- [ ] Verify role-aware visibility
+### STATUS: IN PROGRESS
+
+- [x] Move/reuse the existing Role Verification Request component
+- [x] Render it through the Requests flow
+- [x] Preserve existing submission behavior
+- [x] Preserve existing validation
+- [x] Preserve existing approval/rejection workflow
+- [x] Preserve existing notifications
+- [x] Verify role-aware visibility
 - [ ] Verify authorization
 - [ ] Verify Employee behavior
 - [ ] Verify HR/Admin behavior where applicable
@@ -92,13 +119,15 @@ Branch: `feature/profile-flow`
 
 ## 10.7 — Integrate Identity Verification
 
-- [ ] Move/reuse the existing Identity Verification component
-- [ ] Render it through the Requests flow
-- [ ] Preserve existing submission behavior
-- [ ] Preserve existing validation
-- [ ] Preserve existing approval/rejection workflow
-- [ ] Preserve existing notifications
-- [ ] Verify role-aware visibility
+### STATUS: IN PROGRESS
+
+- [x] Move/reuse the existing Identity Verification component
+- [x] Render it through the Requests flow
+- [x] Preserve existing submission behavior
+- [x] Preserve existing validation
+- [x] Preserve existing approval/rejection workflow
+- [x] Preserve existing notifications
+- [x] Verify role-aware visibility
 - [ ] Verify authorization
 - [ ] Verify Employee behavior
 - [ ] Verify HR/Admin behavior where applicable
@@ -106,6 +135,8 @@ Branch: `feature/profile-flow`
 ---
 
 ## 10.8 — Role-Aware Request Permissions
+
+### STATUS: IN PROGRESS
 
 - [ ] Verify Employee request options
 - [ ] Verify HR request options
@@ -117,16 +148,26 @@ Branch: `feature/profile-flow`
 - [ ] Verify server-side authorization
 - [ ] Verify unavailable request options have appropriate fallback behavior
 
+### Current Permission Requirement
+
+- [ ] Admin can approve/reject Name Change requests
+- [ ] Admin can approve/reject Role Verification requests
+- [ ] Admin can approve/reject Identity Verification requests
+- [ ] Ensure Admin request-review permissions match HR request-review permissions
+- [ ] Verify authorization inside the server actions, not only through UI visibility
+
 ---
 
 ## 10.9 — Request State and UX
 
-- [ ] Display appropriate request state
-- [ ] Handle pending requests
-- [ ] Handle approved requests
-- [ ] Handle rejected requests
+### STATUS: IN PROGRESS
+
+- [x] Display appropriate request state
+- [x] Handle pending requests
+- [x] Handle approved requests
+- [x] Handle rejected requests
 - [ ] Prevent invalid duplicate submissions where existing logic requires it
-- [ ] Provide appropriate empty states
+- [x] Provide appropriate empty states
 - [ ] Provide appropriate error states
 - [ ] Ensure no blank/broken UI occurs for invalid request selections
 
@@ -136,9 +177,9 @@ Branch: `feature/profile-flow`
 
 - [ ] Verify Requests navigation on desktop
 - [ ] Verify Requests navigation on mobile
-- [ ] Verify dropdown/selection behavior
-- [ ] Verify selected-state styling
-- [ ] Verify navigation does not interfere with existing sidebar items
+- [x] Verify dropdown/selection behavior
+- [x] Verify selected-state styling
+- [x] Verify navigation does not interfere with existing sidebar items
 - [ ] Verify mobile sidebar closes/behaves correctly after navigation
 
 ---
@@ -188,10 +229,12 @@ Branch: `feature/profile-flow`
 
 ## 10.12 — Quality Checks
 
+### STATUS: IN PROGRESS
+
 - [ ] Run `npm run lint`
 - [ ] Resolve Task 10-related lint errors
-- [ ] Run `npx tsc --noEmit`
-- [ ] Resolve Task 10-related TypeScript errors
+- [x] Run `npx tsc --noEmit`
+- [x] Resolve Task 10-related TypeScript errors
 - [ ] Run the application and perform final manual testing
 - [ ] Verify no unexpected console errors
 - [ ] Verify no broken navigation
