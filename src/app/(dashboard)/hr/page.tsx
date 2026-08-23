@@ -10,21 +10,39 @@ import {
 import Pagination from "@/components/common/Pagination";
 
 import EmployeeVerificationTable from "@/features/auth/components/EmployeeVerificationTable";
-import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
-import HrManagementSelector from "@/features/auth/components/HrManagementSelector";
-import NameChangeRequestHistoryTable from "@/features/auth/components/NameChangeRequestHistoryTable";
+import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
 
-import { getNameChangeRequestHistory } from "@/features/auth/lib/name-change-requests";
+import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
+import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
+
+import HrManagementSelector from "@/features/auth/components/HrManagementSelector";
+
+import NameChangeRequestHistoryTable from "@/features/auth/components/NameChangeRequestHistoryTable";
+import NameChangeRequestTable from "@/features/auth/components/NameChangeRequestTable";
+
+import RoleVerificationTable from "@/features/auth/components/RoleVerificationTable";
+import RoleVerificationHistoryTable from "@/features/auth/components/RoleVerificationHistoryTable";
+
+import {
+  getNameChangeRequestHistory,
+  getPendingNameChangeRequests,
+} from "@/features/auth/lib/name-change-requests";
+
+import {
+  getRoleRequestHistory,
+  getPendingRoleRequests,
+} from "@/features/auth/lib/role-requests";
+
 import {
   getApprovedExpensesForHR,
   getReimbursementHistory,
 } from "@/features/expenses/lib/expenses";
 
-import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
-import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
-
-import { getPendingNameChangeRequests } from "@/features/auth/lib/name-change-requests";
-import NameChangeRequestTable from "@/features/auth/components/NameChangeRequestTable";
+type Section =
+  | "verification"
+  | "reimbursement"
+  | "name-change"
+  | "role-verification";
 
 export default async function HrPage({
   searchParams,
@@ -67,27 +85,36 @@ export default async function HrPage({
 
   const pageSize = 10;
 
-  const section =
-    params.section === "reimbursement" || params.section === "name-change"
+  const section: Section =
+    params.section === "reimbursement" ||
+    params.section === "name-change" ||
+    params.section === "role-verification"
       ? params.section
       : "verification";
 
   const hrId = Number(session.user.id);
 
   const [
-    requests,
+    employeeVerificationRequests,
     employeeVerificationHistory,
     approvedExpenses,
     reimbursementHistory,
     nameChangeRequests,
     nameChangeRequestHistory,
+    roleVerificationRequests,
+    roleVerificationHistory,
   ] = await Promise.all([
     getPendingEmployeeVerificationRequests(),
     getEmployeeVerificationHistory(),
+
     getApprovedExpensesForHR(hrId, reimbursementPage, pageSize),
     getReimbursementHistory(reimbursementHistoryPage, pageSize),
+
     getPendingNameChangeRequests(),
     getNameChangeRequestHistory(),
+
+    getPendingRoleRequests(),
+    getRoleRequestHistory(),
   ]);
 
   return (
@@ -95,15 +122,17 @@ export default async function HrPage({
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-            HR Management
+            People Management
           </h1>
 
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Manage employee verification and process approved expense
-            reimbursements.
+            Manage employee verification, account requests, role verification,
+            and approved expense reimbursements.
           </p>
 
-          <HrManagementSelector section={section} />
+          <div className="mt-6">
+            <HrManagementSelector section={section} />
+          </div>
         </div>
 
         {/* ---------------------------------------------------------------- */}
@@ -124,7 +153,9 @@ export default async function HrPage({
                 </p>
               </div>
 
-              <EmployeeVerificationTable requests={requests} />
+              <EmployeeVerificationTable
+                requests={employeeVerificationRequests}
+              />
             </section>
 
             <section className="mt-10">
@@ -146,65 +177,13 @@ export default async function HrPage({
           </>
         )}
 
-        {section === "reimbursement" && (
-          <>
-            {/* ---------------------------------------------------------------- */}
-            {/* Reimbursement Queue                                              */}
-            {/* ---------------------------------------------------------------- */}
-
-            <section className="mt-10">
-              <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Expense Reimbursements
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Review expenses approved by Admin and manually mark them as
-                  reimbursed.
-                </p>
-              </div>
-
-              <ReimbursementTable expenses={approvedExpenses.expenses} />
-
-              <Pagination
-                page={approvedExpenses.page}
-                totalPages={approvedExpenses.totalPages}
-                paramName="reimbursementPage"
-              />
-            </section>
-
-            {/* ---------------------------------------------------------------- */}
-            {/* Reimbursement History                                            */}
-            {/* ---------------------------------------------------------------- */}
-
-            <section className="mt-10">
-              <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Reimbursement History
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Review expenses that have already been reimbursed, including
-                  who approved and who processed the reimbursement.
-                </p>
-              </div>
-
-              <ReimbursementHistoryTable
-                expenses={reimbursementHistory.expenses}
-              />
-
-              <Pagination
-                page={reimbursementHistory.page}
-                totalPages={reimbursementHistory.totalPages}
-                paramName="reimbursementHistoryPage"
-              />
-            </section>
-          </>
-        )}
+        {/* ---------------------------------------------------------------- */}
+        {/* Name Change Requests                                             */}
+        {/* ---------------------------------------------------------------- */}
 
         {section === "name-change" && (
           <>
-            <section className="mt-10">
+            <section>
               <div className="mb-5">
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                   Name Change Requests
@@ -231,6 +210,100 @@ export default async function HrPage({
 
               <NameChangeRequestHistoryTable
                 requests={nameChangeRequestHistory}
+              />
+            </section>
+          </>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Role Verification Requests                                      */}
+        {/* ---------------------------------------------------------------- */}
+
+        {section === "role-verification" && (
+          <>
+            <section>
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Role Verification Requests
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review employee requests for ADMIN or HR role verification.
+                </p>
+              </div>
+
+              <RoleVerificationTable
+                requests={roleVerificationRequests}
+                canReview={true}
+              />
+            </section>
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Role Verification History
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review previously approved and rejected role verification
+                  requests.
+                </p>
+              </div>
+
+              <RoleVerificationHistoryTable
+                requests={roleVerificationHistory}
+              />
+            </section>
+          </>
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Reimbursements                                                   */}
+        {/* ---------------------------------------------------------------- */}
+
+        {section === "reimbursement" && (
+          <>
+            <section>
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Expense Reimbursements
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review expenses approved by Admin and manually mark them as
+                  reimbursed.
+                </p>
+              </div>
+
+              <ReimbursementTable expenses={approvedExpenses.expenses} />
+
+              <Pagination
+                page={approvedExpenses.page}
+                totalPages={approvedExpenses.totalPages}
+                paramName="reimbursementPage"
+              />
+            </section>
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Reimbursement History
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review expenses that have already been reimbursed, including
+                  who approved and who processed the reimbursement.
+                </p>
+              </div>
+
+              <ReimbursementHistoryTable
+                expenses={reimbursementHistory.expenses}
+              />
+
+              <Pagination
+                page={reimbursementHistory.page}
+                totalPages={reimbursementHistory.totalPages}
+                paramName="reimbursementHistoryPage"
               />
             </section>
           </>
