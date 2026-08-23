@@ -134,6 +134,15 @@ export default function MobileSidebar({
               icon={<AnalysisIcon />}
             />
 
+            {userRole === "EMPLOYEE" && (
+              <MobileNavLink
+                href="/requests"
+                label="Requests"
+                onClick={closeMenu}
+                icon={<RequestsIcon />}
+              />
+            )}
+
             {userRole === "ADMIN" && (
               <MobileNavLink
                 href="/admin"

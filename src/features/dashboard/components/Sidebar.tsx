@@ -77,6 +77,16 @@ export default function Sidebar({ userRole }: SidebarProps) {
             active={pathname.startsWith("/insights")}
           />
 
+          {userRole === "EMPLOYEE" && (
+            <SidebarLink
+              href="/requests"
+              label="Requests"
+              tooltip="Submit and track your account-related requests"
+              icon={<RequestsIcon />}
+              active={pathname.startsWith("/requests")}
+            />
+          )}
+
           {userRole === "ADMIN" && (
             <SidebarLink
               href="/admin"

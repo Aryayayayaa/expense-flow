@@ -4,23 +4,13 @@ import { auth } from "@/auth";
 
 import RequestsPageClient from "@/features/auth/components/RequestsPageClient";
 
-import {
-  getNameChangeRequestHistory,
-  getNameChangeRequestsForUser,
-  getPendingNameChangeRequests,
-} from "@/features/auth/lib/name-change-requests";
+import { getNameChangeRequestsForUser } from "@/features/auth/lib/name-change-requests";
+
+import { getRoleRequestsForUser } from "@/features/auth/lib/role-requests";
 
 import {
-  getPendingRoleRequests,
-  getRoleRequestHistory,
-  getRoleRequestsForUser,
-} from "@/features/auth/lib/role-requests";
-
-import {
-  getEmployeeVerificationHistory,
   getEmployeeVerificationRequestsForUser,
   getLatestEmployeeVerificationRequest,
-  getPendingEmployeeVerificationRequests,
 } from "@/features/auth/lib/employee-verification";
 
 type RequestsPageProps = {
@@ -38,6 +28,24 @@ export default async function RequestsPage({
     redirect("/login");
   }
 
+  /*
+   * Requests is an employee-only page.
+   *
+   * HR and Admin manage requests from their respective
+   * management pages instead.
+   */
+  if (session.user.role !== "EMPLOYEE") {
+    if (session.user.role === "HR") {
+      redirect("/hr");
+    }
+
+    if (session.user.role === "ADMIN") {
+      redirect("/admin");
+    }
+
+    redirect("/dashboard");
+  }
+
   const params = await searchParams;
 
   const requestedType = params.type;
@@ -51,80 +59,29 @@ export default async function RequestsPage({
 
   const userId = Number(session.user.id);
 
-  const isEmployee = session.user.role === "EMPLOYEE";
+  const [
+    nameChangeRequests,
+    roleRequests,
+    identityRequests,
+    latestIdentityRequest,
+  ] = await Promise.all([
+    getNameChangeRequestsForUser(userId),
+    getRoleRequestsForUser(userId),
+    getEmployeeVerificationRequestsForUser(userId),
+    getLatestEmployeeVerificationRequest(userId),
+  ]);
 
-  const isHrOrAdmin =
-    session.user.role === "HR" || session.user.role === "ADMIN";
-
-  /* ---------------------------------------------------------------------- */
-  /* EMPLOYEE                                                               */
-  /* ---------------------------------------------------------------------- */
-
-  if (isEmployee) {
-    const [
-      nameChangeRequests,
-      roleRequests,
-      identityRequests,
-      latestIdentityRequest,
-    ] = await Promise.all([
-      getNameChangeRequestsForUser(userId),
-      getRoleRequestsForUser(userId),
-      getEmployeeVerificationRequestsForUser(userId),
-      getLatestEmployeeVerificationRequest(userId),
-    ]);
-
-    return (
-      <RequestsPageClient
-        userRole={session.user.role}
-        userName={session.user.name ?? ""}
-        initialType={requestType}
-        employeeData={{
-          nameChangeRequests,
-          roleRequests,
-          identityRequests,
-          latestIdentityRequest,
-        }}
-      />
-    );
-  }
-
-  /* ---------------------------------------------------------------------- */
-  /* HR / ADMIN                                                             */
-  /* ---------------------------------------------------------------------- */
-
-  if (isHrOrAdmin) {
-    const [
-      pendingNameChangeRequests,
-      nameChangeRequestHistory,
-      pendingRoleRequests,
-      roleRequestHistory,
-      pendingIdentityRequests,
-      identityRequestHistory,
-    ] = await Promise.all([
-      getPendingNameChangeRequests(),
-      getNameChangeRequestHistory(),
-      getPendingRoleRequests(),
-      getRoleRequestHistory(),
-      getPendingEmployeeVerificationRequests(),
-      getEmployeeVerificationHistory(),
-    ]);
-
-    return (
-      <RequestsPageClient
-        userRole={session.user.role}
-        userName={session.user.name ?? ""}
-        initialType={requestType}
-        managementData={{
-          pendingNameChangeRequests,
-          nameChangeRequestHistory,
-          pendingRoleRequests,
-          roleRequestHistory,
-          pendingIdentityRequests,
-          identityRequestHistory,
-        }}
-      />
-    );
-  }
-
-  redirect("/dashboard");
+  return (
+    <RequestsPageClient
+      userRole="EMPLOYEE"
+      userName={session.user.name ?? ""}
+      initialType={requestType}
+      employeeData={{
+        nameChangeRequests,
+        roleRequests,
+        identityRequests,
+        latestIdentityRequest,
+      }}
+    />
+  );
 }
