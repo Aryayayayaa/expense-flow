@@ -6,20 +6,24 @@ Branch: `feature/profile-flow`
 
 ## 10.1 — Review Existing Profile and Request Architecture
 
-- [ ] Inspect the current `/profile` page
-- [ ] Identify all profile-related components
-- [ ] Identify all request-related components currently rendered on `/profile`
-- [ ] Inspect existing Name Change Request workflow
-- [ ] Inspect existing Role Verification workflow
-- [ ] Inspect existing Identity Verification workflow
-- [ ] Inspect corresponding server actions
-- [ ] Inspect existing role/permission checks
-- [ ] Identify reusable components and avoid unnecessary rewrites
-- [ ] Document the current architecture before modifying it
+### STATUS: COMPLETED
+
+- [x] Inspect the current `/profile` page
+- [x] Identify all profile-related components
+- [x] Identify all request-related components currently rendered on `/profile`
+- [x] Inspect existing Name Change Request workflow
+- [x] Inspect existing Role Verification workflow
+- [x] Inspect existing Identity Verification workflow
+- [x] Inspect corresponding server actions
+- [x] Inspect existing role/permission checks
+- [x] Identify reusable components and avoid unnecessary rewrites
+- [x] Document the current architecture before modifying it
 
 ---
 
 ## 10.2 — Refactor `/profile` Page
+
+### STATUS: NEXT
 
 - [ ] Keep profile details on `/profile`
 - [ ] Keep profile editing functionality on `/profile`
