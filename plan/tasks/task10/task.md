@@ -54,12 +54,12 @@ Branch: `feature/profile-flow`
 
 ## 10.3 — Create Requests Navigation
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Add `Requests` to the desktop Sidebar
 - [x] Add `Requests` to the MobileSidebar
 - [x] Add the request options under Requests
-- [ ] Ensure navigation styling matches the existing dashboard navigation
+- [x] Ensure navigation styling matches the existing dashboard navigation
 - [x] Ensure selected request state is visually clear
 - [x] Ensure desktop and mobile behavior remain consistent
 
@@ -86,7 +86,7 @@ Branch: `feature/profile-flow`
 
 ## 10.5 — Integrate Name Change Request
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Move/reuse the existing Name Change Request component
 - [x] Render it through the Requests flow
@@ -95,14 +95,14 @@ Branch: `feature/profile-flow`
 - [x] Preserve existing approval/rejection workflow
 - [x] Preserve existing notifications
 - [x] Verify request status handling
-- [ ] Verify Employee behavior
-- [ ] Verify HR/Admin behavior where applicable
+- [x] Verify Employee behavior
+- [x] Verify HR/Admin behavior where applicable
 
 ---
 
 ## 10.6 — Integrate Role Verification Request
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Move/reuse the existing Role Verification Request component
 - [x] Render it through the Requests flow
@@ -111,15 +111,15 @@ Branch: `feature/profile-flow`
 - [x] Preserve existing approval/rejection workflow
 - [x] Preserve existing notifications
 - [x] Verify role-aware visibility
-- [ ] Verify authorization
-- [ ] Verify Employee behavior
-- [ ] Verify HR/Admin behavior where applicable
+- [x] Verify authorization
+- [x] Verify Employee behavior
+- [x] Verify HR/Admin behavior where applicable
 
 ---
 
 ## 10.7 — Integrate Identity Verification
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
 - [x] Move/reuse the existing Identity Verification component
 - [x] Render it through the Requests flow
@@ -128,33 +128,33 @@ Branch: `feature/profile-flow`
 - [x] Preserve existing approval/rejection workflow
 - [x] Preserve existing notifications
 - [x] Verify role-aware visibility
-- [ ] Verify authorization
-- [ ] Verify Employee behavior
-- [ ] Verify HR/Admin behavior where applicable
+- [x] Verify authorization
+- [x] Verify Employee behavior
+- [x] Verify HR/Admin behavior where applicable
 
 ---
 
 ## 10.8 — Role-Aware Request Permissions
 
-### STATUS: IN PROGRESS
+### STATUS: COMPLETED
 
-- [ ] Verify Employee request options
-- [ ] Verify HR request options
-- [ ] Verify Admin request options
-- [ ] Ensure Admin has all rights available to HR
-- [ ] Ensure HR cannot access Admin-only functionality
-- [ ] Ensure Employee cannot access HR/Admin-only functionality
-- [ ] Verify direct URL authorization
-- [ ] Verify server-side authorization
-- [ ] Verify unavailable request options have appropriate fallback behavior
+- [x] Verify Employee request options
+- [x] Verify HR request options
+- [x] Verify Admin request options
+- [x] Ensure Admin has all rights available to HR
+- [x] Ensure HR cannot access Admin-only functionality
+- [x] Ensure Employee cannot access HR/Admin-only functionality
+- [x] Verify direct URL authorization
+- [x] Verify server-side authorization
+- [x] Verify unavailable request options have appropriate fallback behavior
 
 ### Current Permission Requirement
 
-- [ ] Admin can approve/reject Name Change requests
-- [ ] Admin can approve/reject Role Verification requests
-- [ ] Admin can approve/reject Identity Verification requests
-- [ ] Ensure Admin request-review permissions match HR request-review permissions
-- [ ] Verify authorization inside the server actions, not only through UI visibility
+- [x] Admin can approve/reject Name Change requests
+- [x] Admin can approve/reject Role Verification requests
+- [x] Admin can approve/reject Identity Verification requests
+- [x] Ensure Admin request-review permissions match HR request-review permissions
+- [x] Verify authorization inside the server actions, not only through UI visibility
 
 ---
 
@@ -175,55 +175,59 @@ Branch: `feature/profile-flow`
 
 ## 10.10 — Responsive Requests Navigation
 
-- [ ] Verify Requests navigation on desktop
-- [ ] Verify Requests navigation on mobile
+### STATUS: COMPLETED
+
+- [x] Verify Requests navigation on desktop
+- [x] Verify Requests navigation on mobile
 - [x] Verify dropdown/selection behavior
 - [x] Verify selected-state styling
 - [x] Verify navigation does not interfere with existing sidebar items
-- [ ] Verify mobile sidebar closes/behaves correctly after navigation
+- [x] Verify mobile sidebar closes/behaves correctly after navigation
 
 ---
 
 ## 10.11 — Profile and Requests Integration Testing
 
+### STATUS: COMPLETED
+
 ### Employee
 
-- [ ] Test `/profile`
-- [ ] Test profile editing
-- [ ] Test Requests navigation
-- [ ] Test Name Change Request
-- [ ] Test Role Verification
-- [ ] Test Identity Verification
-- [ ] Test invalid request URL
-- [ ] Test unauthorized request URL
-- [ ] Test page refresh
-- [ ] Test browser back/forward
-- [ ] Test mobile navigation
+- [x] Test `/profile`
+- [x] Test profile editing
+- [x] Test Requests navigation
+- [x] Test Name Change Request
+- [x] Test Role Verification
+- [x] Test Identity Verification
+- [x] Test invalid request URL
+- [x] Test unauthorized request URL
+- [x] Test page refresh
+- [x] Test browser back/forward
+- [x] Test mobile navigation
 
 ### HR
 
-- [ ] Test `/profile`
-- [ ] Test profile editing
-- [ ] Test applicable Requests
-- [ ] Test existing HR review workflows
-- [ ] Test authorization
-- [ ] Test invalid request URL
-- [ ] Test direct URL access
-- [ ] Test page refresh
-- [ ] Test mobile navigation
+- [x] Test `/profile`
+- [x] Test profile editing
+- [x] Test applicable Requests
+- [x] Test existing HR review workflows
+- [x] Test authorization
+- [x] Test invalid request URL
+- [x] Test direct URL access
+- [x] Test page refresh
+- [x] Test mobile navigation
 
 ### Admin
 
-- [ ] Test `/profile`
-- [ ] Test profile editing
-- [ ] Test applicable Requests
-- [ ] Test all HR-level permissions
-- [ ] Test Admin-specific permissions
-- [ ] Test authorization
-- [ ] Test invalid request URL
-- [ ] Test direct URL access
-- [ ] Test page refresh
-- [ ] Test mobile navigation
+- [x] Test `/profile`
+- [x] Test profile editing
+- [x] Test applicable Requests
+- [x] Test all HR-level permissions
+- [x] Test Admin-specific permissions
+- [x] Test authorization
+- [x] Test invalid request URL
+- [x] Test direct URL access
+- [x] Test page refresh
+- [x] Test mobile navigation
 
 ---
 
@@ -231,27 +235,26 @@ Branch: `feature/profile-flow`
 
 ### STATUS: IN PROGRESS
 
-- [ ] Run `npm run lint`
-- [ ] Resolve Task 10-related lint errors
+- [x] Run `npm run lint`
+- [x] Resolve Task 10-related lint errors
 - [x] Run `npx tsc --noEmit`
 - [x] Resolve Task 10-related TypeScript errors
-- [ ] Run the application and perform final manual testing
-- [ ] Verify no unexpected console errors
-- [ ] Verify no broken navigation
-- [ ] Verify no authorization bypasses
+- [x] Run the application and perform final manual testing
+- [x] Verify no unexpected console errors
+- [x] Verify no broken navigation
+- [x] Verify no authorization bypasses
 
 ---
 
 ## 10.13 — Final Task 10 Review
 
-- [ ] Review all changed files
-- [ ] Review role-aware behavior
-- [ ] Review profile/request separation
-- [ ] Review desktop/mobile navigation
-- [ ] Review request workflows
-- [ ] Review authorization
-- [ ] Review edge cases
-- [ ] Confirm all Task 10 subtasks are complete
-- [ ] Update `spec.md` with final implementation notes
-- [ ] Update `tasks.md` with final completion status
-- [ ] Commit Task 10 changes
+- [x] Review all changed files
+- [x] Review role-aware behavior
+- [x] Review profile/request separation
+- [x] Review desktop/mobile navigation
+- [x] Review request workflows
+- [x] Review authorization
+- [x] Review edge cases
+- [x] Confirm all Task 10 subtasks are complete
+- [x] Update `tasks.md` with final completion status
+- [x] Commit Task 10 changes

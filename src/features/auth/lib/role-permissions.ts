@@ -5,7 +5,7 @@ export function canReviewRoleRequest(reviewerRole: Role, requestedRole: Role) {
     return false;
   }
 
-  return reviewerRole === "HR";
+  return reviewerRole === "HR" || reviewerRole === "ADMIN";
 }
 
 export function canReviewOwnRoleRequest(
@@ -20,5 +20,5 @@ export function canApproveExpense(role: Role) {
 }
 
 export function canVerifyEmployee(role: Role) {
-  return role === "HR";
+  return role === "HR" || role === "ADMIN";
 }

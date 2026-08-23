@@ -50,9 +50,16 @@ export async function createEmployeeVerificationAction(
       proofPath,
     });
 
-    const hrUsers = await prisma.user.findMany({
+    /*
+     * Both HR and Admin can review identity verification requests.
+     * Therefore both roles must be notified when a request is submitted.
+     */
+    const reviewers = await prisma.user.findMany({
       where: {
-        role: "HR",
+        role: {
+          in: ["ADMIN", "HR"],
+        },
+        isActive: true,
       },
       select: {
         id: true,
@@ -60,9 +67,9 @@ export async function createEmployeeVerificationAction(
     });
 
     await Promise.all(
-      hrUsers.map((hr) =>
+      reviewers.map((reviewer) =>
         createNotification({
-          userId: hr.id,
+          userId: reviewer.id,
           type: "EMPLOYEE_VERIFICATION_PENDING",
           title: "Employee Verification Request",
           message: `${session.user.name ?? "An employee"} has submitted an identity verification request.`,
@@ -76,6 +83,7 @@ export async function createEmployeeVerificationAction(
 
     revalidatePath("/profile");
     revalidatePath("/hr");
+    revalidatePath("/admin");
 
     return {
       success: true,
@@ -91,7 +99,11 @@ export async function createEmployeeVerificationAction(
   }
 }
 
-async function requireHr() {
+/*
+ * HR and Admin are allowed to review employee identity verification
+ * requests.
+ */
+async function requireHrOrAdmin() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -101,7 +113,7 @@ async function requireHr() {
     };
   }
 
-  if (session.user.role !== "HR") {
+  if (session.user.role !== "HR" && session.user.role !== "ADMIN") {
     return {
       success: false as const,
       message: "You are not authorized to perform this action.",
@@ -111,15 +123,16 @@ async function requireHr() {
   return {
     success: true as const,
     reviewerId: Number(session.user.id),
+    reviewerRole: session.user.role,
   };
 }
 
 export async function approveEmployeeVerificationAction(requestId: number) {
   try {
-    const hr = await requireHr();
+    const reviewer = await requireHrOrAdmin();
 
-    if (!hr.success) {
-      return hr;
+    if (!reviewer.success) {
+      return reviewer;
     }
 
     const request = await prisma.employeeVerificationRequest.findUnique({
@@ -131,7 +144,11 @@ export async function approveEmployeeVerificationAction(requestId: number) {
         status: true,
         userId: true,
 
-        user: { select: { name: true } },
+        user: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -149,7 +166,7 @@ export async function approveEmployeeVerificationAction(requestId: number) {
       };
     }
 
-    if (request.userId === hr.reviewerId) {
+    if (request.userId === reviewer.reviewerId) {
       return {
         success: false,
         message: "You cannot review your own verification request.",
@@ -163,7 +180,7 @@ export async function approveEmployeeVerificationAction(requestId: number) {
       data: {
         status: "APPROVED",
         reviewedAt: new Date(),
-        reviewedById: hr.reviewerId,
+        reviewedById: reviewer.reviewerId,
         rejectionReason: null,
       },
     });
@@ -172,13 +189,16 @@ export async function approveEmployeeVerificationAction(requestId: number) {
       userId: request.userId,
       type: "EMPLOYEE_VERIFICATION_APPROVED",
       title: "Identity Verification Approved",
-      message: "Your employee identity verification has been approved by HR.",
+      message: `Your employee identity verification has been approved by ${reviewer.reviewerRole}.`,
       metadata: {
         requestId: request.id,
+        reviewedById: reviewer.reviewerId,
+        reviewedByRole: reviewer.reviewerRole,
       },
     });
 
     revalidatePath("/hr");
+    revalidatePath("/admin");
     revalidatePath("/profile");
 
     return {
@@ -200,10 +220,10 @@ export async function rejectEmployeeVerificationAction(
   rejectionReason: string,
 ) {
   try {
-    const hr = await requireHr();
+    const reviewer = await requireHrOrAdmin();
 
-    if (!hr.success) {
-      return hr;
+    if (!reviewer.success) {
+      return reviewer;
     }
 
     const reason = rejectionReason.trim();
@@ -240,7 +260,7 @@ export async function rejectEmployeeVerificationAction(
       };
     }
 
-    if (request.userId === hr.reviewerId) {
+    if (request.userId === reviewer.reviewerId) {
       return {
         success: false,
         message: "You cannot review your own verification request.",
@@ -255,7 +275,7 @@ export async function rejectEmployeeVerificationAction(
         status: "REJECTED",
         rejectionReason: reason,
         reviewedAt: new Date(),
-        reviewedById: hr.reviewerId,
+        reviewedById: reviewer.reviewerId,
       },
     });
 
@@ -263,14 +283,17 @@ export async function rejectEmployeeVerificationAction(
       userId: request.userId,
       type: "EMPLOYEE_VERIFICATION_REJECTED",
       title: "Identity Verification Rejected",
-      message: "Your employee identity verification has been rejected by HR.",
+      message: `Your employee identity verification has been rejected by ${reviewer.reviewerRole}.`,
       metadata: {
         requestId: request.id,
         rejectionReason: reason,
+        reviewedById: reviewer.reviewerId,
+        reviewedByRole: reviewer.reviewerRole,
       },
     });
 
     revalidatePath("/hr");
+    revalidatePath("/admin");
     revalidatePath("/profile");
 
     return {

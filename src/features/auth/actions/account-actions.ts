@@ -378,9 +378,15 @@ export async function requestNameChangeAction(
       proofPath,
     });
 
-    const hrUsers = await prisma.user.findMany({
+    /*
+     * Both HR and Admin can review name change requests.
+     * Therefore both roles must be notified when a request is submitted.
+     */
+    const reviewers = await prisma.user.findMany({
       where: {
-        role: "HR",
+        role: {
+          in: ["ADMIN", "HR"],
+        },
         isActive: true,
       },
       select: {
@@ -389,9 +395,9 @@ export async function requestNameChangeAction(
     });
 
     await Promise.all(
-      hrUsers.map((hr) =>
+      reviewers.map((reviewer) =>
         createNotification({
-          userId: hr.id,
+          userId: reviewer.id,
           type: "EMPLOYEE_ACCOUNT_UPDATED",
           title: "Name Change Request",
           message: `${user.name} has requested to change their name to ${name}.`,
@@ -438,10 +444,13 @@ export async function approveNameChangeRequestAction(requestId: number) {
       };
     }
 
-    if (session.user.role !== "HR") {
+    /*
+     * Both HR and Admin are allowed to review name change requests.
+     */
+    if (session.user.role !== "HR" && session.user.role !== "ADMIN") {
       return {
         success: false,
-        message: "Only HR can approve name change requests.",
+        message: "Only HR or Admin can approve name change requests.",
       };
     }
 
@@ -561,10 +570,13 @@ export async function rejectNameChangeRequestAction(
       };
     }
 
-    if (session.user.role !== "HR") {
+    /*
+     * Both HR and Admin are allowed to review name change requests.
+     */
+    if (session.user.role !== "HR" && session.user.role !== "ADMIN") {
       return {
         success: false,
-        message: "Only HR can reject name change requests.",
+        message: "Only HR or Admin can reject name change requests.",
       };
     }
 
