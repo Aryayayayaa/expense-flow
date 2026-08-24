@@ -512,24 +512,91 @@ export async function getAllExpensesForAdmin() {
   }));
 }
 
-// Get expenses that are currently waiting for admin approval.
+/* -------------------------------------------------------------------------- */
+/* Admin Expense Functions                                                    */
+/* -------------------------------------------------------------------------- */
 
+export type AdminExpenseScope = "OWN" | "EMPLOYEES" | "HRS" | "OTHER_ADMINS";
+
+/**
+ * Returns the Prisma owner filter for an Admin expense scope.
+ *
+ * OWN:
+ *   Current Admin's own expenses.
+ *
+ * EMPLOYEES:
+ *   Expenses belonging only to EMPLOYEE users.
+ *
+ * HRS:
+ *   Expenses belonging only to HR users.
+ *
+ * OTHER_ADMINS:
+ *   Expenses belonging to other ADMIN users.
+ *
+ * IMPORTANT:
+ *   The current Admin is explicitly excluded from OTHER_ADMINS.
+ */
+function getAdminExpenseScopeFilter(
+  adminId: number,
+  scope: AdminExpenseScope,
+): Prisma.ExpenseWhereInput {
+  switch (scope) {
+    case "OWN":
+      return {
+        userId: adminId,
+      };
+
+    case "EMPLOYEES":
+      return {
+        user: {
+          role: "EMPLOYEE",
+        },
+      };
+
+    case "HRS":
+      return {
+        user: {
+          role: "HR",
+        },
+      };
+
+    case "OTHER_ADMINS":
+      return {
+        user: {
+          role: "ADMIN",
+          id: {
+            not: adminId,
+          },
+        },
+      };
+  }
+}
+
+/**
+ * Get pending expenses for the Admin approval page according
+ * to the selected expense scope.
+ */
 export async function getPendingExpensesForAdmin(
   adminId: number,
+  scope: AdminExpenseScope = "EMPLOYEES",
   reimbursementStatus: "ALL" | ReimbursementStatus = "ALL",
 ) {
+  const scopeFilter = getAdminExpenseScopeFilter(adminId, scope);
+
+  const where: Prisma.ExpenseWhereInput = {
+    status: "PENDING",
+
+    ...scopeFilter,
+
+    ...(reimbursementStatus !== "ALL"
+      ? {
+          reimbursementStatus,
+        }
+      : {}),
+  };
+
   const expenses = await prisma.expense.findMany({
-    where: {
-      status: "PENDING",
-
-      userId: {
-        not: adminId,
-      },
-
-      ...(reimbursementStatus !== "ALL" && {
-        reimbursementStatus,
-      }),
-    },
+    where,
 
     include: {
       user: {
@@ -537,6 +604,7 @@ export async function getPendingExpensesForAdmin(
           id: true,
           name: true,
           email: true,
+          role: true,
         },
       },
 
@@ -562,19 +630,19 @@ export async function getPendingExpensesForAdmin(
     orderBy: [{ expenseDate: "asc" }, { createdAt: "asc" }],
   });
 
-  return expenses.map((expense) => ({
-    ...expense,
-    amount: Number(expense.amount),
-    baseCurrencyAmount:
-      expense.baseCurrencyAmount !== null
-        ? Number(expense.baseCurrencyAmount)
-        : null,
-    exchangeRate:
-      expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
-  }));
+  return expenses.map(serializeExpenseAmounts);
 }
 
+/**
+ * Approval history is ALWAYS restricted to the currently selected scope.
+ *
+ * This is intentionally server-side.
+ *
+ * We do NOT load everybody and filter them in React.
+ */
 export async function getExpenseApprovalHistory(
+  adminId: number,
+  scope: AdminExpenseScope = "EMPLOYEES",
   page: number = 1,
   pageSize: number = 10,
   approvalStatus: "ALL" | "PENDING" | "APPROVED" | "REJECTED" = "ALL",
@@ -583,10 +651,14 @@ export async function getExpenseApprovalHistory(
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
 
+  const scopeFilter = getAdminExpenseScopeFilter(adminId, scope);
+
   const where: Prisma.ExpenseWhereInput = {
     decidedAt: {
       not: null,
     },
+
+    ...scopeFilter,
 
     ...(approvalStatus !== "ALL"
       ? {
@@ -611,6 +683,7 @@ export async function getExpenseApprovalHistory(
             id: true,
             name: true,
             email: true,
+            role: true,
           },
         },
 
@@ -638,16 +711,7 @@ export async function getExpenseApprovalHistory(
   ]);
 
   return {
-    expenses: expenses.map((expense) => ({
-      ...expense,
-      amount: Number(expense.amount),
-      baseCurrencyAmount:
-        expense.baseCurrencyAmount !== null
-          ? Number(expense.baseCurrencyAmount)
-          : null,
-      exchangeRate:
-        expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
-    })),
+    expenses: expenses.map(serializeExpenseAmounts),
     total,
     page: safePage,
     pageSize: safePageSize,
@@ -655,21 +719,87 @@ export async function getExpenseApprovalHistory(
   };
 }
 
+/**
+ * Deleted expense history follows exactly the same scope as
+ * Pending Approvals and Approval History.
+ *
+ * OWN:
+ *   Deleted expenses originally owned by this Admin.
+ *
+ * EMPLOYEES:
+ *   Deleted expenses originally owned by Employees.
+ *
+ * HRS:
+ *   Deleted expenses originally owned by HRs.
+ *
+ * OTHER_ADMINS:
+ *   Deleted expenses originally owned by another Admin.
+ */
 export async function getExpenseDeletionHistoryForAdmin(
+  adminId: number,
+  scope: AdminExpenseScope = "EMPLOYEES",
   page: number = 1,
   pageSize: number = 10,
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
 
+  const ownerFilter = getAdminExpenseScopeFilter(adminId, scope);
+
+  /*
+   * getAdminExpenseScopeFilter() is based on ExpenseWhereInput,
+   * while DeletedExpense has the owner through the `user` relation.
+   *
+   * Convert the scope into a DeletedExpense-compatible filter.
+   */
+  let userFilter: Prisma.UserWhereInput;
+
+  switch (scope) {
+    case "OWN":
+      userFilter = {
+        id: adminId,
+      };
+      break;
+
+    case "EMPLOYEES":
+      userFilter = {
+        role: "EMPLOYEE",
+      };
+      break;
+
+    case "HRS":
+      userFilter = {
+        role: "HR",
+      };
+      break;
+
+    case "OTHER_ADMINS":
+      userFilter = {
+        role: "ADMIN",
+        id: {
+          not: adminId,
+        },
+      };
+      break;
+  }
+
+  void ownerFilter;
+
+  const where: Prisma.DeletedExpenseWhereInput = {
+    user: userFilter,
+  };
+
   const [deletedExpenses, total] = await prisma.$transaction([
     prisma.deletedExpense.findMany({
+      where,
+
       include: {
         user: {
           select: {
             id: true,
             name: true,
             email: true,
+            role: true,
           },
         },
 
@@ -678,6 +808,7 @@ export async function getExpenseDeletionHistoryForAdmin(
             id: true,
             name: true,
             email: true,
+            role: true,
           },
         },
       },
@@ -690,7 +821,9 @@ export async function getExpenseDeletionHistoryForAdmin(
       take: safePageSize,
     }),
 
-    prisma.deletedExpense.count(),
+    prisma.deletedExpense.count({
+      where,
+    }),
   ]);
 
   return {

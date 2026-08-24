@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import {
   approveExpenseAction,
   rejectExpenseAction,
+  deleteExpenseAsAdminAction,
 } from "@/features/expenses/actions/approval-actions";
 
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
 
 import type { DisplayExpense } from "@/features/expenses/types";
+import type { AdminExpenseScope } from "@/features/expenses/lib/expenses";
+
 import { formatCurrency } from "@/utils/formatCurrency";
 
 type ApprovalExpense = DisplayExpense & {
@@ -18,6 +21,7 @@ type ApprovalExpense = DisplayExpense & {
     id: number;
     name: string;
     email: string;
+    role?: string;
   } | null;
 
   decidedBy: {
@@ -29,9 +33,15 @@ type ApprovalExpense = DisplayExpense & {
 
 type ApprovalListProps = {
   expenses: ApprovalExpense[];
+  expenseScope: AdminExpenseScope;
+  currentUserId: number;
 };
 
-export default function ApprovalList({ expenses }: ApprovalListProps) {
+export default function ApprovalList({
+  expenses,
+  expenseScope,
+  currentUserId,
+}: ApprovalListProps) {
   const router = useRouter();
 
   const [selectedExpense, setSelectedExpense] =
@@ -44,9 +54,12 @@ export default function ApprovalList({ expenses }: ApprovalListProps) {
   const wasEditing = useRef(false);
 
   /*
-   * Refresh the Admin approval list after the Admin finishes editing
-   * an expense.
+   * Only OWN expenses are allowed to navigate to /expenses/[id].
+   *
+   * Employee / HR approval expenses stay inside the Review dialog.
    */
+  const canNavigateToExpenseDetails = expenseScope === "OWN";
+
   useEffect(() => {
     if (wasEditing.current && !editingExpense) {
       router.refresh();
@@ -59,14 +72,26 @@ export default function ApprovalList({ expenses }: ApprovalListProps) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
         <h2 className="text-lg font-semibold text-slate-800">
-          No pending expenses
+          No expenses found
         </h2>
 
         <p className="mt-1 text-sm text-slate-500">
-          All expenses have been reviewed.
+          There are no pending expenses for this scope.
         </p>
       </div>
     );
+  }
+
+  function handleExpenseClick(expense: ApprovalExpense) {
+    /*
+     * OWN:
+     *
+     * The Admin is viewing their own expense.
+     * This follows the same employee-owned expense flow.
+     */
+    if (canNavigateToExpenseDetails && expense.user?.id === currentUserId) {
+      router.push(`/expenses/${expense.id}`);
+    }
   }
 
   return (
@@ -111,65 +136,126 @@ export default function ApprovalList({ expenses }: ApprovalListProps) {
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {expenses.map((expense) => (
-                <tr key={expense.id} className="transition hover:bg-slate-50">
-                  <td className="px-5 py-4">
-                    <div>
+              {expenses.map((expense) => {
+                const isOwnExpense = expense.user?.id === currentUserId;
+
+                const isClickable = canNavigateToExpenseDetails && isOwnExpense;
+
+                return (
+                  <tr
+                    key={expense.id}
+                    onClick={() => {
+                      if (isClickable) {
+                        handleExpenseClick(expense);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (!isClickable) {
+                        return;
+                      }
+
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleExpenseClick(expense);
+                      }
+                    }}
+                    tabIndex={isClickable ? 0 : undefined}
+                    role={isClickable ? "link" : undefined}
+                    className={`transition ${
+                      isClickable
+                        ? "cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                        : "hover:bg-slate-50"
+                    }`}
+                  >
+                    <td className="px-5 py-4">
+                      <div>
+                        <p className="font-medium text-slate-900">
+                          {expense.user?.name ?? "Unknown"}
+                        </p>
+
+                        <p className="text-xs text-slate-500">
+                          {expense.user?.email ?? "No email"}
+                        </p>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4">
                       <p className="font-medium text-slate-900">
-                        {expense.user?.name ?? "Unknown"}
+                        {expense.title}
                       </p>
 
-                      <p className="text-xs text-slate-500">
-                        {expense.user?.email ?? "No email"}
-                      </p>
-                    </div>
-                  </td>
+                      <p className="text-xs text-slate-400">#{expense.id}</p>
+                    </td>
 
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-slate-900">
-                      {expense.title}
-                    </p>
+                    <td className="whitespace-nowrap px-5 py-4 font-semibold text-green-600">
+                      {formatCurrency(
+                        expense.displayAmount ?? expense.amount,
+                        expense.displayAmount !== undefined
+                          ? expense.currency
+                          : expense.currency,
+                      )}
+                    </td>
 
-                    <p className="text-xs text-slate-400">#{expense.id}</p>
-                  </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                        {expense.category}
+                      </span>
+                    </td>
 
-                  <td className="whitespace-nowrap px-5 py-4 font-semibold text-green-600">
-                    {formatCurrency(expense.amount, expense.currency)}
-                  </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
+                      {expense.expenseDate
+                        ? new Date(expense.expenseDate).toLocaleDateString()
+                        : "—"}
+                    </td>
 
-                  <td className="px-5 py-4">
-                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                      {expense.category}
-                    </span>
-                  </td>
+                    <td className="px-5 py-4">
+                      <EvidenceIndicator expense={expense} />
+                    </td>
 
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
-                    {expense.expenseDate
-                      ? new Date(expense.expenseDate).toLocaleDateString()
-                      : "—"}
-                  </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                        PENDING
+                      </span>
+                    </td>
 
-                  <td className="px-5 py-4">
-                    <EvidenceIndicator expense={expense} />
-                  </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {isClickable ? (
+                          <>
+                            <span className="text-sm font-medium text-blue-600">
+                              View expense →
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedExpense(expense);
+                              }}
+                              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                            >
+                              Review
+                            </button>
 
-                  <td className="px-5 py-4">
-                    <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                      PENDING
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedExpense(expense)}
-                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                    >
-                      Review
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedExpense(expense);
+                              }}
+                              className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -329,20 +415,10 @@ function ReviewExpenseModal({
     setMessage("");
 
     try {
-      const response = await fetch(`/api/expenses/${expense.id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          deletionReason: reason,
-        }),
-      });
+      const result = await deleteExpenseAsAdminAction(expense.id, reason);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.message ?? "Unable to delete expense.");
+      if (!result.success) {
+        setMessage(result.message);
         return;
       }
 

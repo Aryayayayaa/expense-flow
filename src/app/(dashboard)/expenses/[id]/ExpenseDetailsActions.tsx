@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import Button from "@/components/common/Button";
 import EditExpenseDialog from "@/features/expenses/components/EditExpenseDialog";
+import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
 
 type ExpenseDetailsActionsProps = {
   expense: {
@@ -26,20 +27,64 @@ export default function ExpenseDetailsActions({
   const router = useRouter();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (!expense) {
     return null;
   }
 
+  async function handleDelete() {
+    if (deleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this pending expense?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      await deleteExpenseAction(expense.id);
+
+      router.push("/expenses");
+      router.refresh();
+    } catch (error) {
+      console.error("Delete expense error:", error);
+
+      window.alert(
+        error instanceof Error ? error.message : "Unable to delete expense.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <>
-      <Button
-        type="button"
-        onClick={() => setEditOpen(true)}
-        className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-      >
-        Edit Expense
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          onClick={() => setEditOpen(true)}
+          disabled={deleting}
+          className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Edit Expense
+        </Button>
+
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-white px-5 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {deleting ? "Deleting..." : "Delete Expense"}
+        </button>
+      </div>
 
       <EditExpenseDialog
         open={editOpen}

@@ -46,7 +46,7 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
   }
 
   const userId = Number(session.user.id);
-  const role = session.user.role;
+  //const role = session.user.role;
 
   /*
    * Use the user's CURRENT default currency for display.
@@ -66,18 +66,16 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
   const expense = await prisma.expense.findFirst({
     where: {
       id: expenseId,
-      ...(role === "ADMIN" || role === "HR"
-        ? {}
-        : {
-            userId,
-          }),
+      userId,
     },
+
     include: {
       user: {
         select: {
           id: true,
           name: true,
           email: true,
+          role: true,
         },
       },
 

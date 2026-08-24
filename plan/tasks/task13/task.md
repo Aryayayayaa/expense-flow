@@ -1,165 +1,119 @@
-# Task 13 —
+# Task 10 — Expense Scope & Reimbursement Management
 
-## Subtask 1: Redesign Expense Details UI
+## Objective
 
-### Objective
+Enhance expense management for HR and Admin users by introducing clear expense-scope handling for reimbursement-related data and ensuring that reimbursement information is segregated according to the selected scope.
 
-Redesign the `/expenses/[id]` page to provide a clean, polished, and user-friendly view of a single expense.
+The reimbursement functionality currently does **not** have a separate reimbursement page. Instead, reimbursement options are available through:
 
-This subtask is limited to the UI/UX redesign of the Expense Details page and should remain independent from the receipt-only workflow changes being implemented in the remaining Task 13 subtasks.
+- **People Management** → HR account
+- **Administration** → Admin account
 
-### Scope
+The implementation should therefore extend the existing expense-scope mechanism rather than introducing a separate reimbursement page.
 
-#### 1. Expense Details Layout
+---
 
-##### STATUS: COMPLETED
+## Subtask 1 — Reimbursement Expense Scope
 
-Redesign the page with a clear visual hierarchy for:
+### Goal
 
-- Expense title
+Add an expense-scope option specifically for **Reimbursements** so that the reimbursement data displayed to HR/Admin users is segregated according to the selected scope.
+
+The reimbursement scope should follow the existing account-specific ownership/access model.
+
+### Required Scope Options
+
+#### Admin account
+
+The reimbursement expense scope should support:
+
+- **OWN** — Admin's own expenses
+- **Employees** — Expenses belonging to employees
+- **Other Admin/HRs** — Expenses belonging to other Admin/HR users
+- **HRs and Admins** — Expenses belonging to HR and Admin users
+
+#### HR account
+
+The reimbursement expense scope should support:
+
+- **OWN** — HR's own expenses, where applicable according to the existing expense-scope rules
+- **Employees** — Expenses belonging to employees
+- **Other Admin/HRs** — Expenses belonging to other Admin/HR users
+- **HRs and Admins** — Expenses belonging to HR and Admin users
+
+The exact data returned for each scope must remain consistent with the existing role and expense-visibility rules.
+
+---
+
+## Current Reimbursement Implementation
+
+Reimbursement functionality currently exists through the following files:
+
+- `src/features/expenses/components/ReimbursementTable.tsx`
+- `src/features/expenses/components/ReimbursementHistoryTable.tsx`
+- `src/features/expenses/actions/reimbursement-actions.ts`
+
+The existing reimbursement workflow includes:
+
+### Pending reimbursement processing
+
+`ReimbursementTable.tsx` currently allows HR users to:
+
+- Review approved expenses waiting for reimbursement
+- View employee information
+- View expense details
+- View approval information
+- Open the original receipt
+- Open bill proof
+- Enter a reimbursement rejection reason
+- Reject reimbursement
+- Mark an expense as reimbursed
+
+### Reimbursement history
+
+`ReimbursementHistoryTable.tsx` currently displays:
+
+- Employee
+- Expense
 - Amount
-- Currency
-- Category
-- Expense date and time
 - Expense status
-- Reimbursement status, where applicable
-- Created/updated information, where available
-
-#### 2. Expense Status
-
-##### STATUS: COMPLETED
-
-Display the current expense status clearly.
-
-Support the existing states where applicable:
-
-- PENDING
-- APPROVED
-- REJECTED
-
-Display relevant information such as:
-
-- Reviewer
-- Decision date
-- Rejection reason
-
-when the existing data is available.
-
-#### 3. Reimbursement Information
-
-If reimbursement information exists, display it in a dedicated and clearly identifiable section.
-
-Show relevant existing information such as:
-
 - Reimbursement status
-- Reimbursed by
-- Reimbursement date
+- Approved by
+- Approved on
+- Processed by
+- Processed on
+- Reimbursement rejection reason, when applicable
 
-Do not introduce new reimbursement functionality as part of this subtask.
+### Server actions
 
-#### 4. Receipt Section
+`reimbursement-actions.ts` currently provides:
 
-##### STATUS: COMPLETED
+- `reimburseExpenseAction()`
+- `rejectReimbursementAction()`
 
-Create a dedicated receipt area in the Expense Details page.
+The actions currently:
 
-For the current UI redesign:
+- Authenticate the user
+- Require the `HR` role
+- Validate that the expense exists
+- Prevent processing an HR user's own expense
+- Require the expense to be `APPROVED`
+- Require reimbursement status to be `PENDING`
+- Update reimbursement status
+- Store reimbursement date and processor
+- Store rejection reason when reimbursement is rejected
+- Create an expense audit log
+- Revalidate relevant application paths
+- Create employee notifications
+- Send reimbursement/rejection emails
 
-- Clearly indicate whether a receipt is attached.
-- Provide access to view the existing receipt when available.
-- Provide an appropriate empty state when no receipt is attached.
-- Do not introduce a separate Bill Proof section.
-- Follow the Task 13 requirement of having only one receipt per expense.
+---
 
-Receipt upload/edit behavior will be handled separately in the remaining Task 13 subtasks.
+## Existing Data Retrieval
 
-#### 5. Actions
+The reimbursement-related data is currently retrieved through:
 
-##### STATUS: COMPLETED
-
-Keep the existing supported expense actions available where appropriate.
-
-The redesigned page should provide a clear location for actions such as:
-
-- Edit Expense
-- Back to Expenses
-
-Do not introduce new expense actions unless required by the existing functionality.
-
-#### 6. Responsive Design
-
-##### STATUS: COMPLETED
-
-The redesigned `/expenses/[id]` page should work properly across:
-
-- Desktop
-- Tablet
-- Mobile
-
-The layout should remain readable and usable without unnecessary horizontal scrolling.
-
-#### 7. Visual Consistency
-
-##### STATUS: COMPLETED
-
-The redesigned page should follow the existing ExpenseFlow design language:
-
-- Existing components where appropriate
-- Existing typography
-- Existing spacing conventions
-- Existing buttons
-- Existing status styling
-- Existing cards/borders/shadows
-- Existing Tailwind CSS approach
-
-Avoid introducing an unrelated visual style.
-
-### Out of Scope
-
-The following are NOT part of this subtask:
-
-- Changing OCR extraction logic
-- Changing receipt upload processing
-- Changing receipt immutability rules
-- Removing Bill Proof from backend/database
-- Changing expense creation logic
-- Changing expense editing logic
-- Changing expense approval/rejection logic
-- Changing reimbursement logic
-- Changing database schema
-
-These will be handled in subsequent Task 13 subtasks.
-
-### Acceptance Criteria
-
-- [x] `/expenses/[id]` has a redesigned and polished UI.
-- [x] Expense information has a clear visual hierarchy.
-- [x] Expense status is clearly displayed.
-- [x] Reimbursement information is displayed when available.
-- [x] Receipt information has a dedicated section.
-- [x] Existing receipt can be viewed/accessed where applicable.
-- [x] No separate Bill Proof UI is introduced.
-- [x] Appropriate empty states are displayed.
-- [x] Existing supported actions remain functional.
-- [x] Page is responsive on desktop, tablet, and mobile.
-- [x] Existing ExpenseFlow styling/components are respected.
-- [x] No unrelated backend or business-logic changes are introduced.
-- [x] `npm run build` passes successfully.
-
-### Verification
-
-1. Open `/expenses/[id]` for an existing expense.
-2. Verify the redesigned layout and information hierarchy.
-3. Verify an expense with a receipt attached.
-4. Verify an expense without a receipt.
-5. Verify PENDING, APPROVED, and REJECTED states where test data is available.
-6. Verify reimbursement information where applicable.
-7. Verify the existing receipt-viewing functionality.
-8. Verify the Edit Expense action.
-9. Verify the Back to Expenses action.
-10. Test the page at desktop, tablet, and mobile widths.
-11. Run:
-
-```bash
-npm run build
+```ts
+getApprovedExpensesForHR();
+getReimbursementHistory();
 ```

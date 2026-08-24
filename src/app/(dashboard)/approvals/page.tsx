@@ -11,6 +11,7 @@ import {
   getPendingExpensesForAdmin,
   getExpenseDeletionHistoryForAdmin,
   getDeletedExpensesForUser,
+  type AdminExpenseScope,
 } from "@/features/expenses/lib/expenses";
 
 import type {
@@ -31,6 +32,7 @@ type ApprovalsPageProps = {
     page?: string;
     approvalStatus?: string;
     reimbursementStatus?: string;
+    scope?: string;
   }>;
 };
 
@@ -49,14 +51,8 @@ export default async function ApprovalsPage({
 
   /*
    * Get the exchange rate needed to convert the application's
-   * stored base currency (INR) into the user's current default currency.
-   *
-   * Example:
-   *
-   * defaultCurrency = USD
-   * USD -> INR rate = 92
-   *
-   * INR 188 / 92 = USD 2.04
+   * stored base currency (INR) into the user's current default
+   * currency.
    */
   const displayRateToInr =
     defaultCurrency === "INR"
@@ -64,10 +60,19 @@ export default async function ApprovalsPage({
       : (await getExchangeRate(defaultCurrency, "INR")).rate;
 
   /*
+   * --------------------------------------------------------------------------
    * ADMIN
+   * --------------------------------------------------------------------------
    *
-   * Admins review other users' pending expenses
-   * and can view the complete approval history.
+   * Admins can:
+   *
+   * 1. View their own pending expenses using OWN.
+   * 2. Review employee pending expenses using EMPLOYEES.
+   * 3. Review HR pending expenses using HRS.
+   *
+   * Only OWN expenses are allowed to navigate to /expenses/[id].
+   *
+   * Employee / HR expenses remain inside the Review dialog.
    */
   if (role === "ADMIN") {
     const params = await searchParams;
@@ -91,15 +96,35 @@ export default async function ApprovalsPage({
         ? params.reimbursementStatus
         : "ALL";
 
+    /*
+     * Default Admin scope:
+     *
+     * Employees
+     *
+     * This preserves the purpose of the approval page:
+     * reviewing employee expenses.
+     */
+    const expenseScope: AdminExpenseScope =
+      params.scope === "OWN" ||
+      params.scope === "EMPLOYEES" ||
+      params.scope === "HRS" ||
+      params.scope === "OTHER_ADMINS"
+        ? params.scope
+        : "EMPLOYEES";
+
     const [pendingExpenses, history, deletionHistory] = await Promise.all([
-      getPendingExpensesForAdmin(userId),
+      getPendingExpensesForAdmin(userId, expenseScope, reimbursementStatus),
+
       getExpenseApprovalHistory(
+        userId,
+        expenseScope,
         historyPage,
         10,
         approvalStatus,
         reimbursementStatus,
       ),
-      getExpenseDeletionHistoryForAdmin(),
+
+      getExpenseDeletionHistoryForAdmin(userId, expenseScope, historyPage, 10),
     ]);
 
     const serializedPendingExpenses = pendingExpenses.map((expense) => {
@@ -107,28 +132,27 @@ export default async function ApprovalsPage({
 
       /*
        * If the expense was created in the Admin's current
-       * default currency, the original amount can be displayed directly.
+       * default currency, display the original amount directly.
        */
       if (expense.currency === defaultCurrency) {
         return {
           ...expense,
           amount,
+
           baseCurrencyAmount:
             expense.baseCurrencyAmount !== null
               ? Number(expense.baseCurrencyAmount)
               : null,
+
           exchangeRate:
             expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+
           displayAmount: amount,
         };
       }
 
       /*
        * The application's stored base currency is INR.
-       *
-       * Existing INR expenses may not have baseCurrencyAmount,
-       * so for those expenses the original amount itself is the
-       * normalized INR amount.
        */
       const baseCurrencyAmount =
         expense.baseCurrencyAmount !== null
@@ -155,8 +179,10 @@ export default async function ApprovalsPage({
         ...expense,
         amount,
         baseCurrencyAmount,
+
         exchangeRate:
           expense.exchangeRate !== null ? Number(expense.exchangeRate) : null,
+
         displayAmount,
       };
     });
@@ -170,11 +196,15 @@ export default async function ApprovalsPage({
             </h1>
 
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Review employee expenses and track previous approval decisions.
+              Review expenses according to the selected expense scope and track
+              previous approval decisions.
             </p>
           </div>
 
-          {/* Pending approvals */}
+          {/* ---------------------------------------------------------------- */}
+          {/* Pending Approvals                                                */}
+          {/* ---------------------------------------------------------------- */}
+
           <section>
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -182,14 +212,69 @@ export default async function ApprovalsPage({
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Expenses waiting for your approval.
+                Previously approved and rejected expenses within the selected
+                expense scope.
               </p>
             </div>
 
-            <ApprovalList expenses={serializedPendingExpenses} />
+            {/* Expense Scope */}
+            <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <div className="mb-3">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Expense Scope
+                </h3>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Choose which pending expenses you want to view.
+                </p>
+              </div>
+
+              <form method="GET" className="flex flex-wrap items-center gap-3">
+                <input
+                  type="hidden"
+                  name="approvalStatus"
+                  value={approvalStatus}
+                />
+
+                <input
+                  type="hidden"
+                  name="reimbursementStatus"
+                  value={reimbursementStatus}
+                />
+
+                <input type="hidden" name="page" value="1" />
+
+                <select
+                  name="scope"
+                  defaultValue={expenseScope}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="OWN">OWN</option>
+                  <option value="EMPLOYEES">Employees</option>
+                  <option value="HRS">HRs</option>
+                  <option value="OTHER_ADMINS">Other Admins</option>
+                </select>
+
+                <button
+                  type="submit"
+                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+                >
+                  Apply Scope
+                </button>
+              </form>
+            </div>
+
+            <ApprovalList
+              expenses={serializedPendingExpenses}
+              expenseScope={expenseScope}
+              currentUserId={userId}
+            />
           </section>
 
-          {/* Approval history */}
+          {/* ---------------------------------------------------------------- */}
+          {/* Approval History                                                 */}
+          {/* ---------------------------------------------------------------- */}
+
           <section className="mt-10">
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -219,7 +304,6 @@ export default async function ApprovalsPage({
               />
             </div>
 
-            {/* Approval history table */}
             <ApprovalHistoryTable expenses={history.expenses} />
 
             {/* Approval delete history */}
@@ -231,7 +315,7 @@ export default async function ApprovalsPage({
 
                 <p className="mt-1 text-sm text-slate-500">
                   Expenses deleted by Admins are preserved here with their
-                  deletion reason and employee information.
+                  deletion reason and owner information for the selected scope.
                 </p>
               </div>
 
@@ -246,10 +330,19 @@ export default async function ApprovalsPage({
   }
 
   /*
+   * --------------------------------------------------------------------------
    * EMPLOYEE / HR
+   * --------------------------------------------------------------------------
    *
-   * They cannot approve expenses.
-   * They only see the status of their own expenses.
+   * They cannot approve other users' expenses.
+   *
+   * They only see their own expenses.
+   *
+   * Clicking one of their own expenses opens:
+   *
+   *   /expenses/[id]
+   *
+   * Edit/Delete are handled there.
    */
   const params = await searchParams;
 
