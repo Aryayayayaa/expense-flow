@@ -517,6 +517,13 @@ export async function getAllExpensesForAdmin() {
 /* -------------------------------------------------------------------------- */
 
 export type AdminExpenseScope = "OWN" | "EMPLOYEES" | "HRS" | "OTHER_ADMINS";
+export type ReimbursementExpenseScope =
+  | "OWN"
+  | "EMPLOYEES"
+  | "OTHER_ADMINS"
+  | "HRS"
+  | "OTHER_HRS"
+  | "ADMINS";
 
 /**
  * Returns the Prisma owner filter for an Admin expense scope.
@@ -1083,20 +1090,18 @@ export async function getDeletedExpensesForUser(userId: number) {
  */
 export async function getApprovedExpensesForHR(
   hrId: number,
-  page: number = 1,
-  pageSize: number = 10,
+  page: number,
+  pageSize: number,
+  scope: ReimbursementExpenseScope = "EMPLOYEES",
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
 
+  const scopeFilter = getReimbursementScopeFilter(scope, hrId);
   const where: Prisma.ExpenseWhereInput = {
     status: "APPROVED",
-
     reimbursementStatus: "PENDING",
-
-    userId: {
-      not: hrId,
-    },
+    ...scopeFilter,
   };
 
   const [expenses, total] = await prisma.$transaction([
@@ -1158,11 +1163,18 @@ export async function getApprovedExpensesForHR(
 export async function getReimbursementHistory(
   page: number = 1,
   pageSize: number = 10,
+  userId?: number,
+  scope?: ReimbursementExpenseScope,
 ) {
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
 
-  const where = {
+  const scopeFilter =
+    userId !== undefined && scope
+      ? getReimbursementScopeFilter(scope, userId)
+      : {};
+
+  const where: Prisma.ExpenseWhereInput = {
     reimbursementStatus: {
       in: ["REIMBURSED", "REJECTED"] satisfies ReimbursementStatus[],
     },
@@ -1170,8 +1182,9 @@ export async function getReimbursementHistory(
     reimbursementAt: {
       not: null,
     },
-  };
 
+    ...scopeFilter,
+  };
   const [expenses, total] = await prisma.$transaction([
     prisma.expense.findMany({
       where,
@@ -1255,4 +1268,70 @@ export async function getReimbursementHistory(
     pageSize: safePageSize,
     totalPages: Math.ceil(total / safePageSize),
   };
+}
+
+function getReimbursementScopeFilter(
+  scope: ReimbursementExpenseScope,
+  userId: number,
+): Prisma.ExpenseWhereInput {
+  switch (scope) {
+    case "OWN":
+      return {
+        userId,
+      };
+
+    case "EMPLOYEES":
+      return {
+        user: {
+          is: {
+            role: "EMPLOYEE",
+          },
+        },
+      };
+
+    case "OTHER_ADMINS":
+      return {
+        user: {
+          is: {
+            role: "ADMIN",
+            id: {
+              not: userId,
+            },
+          },
+        },
+      };
+
+    case "HRS":
+      return {
+        user: {
+          is: {
+            role: "HR",
+          },
+        },
+      };
+
+    case "OTHER_HRS":
+      return {
+        user: {
+          is: {
+            role: "HR",
+            id: {
+              not: userId,
+            },
+          },
+        },
+      };
+
+    case "ADMINS":
+      return {
+        user: {
+          is: {
+            role: "ADMIN",
+          },
+        },
+      };
+
+    default:
+      return {};
+  }
 }

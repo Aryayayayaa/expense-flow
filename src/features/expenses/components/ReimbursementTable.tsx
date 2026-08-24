@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import {
   Calendar,
   CheckCircle2,
@@ -19,7 +20,7 @@ import {
 
 import { formatCurrency } from "@/utils/formatCurrency";
 
-type ReimbursementExpense = {
+export type ReimbursementExpense = {
   id: number;
   title: string;
   amount: unknown;
@@ -68,6 +69,10 @@ export default function ReimbursementTable({ expenses }: Props) {
   const [message, setMessage] = useState("");
 
   const [rejectionReason, setRejectionReason] = useState("");
+
+  useEffect(() => {
+    setItems(expenses);
+  }, [expenses]);
 
   async function handleReimburse(id: number) {
     const confirmed = window.confirm(

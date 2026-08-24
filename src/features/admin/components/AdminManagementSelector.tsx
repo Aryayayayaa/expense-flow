@@ -1,9 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import UserManagementTable from "./UserManagementTable";
+
+import ReimbursementTable, {
+  ReimbursementExpense,
+} from "@/features/expenses/components/ReimbursementTable";
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
+import ReimbursementScopeSelector from "@/features/expenses/components/ReimbursementScopeSelector";
+
+import type {
+  ReimbursementExpenseScope,
+  ReimbursementHistoryExpense,
+} from "@/features/expenses/lib/expenses";
+
+import Pagination from "@/components/common/Pagination";
 
 import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
 import EmployeeVerificationTable from "@/features/auth/components/EmployeeVerificationTable";
@@ -16,14 +29,16 @@ import NameChangeRequestHistoryTable from "@/features/auth/components/NameChange
 import RoleVerificationTable from "@/features/auth/components/RoleVerificationTable";
 import RoleVerificationHistoryTable from "@/features/auth/components/RoleVerificationHistoryTable";
 
-import type { ReimbursementHistoryExpense } from "@/features/expenses/lib/expenses";
-
 import type {
   EmployeeVerificationStatus,
   NameChangeRequestStatus,
   Role,
   RoleRequestStatus,
 } from "@prisma/client";
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
 
 type User = {
   id: number;
@@ -192,11 +207,26 @@ type OwnNameChangeRequest = {
   } | null;
 };
 
+/* -------------------------------------------------------------------------- */
+/* Props                                                                      */
+/* -------------------------------------------------------------------------- */
+
 type Props = {
   userName: string;
   users: User[];
-  reimbursementExpenses: ReimbursementHistoryExpense[];
 
+  /* Reimbursements */
+  approvedExpenses: ReimbursementExpense[];
+  reimbursementExpenses: ReimbursementHistoryExpense[];
+  reimbursementScope: ReimbursementExpenseScope;
+
+  reimbursementPage: number;
+  reimbursementTotalPages: number;
+
+  reimbursementHistoryPage: number;
+  reimbursementHistoryTotalPages: number;
+
+  /* Employee Verification */
   employeeVerificationRequests: EmployeeVerificationRequest[];
   employeeVerificationHistory: EmployeeVerificationHistoryRequest[];
 
@@ -204,14 +234,20 @@ type Props = {
   latestOwnIdentityRequest: OwnIdentityRequest | null;
   ownIdentityAttemptCount: number;
 
+  /* Name Change */
   nameChangeRequests: NameChangeRequest[];
   nameChangeRequestHistory: NameChangeRequestHistoryRequest[];
 
   ownNameChangeRequests: OwnNameChangeRequest[];
 
+  /* Role Verification */
   roleRequests: RoleVerificationRequest[];
   roleRequestHistory: RoleVerificationHistoryRequest[];
 };
+
+/* -------------------------------------------------------------------------- */
+/* Management View                                                            */
+/* -------------------------------------------------------------------------- */
 
 type ManagementView =
   | "users"
@@ -220,25 +256,72 @@ type ManagementView =
   | "role-verification"
   | "reimbursements";
 
+/* -------------------------------------------------------------------------- */
+/* Component                                                                  */
+/* -------------------------------------------------------------------------- */
+
 export default function AdminManagementSelector({
   userName,
   users,
+
+  approvedExpenses,
   reimbursementExpenses,
+  reimbursementScope,
+
+  reimbursementPage,
+  reimbursementTotalPages,
+
+  reimbursementHistoryPage,
+  reimbursementHistoryTotalPages,
+
   employeeVerificationRequests,
   employeeVerificationHistory,
+
   ownIdentityRequests,
   latestOwnIdentityRequest,
   ownIdentityAttemptCount,
+
   nameChangeRequests,
   nameChangeRequestHistory,
   ownNameChangeRequests,
+
   roleRequests,
   roleRequestHistory,
 }: Props) {
   const [view, setView] = useState<ManagementView>("users");
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  /* ---------------------------------------------------------------------- */
+  /* Change reimbursement scope                                              */
+  /* ---------------------------------------------------------------------- */
+
+  function handleReimbursementScopeChange(scope: ReimbursementExpenseScope) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.set("reimbursementScope", scope);
+
+    /*
+     * Reset both reimbursement paginations whenever
+     * the expense scope changes.
+     */
+    params.set("reimbursementPage", "1");
+    params.set("reimbursementHistoryPage", "1");
+
+    router.push(`/admin?${params.toString()}`);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* View                                                                     */
+  /* ---------------------------------------------------------------------- */
+
   return (
     <div className="mt-8">
+      {/* ------------------------------------------------------------------ */}
+      {/* Administration Selector                                             */}
+      {/* ------------------------------------------------------------------ */}
+
       <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <label
           htmlFor="admin-management-view"
@@ -254,14 +337,20 @@ export default function AdminManagementSelector({
           className="h-12 w-full max-w-md rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         >
           <option value="users">Users</option>
+
           <option value="employee-verification">Employee Verification</option>
+
           <option value="name-change">Name Change Requests</option>
+
           <option value="role-verification">Role Verification Requests</option>
-          <option value="reimbursements">Reimbursement History</option>
+
+          <option value="reimbursements">Reimbursements</option>
         </select>
       </div>
 
-      {/* Users */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Users                                                                */}
+      {/* ------------------------------------------------------------------ */}
 
       {view === "users" && (
         <section>
@@ -279,7 +368,9 @@ export default function AdminManagementSelector({
         </section>
       )}
 
-      {/* Employee Verification */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Employee Verification                                               */}
+      {/* ------------------------------------------------------------------ */}
 
       {view === "employee-verification" && (
         <>
@@ -352,7 +443,9 @@ export default function AdminManagementSelector({
         </>
       )}
 
-      {/* Name Change */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Name Change                                                          */}
+      {/* ------------------------------------------------------------------ */}
 
       {view === "name-change" && (
         <>
@@ -417,7 +510,9 @@ export default function AdminManagementSelector({
         </>
       )}
 
-      {/* Role Verification */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Role Verification                                                   */}
+      {/* ------------------------------------------------------------------ */}
 
       {view === "role-verification" && (
         <>
@@ -452,23 +547,85 @@ export default function AdminManagementSelector({
         </>
       )}
 
-      {/* Reimbursements */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Reimbursements                                                       */}
+      {/* ------------------------------------------------------------------ */}
 
       {view === "reimbursements" && (
-        <section>
-          <div className="mb-5">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-              Reimbursement History
-            </h2>
+        <>
+          {/* -------------------------------------------------------------- */}
+          {/* Expense Scope                                                   */}
+          {/* -------------------------------------------------------------- */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              Review expenses that have been reimbursed, including the Admin who
-              approved them and the HR member who processed the reimbursement.
-            </p>
-          </div>
+          <section>
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                Reimbursements
+              </h2>
 
-          <ReimbursementHistoryTable expenses={reimbursementExpenses} />
-        </section>
+              <p className="mt-1 text-sm text-slate-500">
+                Review pending reimbursement requests and reimbursement history
+                based on the selected expense scope.
+              </p>
+            </div>
+
+            <ReimbursementScopeSelector
+              scope={reimbursementScope}
+              basePath="/admin"
+            />
+          </section>
+
+          {/* -------------------------------------------------------------- */}
+          {/* Pending Reimbursement Approvals                                */}
+          {/* -------------------------------------------------------------- */}
+
+          <section className="mt-10">
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                Pending Reimbursement Approvals
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Review approved expenses that are waiting to be reimbursed. You
+                can review the expense proof and approve or reject the
+                reimbursement.
+              </p>
+            </div>
+
+            <ReimbursementTable expenses={approvedExpenses} />
+
+            <Pagination
+              page={reimbursementPage}
+              totalPages={reimbursementTotalPages}
+              paramName="reimbursementPage"
+            />
+          </section>
+
+          {/* -------------------------------------------------------------- */}
+          {/* Reimbursement History                                            */}
+          {/* -------------------------------------------------------------- */}
+
+          <section className="mt-10">
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                Reimbursement History
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Review reimbursements that have already been processed,
+                including approval and processing details.
+              </p>
+            </div>
+
+            <ReimbursementHistoryTable expenses={reimbursementExpenses} />
+
+            <Pagination
+              page={reimbursementHistoryPage}
+              totalPages={reimbursementHistoryTotalPages}
+              paramName="reimbursementHistoryPage"
+            />
+          </section>
+        </>
       )}
     </div>
   );

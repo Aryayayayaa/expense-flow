@@ -16,7 +16,7 @@ type ReimbursementActionResult = {
   message: string;
 };
 
-async function requireHR() {
+async function requireReimbursementProcessor() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -26,7 +26,7 @@ async function requireHR() {
     };
   }
 
-  if (session.user.role !== "HR") {
+  if (session.user.role !== "HR" && session.user.role !== "ADMIN") {
     return {
       success: false as const,
       message: "You are not authorized to perform this action.",
@@ -36,6 +36,7 @@ async function requireHR() {
   return {
     success: true as const,
     userId: Number(session.user.id),
+    role: session.user.role,
   };
 }
 
@@ -101,7 +102,7 @@ export async function reimburseExpenseAction(
   expenseId: number,
 ): Promise<ReimbursementActionResult> {
   try {
-    const hr = await requireHR();
+    const hr = await requireReimbursementProcessor();
 
     if (!hr.success) {
       return hr;
@@ -146,7 +147,7 @@ export async function reimburseExpenseAction(
         userId: expenseResult.expense.userId!,
         type: "EXPENSE_REIMBURSED",
         title: "Expense Reimbursed",
-        message: `Your expense "${expenseResult.expense.title}" has been reimbursed by HR.`,
+        message: `Your expense "${expenseResult.expense.title}" has been reimbursed.`,
         expenseId: expenseResult.expense.id,
         metadata: {
           expenseTitle: expenseResult.expense.title,
@@ -184,10 +185,10 @@ export async function rejectReimbursementAction(
   rejectionReason: string,
 ): Promise<ReimbursementActionResult> {
   try {
-    const hr = await requireHR();
+    const processor = await requireReimbursementProcessor();
 
-    if (!hr.success) {
-      return hr;
+    if (!processor.success) {
+      return processor;
     }
 
     const reason = rejectionReason.trim();
@@ -199,7 +200,10 @@ export async function rejectReimbursementAction(
       };
     }
 
-    const expenseResult = await getReimbursementExpense(expenseId, hr.userId);
+    const expenseResult = await getReimbursementExpense(
+      expenseId,
+      processor.userId,
+    );
 
     if (!expenseResult.success) {
       return expenseResult;
@@ -213,7 +217,7 @@ export async function rejectReimbursementAction(
         data: {
           reimbursementStatus: "REJECTED",
           reimbursementAt: new Date(),
-          reimbursementById: hr.userId,
+          reimbursementById: processor.userId,
           reimbursementReason: reason,
         },
       });
@@ -221,7 +225,7 @@ export async function rejectReimbursementAction(
       await tx.expenseAuditLog.create({
         data: {
           expenseId,
-          actorId: hr.userId,
+          actorId: processor.userId,
           action: "REJECTED",
           reason,
           metadata: {
@@ -240,7 +244,7 @@ export async function rejectReimbursementAction(
         userId: expenseResult.expense.userId!,
         type: "REIMBURSEMENT_REJECTED",
         title: "Reimbursement Rejected",
-        message: `The reimbursement for your expense "${expenseResult.expense.title}" has been rejected by HR.`,
+        message: `The reimbursement for your expense "${expenseResult.expense.title}" has been rejected.`,
         expenseId: expenseResult.expense.id,
         metadata: {
           expenseTitle: expenseResult.expense.title,

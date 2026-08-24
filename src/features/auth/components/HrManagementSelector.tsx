@@ -12,25 +12,6 @@ type Props = {
   section: Section;
 };
 
-const sections: { value: Section; label: string }[] = [
-  {
-    value: "verification",
-    label: "Employee Verification",
-  },
-  {
-    value: "name-change",
-    label: "Name Change Requests",
-  },
-  {
-    value: "role-verification",
-    label: "Role Verification Requests",
-  },
-  {
-    value: "reimbursement",
-    label: "Reimbursement",
-  },
-];
-
 export default function HrManagementSelector({ section }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,6 +20,8 @@ export default function HrManagementSelector({ section }: Props) {
     const params = new URLSearchParams(searchParams.toString());
 
     params.set("section", value);
+    params.delete("reimbursementPage");
+    params.delete("reimbursementHistoryPage");
 
     router.push(`/hr?${params.toString()}`);
   }
@@ -58,11 +41,10 @@ export default function HrManagementSelector({ section }: Props) {
         onChange={(event) => handleChange(event.target.value as Section)}
         className="mt-2 h-12 w-full max-w-md rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
       >
-        {sections.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.label}
-          </option>
-        ))}
+        <option value="verification">Employee Verification</option>
+        <option value="name-change">Name Change Requests</option>
+        <option value="role-verification">Role Verification Requests</option>
+        <option value="reimbursement">Reimbursement</option>
       </select>
     </div>
   );

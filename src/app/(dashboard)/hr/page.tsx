@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 
+import type { ReimbursementExpenseScope } from "@/features/expenses/lib/expenses";
+
 import {
   getEmployeeVerificationHistory,
   getEmployeeVerificationAttemptCount,
@@ -18,6 +20,7 @@ import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVeri
 
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
 import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
+import ReimbursementScopeSelector from "@/features/expenses/components/ReimbursementScopeSelector";
 
 import HrManagementSelector from "@/features/auth/components/HrManagementSelector";
 
@@ -57,6 +60,7 @@ export default async function HrPage({
     section?: string;
     reimbursementPage?: string;
     reimbursementHistoryPage?: string;
+    reimbursementScope?: string;
   }>;
 }) {
   const session = await auth();
@@ -70,6 +74,22 @@ export default async function HrPage({
   }
 
   const params = await searchParams;
+
+  /* ---------------------------------------------------------------------- */
+  /* Reimbursement Scope                                                    */
+  /* ---------------------------------------------------------------------- */
+
+  const reimbursementScope: ReimbursementExpenseScope =
+    params.reimbursementScope === "OWN" ||
+    params.reimbursementScope === "EMPLOYEES" ||
+    params.reimbursementScope === "OTHER_HRS" ||
+    params.reimbursementScope === "ADMINS"
+      ? params.reimbursementScope
+      : "EMPLOYEES";
+
+  /* ---------------------------------------------------------------------- */
+  /* Reimbursement Pagination                                               */
+  /* ---------------------------------------------------------------------- */
 
   const requestedReimbursementPage = Number(params.reimbursementPage ?? "1");
 
@@ -91,6 +111,10 @@ export default async function HrPage({
 
   const pageSize = 10;
 
+  /* ---------------------------------------------------------------------- */
+  /* Management Section                                                     */
+  /* ---------------------------------------------------------------------- */
+
   const section: Section =
     params.section === "reimbursement" ||
     params.section === "name-change" ||
@@ -99,6 +123,10 @@ export default async function HrPage({
       : "verification";
 
   const hrId = Number(session.user.id);
+
+  /* ---------------------------------------------------------------------- */
+  /* Data                                                                    */
+  /* ---------------------------------------------------------------------- */
 
   const [
     employeeVerificationRequests,
@@ -115,26 +143,47 @@ export default async function HrPage({
     roleVerificationHistory,
   ] = await Promise.all([
     getPendingEmployeeVerificationRequests(hrId),
+
     getEmployeeVerificationHistory(hrId),
 
     getEmployeeVerificationRequestsForUser(hrId),
+
     getLatestEmployeeVerificationRequest(hrId),
+
     getEmployeeVerificationAttemptCount(hrId),
 
-    getApprovedExpensesForHR(hrId, reimbursementPage, pageSize),
-    getReimbursementHistory(reimbursementHistoryPage, pageSize),
+    getApprovedExpensesForHR(
+      hrId,
+      reimbursementPage,
+      pageSize,
+      reimbursementScope,
+    ),
+
+    getReimbursementHistory(
+      reimbursementHistoryPage,
+      pageSize,
+      hrId,
+      reimbursementScope,
+    ),
 
     getPendingNameChangeRequests(hrId),
+
     getNameChangeRequestHistory(hrId),
+
     getNameChangeRequestsForUser(hrId),
 
     getPendingRoleRequests(),
+
     getRoleRequestHistory(),
   ]);
 
   return (
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-7xl">
+        {/* ---------------------------------------------------------------- */}
+        {/* Page Header                                                       */}
+        {/* ---------------------------------------------------------------- */}
+
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
             People Management
@@ -150,7 +199,9 @@ export default async function HrPage({
           </div>
         </div>
 
-        {/* Employee Verification */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Employee Verification                                             */}
+        {/* ---------------------------------------------------------------- */}
 
         {section === "verification" && (
           <>
@@ -227,7 +278,9 @@ export default async function HrPage({
           </>
         )}
 
-        {/* Name Change Requests */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Name Change Requests                                              */}
+        {/* ---------------------------------------------------------------- */}
 
         {section === "name-change" && (
           <>
@@ -293,7 +346,9 @@ export default async function HrPage({
           </>
         )}
 
-        {/* Role Verification Requests */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Role Verification Requests                                        */}
+        {/* ---------------------------------------------------------------- */}
 
         {section === "role-verification" && (
           <>
@@ -333,7 +388,9 @@ export default async function HrPage({
           </>
         )}
 
-        {/* Reimbursements */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Reimbursements                                                    */}
+        {/* ---------------------------------------------------------------- */}
 
         {section === "reimbursement" && (
           <>
@@ -344,8 +401,30 @@ export default async function HrPage({
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Review expenses approved by Admin and manually mark them as
-                  reimbursed.
+                  Review approved expenses and process reimbursements based on
+                  the selected expense scope.
+                </p>
+              </div>
+
+              {/* Expense Scope */}
+              <ReimbursementScopeSelector
+                scope={reimbursementScope}
+                basePath="/hr"
+              />
+            </section>
+
+            {/* Pending Reimbursement Approvals */}
+
+            <section className="mt-10">
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Pending Reimbursement Approvals
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Review approved expenses that are waiting to be reimbursed.
+                  You can review the expense proof and approve or reject the
+                  reimbursement.
                 </p>
               </div>
 
@@ -357,6 +436,8 @@ export default async function HrPage({
                 paramName="reimbursementPage"
               />
             </section>
+
+            {/* Reimbursement History */}
 
             <section className="mt-10">
               <div className="mb-5">
