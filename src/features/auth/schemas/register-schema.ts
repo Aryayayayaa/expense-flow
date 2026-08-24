@@ -1,3 +1,5 @@
+// src/features/auth/schemas/register-schema.ts
+
 import { z } from "zod";
 
 import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY } from "@/constants/currencies";

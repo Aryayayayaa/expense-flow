@@ -1,7 +1,10 @@
+// src/features/auth/components/LoginForm.tsx
+
 "use client";
 
 import Link from "next/link";
 import { useActionState } from "react";
+
 import { loginUserAction } from "../actions/auth-actions";
 import { AuthState } from "../types/auth";
 
@@ -18,44 +21,71 @@ export default function LoginForm() {
   );
 
   return (
-    <form action={formAction} className="space-y-4 max-w-md">
+    <form action={formAction} className="max-w-md space-y-4">
       <div>
-        <label>Email</label>
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-slate-700"
+        >
+          Email
+        </label>
 
         <input
+          id="email"
           type="email"
           name="email"
-          className="border rounded p-2 w-full"
+          autoComplete="email"
+          className="mt-1 w-full rounded-lg border border-slate-300 p-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
 
         {state.errors?.email && (
-          <p className="text-red-500 text-sm">{state.errors.email[0]}</p>
+          <p className="mt-1 text-sm text-red-500">{state.errors.email[0]}</p>
         )}
       </div>
 
       <div>
-        <label>Password</label>
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-slate-700"
+        >
+          Password
+        </label>
 
         <input
+          id="password"
           type="password"
           name="password"
-          className="border rounded p-2 w-full"
+          autoComplete="current-password"
+          className="mt-1 w-full rounded-lg border border-slate-300 p-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
 
         {state.errors?.password && (
-          <p className="text-red-500 text-sm">{state.errors.password[0]}</p>
+          <p className="mt-1 text-sm text-red-500">
+            {state.errors.password[0]}
+          </p>
         )}
+      </div>
+
+      <div className="text-right">
+        <Link
+          href="/forgot-password"
+          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
+          Forgot Password?
+        </Link>
       </div>
 
       <button
         type="submit"
         disabled={pending}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? "Logging in..." : "Login"}
       </button>
 
-      {state.success && <p className="text-green-600">Login successful!</p>}
+      {state.success && (
+        <p className="text-sm text-green-600">Login successful!</p>
+      )}
     </form>
   );
 }
