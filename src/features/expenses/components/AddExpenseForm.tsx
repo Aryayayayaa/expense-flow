@@ -66,10 +66,6 @@ export default function AddExpenseForm({
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  /*
-   * Return the current browser-local date/time in the exact format
-   * required by <input type="datetime-local">.
-   */
   function getCurrentDateTime() {
     const now = new Date();
 
@@ -83,18 +79,6 @@ export default function AddExpenseForm({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
-  /*
-   * Convert the browser-local datetime-local value into an ISO
-   * timestamp that contains the correct timezone offset.
-   *
-   * Example in India:
-   *
-   * 2026-08-23T23:57
-   *
-   * becomes approximately:
-   *
-   * 2026-08-23T18:27:00.000Z
-   */
   function toIsoDateTime(value: string): string {
     const date = new Date(value);
 
@@ -127,10 +111,6 @@ export default function AddExpenseForm({
 
   useEffect(() => {
     if (!editingExpense) {
-      /*
-       * When opening the create form, initialize the date/time
-       * once instead of waiting for the input fallback.
-       */
       if (!expenseDate) {
         setExpenseDate(getCurrentDateTime());
       }
@@ -171,10 +151,6 @@ export default function AddExpenseForm({
         .slice(0, 16),
     );
 
-    /*
-     * Editing an existing expense must never carry over
-     * OCR information from a previously selected receipt.
-     */
     setOcrResult(null);
     setReceiptFile(null);
 
@@ -184,9 +160,6 @@ export default function AddExpenseForm({
     });
   }, [editingExpense, defaultCurrency]);
 
-  /*
-   * Apply OCR results to the form.
-   */
   useEffect(() => {
     if (!ocrResult) {
       return;
@@ -205,9 +178,6 @@ export default function AddExpenseForm({
     }
   }, [ocrResult]);
 
-  /*
-   * Upload the original receipt and save its metadata.
-   */
   async function saveOriginalReceipt(
     expenseId: number,
     file: File,
@@ -245,115 +215,111 @@ export default function AddExpenseForm({
     }
   }
 
+  async function handleSubmit(formData: FormData) {
+    if (pending) {
+      return;
+    }
+
+    /*
+     * Set the loading state before doing ANY server action or upload.
+     */
+    setPending(true);
+    setState(initialState);
+
+    try {
+      if (expenseDate) {
+        formData.set("expenseDate", toIsoDateTime(expenseDate));
+      }
+
+      let result;
+
+      /*
+       * ---------------------------------------------------------
+       * EDIT EXISTING EXPENSE
+       * ---------------------------------------------------------
+       */
+      if (editingExpense) {
+        result = await updateExpenseAction(editingExpense.id, formData);
+
+        setState(result);
+
+        if (!result.success) {
+          return;
+        }
+
+        setTimeout(() => {
+          resetForm();
+        }, 1000);
+
+        return;
+      }
+
+      /*
+       * ---------------------------------------------------------
+       * CREATE NEW EXPENSE
+       * ---------------------------------------------------------
+       */
+      result = await createExpenseAction(null, formData);
+
+      if (!result.success) {
+        setState(result);
+        return;
+      }
+
+      /*
+       * ---------------------------------------------------------
+       * SAVE ORIGINAL RECEIPT
+       * ---------------------------------------------------------
+       */
+      if (result.expenseId && receiptFile) {
+        try {
+          await saveOriginalReceipt(
+            result.expenseId,
+            receiptFile,
+            ocrResult?.rawText ?? "",
+          );
+        } catch (error) {
+          console.error("Original receipt storage error:", error);
+
+          setState({
+            ...result,
+            success: false,
+            message:
+              "Expense was created, but the original receipt could not be saved.",
+          });
+
+          return;
+        }
+      }
+
+      /*
+       * ---------------------------------------------------------
+       * CREATION SUCCESS
+       * ---------------------------------------------------------
+       */
+      setState(result);
+
+      router.push("/expenses");
+    } catch (error) {
+      console.error("Expense submission error:", error);
+
+      setState({
+        success: false,
+        errors: {},
+        message:
+          error instanceof Error ? error.message : "Unable to submit expense.",
+        expenseId: undefined,
+      });
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <Card>
       <form
         ref={formRef}
-        action={async (formData) => {
-          if (pending) {
-            return;
-          }
-
-          setPending(true);
-          setState(initialState);
-
-          try {
-            /*
-             * IMPORTANT:
-             *
-             * datetime-local has no timezone.
-             *
-             * Convert it before sending it to the server action.
-             */
-            if (expenseDate) {
-              formData.set("expenseDate", toIsoDateTime(expenseDate));
-            }
-
-            let result;
-
-            /*
-             * ---------------------------------------------------------
-             * EDIT EXISTING EXPENSE
-             * ---------------------------------------------------------
-             */
-            if (editingExpense) {
-              result = await updateExpenseAction(editingExpense.id, formData);
-
-              setState(result);
-
-              if (!result.success) {
-                return;
-              }
-
-              setTimeout(() => {
-                resetForm();
-              }, 1000);
-
-              return;
-            }
-
-            /*
-             * -------------------------------------------------------
-             * CREATE NEW EXPENSE
-             * -------------------------------------------------------
-             */
-            result = await createExpenseAction(null, formData);
-
-            if (!result.success) {
-              setState(result);
-              return;
-            }
-
-            /*
-             * -------------------------------------------------------
-             * SAVE ORIGINAL RECEIPT
-             * -------------------------------------------------------
-             */
-            if (result.expenseId && receiptFile) {
-              try {
-                await saveOriginalReceipt(
-                  result.expenseId,
-                  receiptFile,
-                  ocrResult?.rawText ?? "",
-                );
-              } catch (error) {
-                console.error("Original receipt storage error:", error);
-
-                setState({
-                  ...result,
-                  success: false,
-                  message:
-                    "Expense was created, but the original receipt could not be saved.",
-                });
-
-                return;
-              }
-            }
-
-            /*
-             * -------------------------------------------------------
-             * CREATION SUCCESS
-             * -------------------------------------------------------
-             */
-            setState(result);
-
-            router.push("/expenses");
-          } catch (error) {
-            console.error("Expense submission error:", error);
-
-            setState({
-              success: false,
-              errors: {},
-              message:
-                error instanceof Error
-                  ? error.message
-                  : "Unable to submit expense.",
-              expenseId: undefined,
-            });
-          } finally {
-            setPending(false);
-          }
-        }}
+        action={handleSubmit}
         className="space-y-5 text-black"
       >
         <div className="border-b pb-4">
@@ -489,10 +455,6 @@ export default function AddExpenseForm({
             onChange={(e) => {
               setExpenseDate(e.target.value);
 
-              /*
-               * Clear the previous date validation error as soon
-               * as the user changes the value.
-               */
               if (state.errors?.expenseDate) {
                 setState((previous) => ({
                   ...previous,
@@ -517,13 +479,32 @@ export default function AddExpenseForm({
           </p>
         </div>
 
+        {pending && (
+          <div
+            className="flex items-center justify-center gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-700"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600"
+              aria-hidden="true"
+            />
+
+            <span>
+              {editingExpense ? "Updating expense..." : "Creating expense..."}
+            </span>
+          </div>
+        )}
+
         <Button
           type="submit"
           disabled={pending}
           className="w-full rounded bg-blue-600 px-4 py-2 text-white"
         >
           {pending
-            ? "Saving..."
+            ? editingExpense
+              ? "Updating..."
+              : "Creating..."
             : editingExpense
               ? "Update Expense"
               : "Save Expense"}

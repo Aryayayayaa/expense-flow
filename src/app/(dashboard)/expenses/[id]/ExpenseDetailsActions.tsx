@@ -1,3 +1,4 @@
+// ExpenseDetailsActions.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -106,7 +107,7 @@ export default function ExpenseDetailsActions({
         confirmLabel="Delete Expense"
         cancelLabel="Cancel"
         loading={deleting}
-        loadingLabel="Deleting..."
+        loadingLabel="Deleting Expense..."
         onConfirm={handleDelete}
         onCancel={() => {
           if (!deleting) {

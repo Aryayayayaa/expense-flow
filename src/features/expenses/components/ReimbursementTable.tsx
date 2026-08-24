@@ -106,11 +106,14 @@ export default function ReimbursementTable({ expenses }: Props) {
     }
 
     setDialogMessage("Are you sure you want to reimburse this expense?");
-
     setDialog("reimburse");
   }
 
   function requestReject(id: number) {
+    if (processingId !== null) {
+      return;
+    }
+
     const reason = rejectionReason.trim();
 
     if (!reason) {
@@ -118,10 +121,6 @@ export default function ReimbursementTable({ expenses }: Props) {
         "Please provide a reason for rejecting the reimbursement.",
       );
       setDialog("error");
-      return;
-    }
-
-    if (processingId !== null) {
       return;
     }
 
@@ -139,8 +138,8 @@ export default function ReimbursementTable({ expenses }: Props) {
 
     const id = selectedExpense.id;
 
-    setDialog(null);
     setProcessingId(id);
+    setDialogMessage("Reimbursement is in progress...");
     setMessage("");
 
     try {
@@ -153,6 +152,8 @@ export default function ReimbursementTable({ expenses }: Props) {
 
         setSelectedExpense(null);
         setRejectionReason("");
+        setDialog(null);
+        setDialogMessage("");
       } else {
         setDialogMessage(result.message);
         setDialog("error");
@@ -184,8 +185,8 @@ export default function ReimbursementTable({ expenses }: Props) {
 
     const id = selectedExpense.id;
 
-    setDialog(null);
     setProcessingId(id);
+    setDialogMessage("Reimbursement rejection is in progress...");
     setMessage("");
 
     try {
@@ -198,6 +199,8 @@ export default function ReimbursementTable({ expenses }: Props) {
 
         setSelectedExpense(null);
         setRejectionReason("");
+        setDialog(null);
+        setDialogMessage("");
       } else {
         setDialogMessage(result.message);
         setDialog("error");
@@ -216,6 +219,10 @@ export default function ReimbursementTable({ expenses }: Props) {
     expenseId: number,
     type: "ocr-receipt" | "bill-proof",
   ) {
+    if (processingId !== null) {
+      return;
+    }
+
     try {
       const response = await fetch(`/api/expenses/${expenseId}/${type}`);
 
@@ -258,6 +265,8 @@ export default function ReimbursementTable({ expenses }: Props) {
           variant={dialog === "error" ? "danger" : "danger"}
           confirmLabel="OK"
           cancelLabel={dialog === "error" ? undefined : "Cancel"}
+          loading={processingId !== null}
+          loadingLabel="Processing..."
           onCancel={closeDialog}
           onConfirm={() => {
             if (dialog === "error") {
@@ -356,7 +365,7 @@ export default function ReimbursementTable({ expenses }: Props) {
                     <td className="px-5 py-4 text-right">
                       <button
                         type="button"
-                        disabled={processing}
+                        disabled={processing || processingId !== null}
                         onClick={() => {
                           setSelectedExpense(expense);
                           setRejectionReason("");
@@ -375,8 +384,6 @@ export default function ReimbursementTable({ expenses }: Props) {
           </table>
         </div>
       </div>
-
-      {/* Review Modal */}
 
       {selectedExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -404,8 +411,6 @@ export default function ReimbursementTable({ expenses }: Props) {
             </div>
 
             <div className="space-y-6 p-6">
-              {/* Employee Information */}
-
               <section className="rounded-xl border border-slate-200 bg-slate-50 p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <User size={18} className="text-slate-600" />
@@ -437,8 +442,6 @@ export default function ReimbursementTable({ expenses }: Props) {
                   </div>
                 </div>
               </section>
-
-              {/* Expense Information */}
 
               <section className="rounded-xl border border-slate-200 bg-white p-5">
                 <div className="mb-4 flex items-center gap-2">
@@ -515,8 +518,6 @@ export default function ReimbursementTable({ expenses }: Props) {
                 </div>
               </section>
 
-              {/* Approval Information */}
-
               <section className="rounded-xl border border-green-200 bg-green-50 p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-green-600" />
@@ -567,8 +568,6 @@ export default function ReimbursementTable({ expenses }: Props) {
                 </div>
               </section>
 
-              {/* Proof */}
-
               <section className="rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <FileText size={18} className="text-blue-600" />
@@ -587,10 +586,11 @@ export default function ReimbursementTable({ expenses }: Props) {
                   {selectedExpense.ocrReceiptUrl && (
                     <button
                       type="button"
+                      disabled={processingId !== null}
                       onClick={() =>
                         openProof(selectedExpense.id, "ocr-receipt")
                       }
-                      className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                      className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Eye size={16} />
                       View Original Receipt
@@ -600,10 +600,11 @@ export default function ReimbursementTable({ expenses }: Props) {
                   {selectedExpense.billProofUrl && (
                     <button
                       type="button"
+                      disabled={processingId !== null}
                       onClick={() =>
                         openProof(selectedExpense.id, "bill-proof")
                       }
-                      className="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+                      className="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Eye size={16} />
                       View Bill Proof
@@ -618,8 +619,6 @@ export default function ReimbursementTable({ expenses }: Props) {
                     )}
                 </div>
               </section>
-
-              {/* Rejection Reason */}
 
               <section className="rounded-xl border border-red-200 bg-red-50 p-5">
                 <div className="mb-3 flex items-center gap-2">
@@ -639,7 +638,7 @@ export default function ReimbursementTable({ expenses }: Props) {
                   onChange={(event) => setRejectionReason(event.target.value)}
                   placeholder="Enter the reason for rejecting this reimbursement..."
                   rows={4}
-                  className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-50"
                   disabled={processingId === selectedExpense.id}
                 />
               </section>
@@ -650,12 +649,10 @@ export default function ReimbursementTable({ expenses }: Props) {
                 </div>
               )}
 
-              {/* Actions */}
-
               <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
                 <button
                   type="button"
-                  disabled={processingId === selectedExpense.id}
+                  disabled={processingId !== null}
                   onClick={closeReview}
                   className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -664,7 +661,7 @@ export default function ReimbursementTable({ expenses }: Props) {
 
                 <button
                   type="button"
-                  disabled={processingId === selectedExpense.id}
+                  disabled={processingId !== null}
                   onClick={() => requestReject(selectedExpense.id)}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -677,7 +674,7 @@ export default function ReimbursementTable({ expenses }: Props) {
 
                 <button
                   type="button"
-                  disabled={processingId === selectedExpense.id}
+                  disabled={processingId !== null}
                   onClick={() => requestReimburse(selectedExpense.id)}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -713,9 +710,19 @@ export default function ReimbursementTable({ expenses }: Props) {
         }
         cancelLabel={dialog === "error" ? undefined : "Cancel"}
         loading={processingId !== null}
-        loadingLabel="Processing..."
+        loadingLabel={
+          dialog === "reimburse"
+            ? "Reimbursing..."
+            : dialog === "reject"
+              ? "Rejecting..."
+              : "Processing..."
+        }
         onCancel={closeDialog}
         onConfirm={() => {
+          if (processingId !== null) {
+            return;
+          }
+
           if (dialog === "reimburse") {
             void handleReimburse();
             return;

@@ -1,3 +1,4 @@
+// EditExpenseDialog.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -79,9 +80,6 @@ export default function EditExpenseDialog({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  /*
-   * Populate the dialog whenever it opens for an expense.
-   */
   useEffect(() => {
     if (!open || !expense) {
       return;
@@ -99,18 +97,10 @@ export default function EditExpenseDialog({
     setError("");
   }, [open, expense]);
 
-  /*
-   * Nothing to render if the dialog is closed or there is
-   * no expense.
-   */
   if (!open || !expense) {
     return null;
   }
 
-  /*
-   * From this point onward TypeScript knows that `expense`
-   * is not null.
-   */
   const currentExpense = expense;
 
   const hasReceipt = Boolean(
@@ -135,19 +125,6 @@ export default function EditExpenseDialog({
     setError("");
 
     try {
-      /*
-       * ---------------------------------------------------------
-       * STEP 1
-       *
-       * Update normal expense fields.
-       *
-       * IMPORTANT:
-       * OCR is deliberately NOT involved here.
-       *
-       * Therefore uploading a receipt while editing will NOT
-       * overwrite title, amount, category, date/time, etc.
-       * ---------------------------------------------------------
-       */
       const formData = new FormData();
 
       formData.set("title", title);
@@ -171,22 +148,9 @@ export default function EditExpenseDialog({
 
       if (!updateResult.success) {
         setError(updateResult.message || "Unable to update expense.");
-
         return;
       }
 
-      /*
-       * ---------------------------------------------------------
-       * STEP 2
-       *
-       * Save receipt only when:
-       *
-       *   - user selected a receipt
-       *   - expense does NOT already have a receipt
-       *
-       * This makes the receipt immutable.
-       * ---------------------------------------------------------
-       */
       if (receiptFile && !hasReceipt) {
         const extensionMap: Record<string, string> = {
           "image/jpeg": "jpg",
@@ -199,11 +163,6 @@ export default function EditExpenseDialog({
 
         const safePath = `expenses/${currentExpense.id}/original-receipt-${Date.now()}.${extension}`;
 
-        /*
-         * Upload the original receipt.
-         *
-         * No OCR extraction is performed in this Edit flow.
-         */
         const blob = await upload(safePath, receiptFile, {
           access: "private",
           handleUploadUrl: "/api/upload",
@@ -232,29 +191,12 @@ export default function EditExpenseDialog({
         }
       }
 
-      /*
-       * ---------------------------------------------------------
-       * STEP 3
-       *
-       * Everything succeeded.
-       * ---------------------------------------------------------
-       */
       setMessage("Expense updated successfully.");
 
-      /*
-       * Tell the parent that the expense changed.
-       */
       onSuccess?.();
 
-      /*
-       * Refresh the Server Component so the latest receipt
-       * state is fetched from Prisma.
-       */
       router.refresh();
 
-      /*
-       * Close the dialog after the parent has been notified.
-       */
       setTimeout(() => {
         onClose();
       }, 300);
@@ -285,7 +227,6 @@ export default function EditExpenseDialog({
         </p>
 
         <div className="mt-6 space-y-4">
-          {/* Title */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Title
@@ -295,11 +236,10 @@ export default function EditExpenseDialog({
               value={title}
               disabled={saving}
               onChange={(event) => setTitle(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
             />
           </div>
 
-          {/* Amount */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Amount
@@ -311,11 +251,10 @@ export default function EditExpenseDialog({
               type="number"
               step="0.01"
               onChange={(event) => setAmount(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
             />
           </div>
 
-          {/* Currency */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Currency
@@ -328,11 +267,10 @@ export default function EditExpenseDialog({
               onChange={(event) =>
                 setCurrency(event.target.value.toUpperCase())
               }
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 uppercase outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 uppercase outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
             />
           </div>
 
-          {/* Category */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Category
@@ -342,11 +280,10 @@ export default function EditExpenseDialog({
               value={category}
               disabled={saving}
               onChange={(event) => setCategory(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
             />
           </div>
 
-          {/* Expense Date & Time */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Expense Date & Time
@@ -358,11 +295,10 @@ export default function EditExpenseDialog({
               type="datetime-local"
               max={getCurrentDateTime()}
               onChange={(event) => setExpenseDate(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
             />
           </div>
 
-          {/* Receipt */}
           {!hasReceipt && (
             <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
               <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -380,7 +316,7 @@ export default function EditExpenseDialog({
                 onChange={(event) => {
                   setReceiptFile(event.target.files?.[0] ?? null);
                 }}
-                className="block w-full text-sm"
+                className="block w-full text-sm disabled:cursor-not-allowed"
               />
 
               {receiptFile && (
@@ -395,7 +331,6 @@ export default function EditExpenseDialog({
             </div>
           )}
 
-          {/* Existing receipt */}
           {hasReceipt && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-4">
               <p className="font-medium text-green-800">
@@ -408,14 +343,29 @@ export default function EditExpenseDialog({
             </div>
           )}
 
-          {/* Error */}
+          {saving && (
+            <div
+              className="flex items-center justify-center gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-700"
+              role="status"
+              aria-live="polite"
+            >
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600"
+                aria-hidden="true"
+              />
+
+              <span>
+                Updating expense. Please wait while the changes are saved...
+              </span>
+            </div>
+          )}
+
           {error && (
             <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {/* Success */}
           {message && (
             <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
               {message}
@@ -423,14 +373,13 @@ export default function EditExpenseDialog({
           )}
         </div>
 
-        {/* Buttons */}
         <div className="mt-8 flex justify-end gap-3">
           <Button variant="secondary" disabled={saving} onClick={handleClose}>
             Cancel
           </Button>
 
           <Button disabled={saving} onClick={handleSave}>
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Updating..." : "Save Changes"}
           </Button>
         </div>
       </div>

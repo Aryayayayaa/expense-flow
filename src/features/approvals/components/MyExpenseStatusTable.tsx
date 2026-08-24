@@ -1,3 +1,4 @@
+// MyExpenseStatusTable.tsx
 "use client";
 
 import { useState } from "react";
@@ -34,6 +35,10 @@ export default function MyExpenseStatusTable({
   }
 
   function handleExpenseClick(expenseId: number) {
+    if (deleting) {
+      return;
+    }
+
     router.push(`/expenses/${expenseId}`);
   }
 
@@ -184,12 +189,27 @@ export default function MyExpenseStatusTable({
                         disabled={deleting}
                         onClick={(event) => {
                           event.stopPropagation();
+
+                          if (deleting) {
+                            return;
+                          }
+
                           setMessage("");
                           setDeleteExpenseId(expense.id);
                         }}
-                        className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Delete
+                        {deleting && deleteExpenseId === expense.id ? (
+                          <>
+                            <span
+                              className="h-4 w-4 animate-spin rounded-full border-2 border-red-200 border-t-red-600"
+                              aria-hidden="true"
+                            />
+                            Deleting...
+                          </>
+                        ) : (
+                          "Delete"
+                        )}
                       </button>
                     )}
                   </td>
@@ -214,7 +234,7 @@ export default function MyExpenseStatusTable({
         confirmLabel="Delete"
         cancelLabel="Cancel"
         loading={deleting}
-        loadingLabel="Deleting..."
+        loadingLabel="Deleting Expense..."
         onCancel={() => {
           if (!deleting) {
             setDeleteExpenseId(null);

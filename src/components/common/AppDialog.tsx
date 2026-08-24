@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  Loader2,
+  X,
+  XCircle,
+} from "lucide-react";
 
 export type AppDialogVariant =
   | "default"
@@ -94,7 +101,9 @@ export default function AppDialog({
       return;
     }
 
-    cancelButtonRef.current?.focus();
+    if (!loading) {
+      cancelButtonRef.current?.focus();
+    }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !loading) {
@@ -135,7 +144,11 @@ export default function AppDialog({
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${config.iconClass}`}
           >
-            <Icon size={22} />
+            {loading ? (
+              <Loader2 size={22} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Icon size={22} />
+            )}
           </div>
 
           <div className="min-w-0 flex-1">
@@ -143,16 +156,30 @@ export default function AppDialog({
               id="app-dialog-title"
               className="text-lg font-semibold text-slate-900"
             >
-              {title}
+              {loading ? loadingLabel : title}
             </h2>
 
-            {description && (
-              <p
-                id="app-dialog-description"
-                className="mt-2 text-sm leading-6 text-slate-600"
+            {loading ? (
+              <div
+                className="mt-2 flex items-center gap-2 text-sm leading-6 text-slate-600"
+                role="status"
+                aria-live="polite"
               >
-                {description}
-              </p>
+                <span
+                  className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700"
+                  aria-hidden="true"
+                />
+                <span>Action is in progress. Please wait...</span>
+              </div>
+            ) : (
+              description && (
+                <p
+                  id="app-dialog-description"
+                  className="mt-2 text-sm leading-6 text-slate-600"
+                >
+                  {description}
+                </p>
+              )
             )}
           </div>
 
@@ -167,7 +194,7 @@ export default function AppDialog({
           </button>
         </div>
 
-        {requiresReason && (
+        {requiresReason && !loading && (
           <div className="px-6 pb-2">
             <label
               htmlFor="app-dialog-reason"
@@ -186,7 +213,7 @@ export default function AppDialog({
               className="w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
             />
 
-            {requiresReason && !reason.trim() && (
+            {!reason.trim() && (
               <p className="mt-1 text-xs text-red-600">A reason is required.</p>
             )}
           </div>
@@ -209,8 +236,12 @@ export default function AppDialog({
             type="button"
             onClick={onConfirm}
             disabled={confirmDisabled}
-            className={`rounded-lg px-4 py-2.5 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${config.confirmClass}`}
+            className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${config.confirmClass}`}
           >
+            {loading && (
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            )}
+
             {loading ? loadingLabel : confirmLabel}
           </button>
         </div>

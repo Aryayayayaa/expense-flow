@@ -11,6 +11,7 @@ import {
 
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
 import AppDialog from "@/components/common/AppDialog";
+import ActionSpinner from "@/components/common/ActionSpinner";
 
 import type { DisplayExpense } from "@/features/expenses/types";
 import type { AdminExpenseScope } from "@/features/expenses/lib/expenses";
@@ -326,6 +327,11 @@ function ReviewExpenseModal({
   onEdit: () => void;
 }) {
   const [processing, setProcessing] = useState(false);
+
+  const [processingAction, setProcessingAction] = useState<
+    "approve" | "reject" | "delete" | null
+  >(null);
+
   const [message, setMessage] = useState("");
 
   const [showReject, setShowReject] = useState(false);
@@ -337,7 +343,12 @@ function ReviewExpenseModal({
   const [dialog, setDialog] = useState<DialogState>(null);
 
   async function handleApprove() {
+    if (processing) {
+      return;
+    }
+
     setProcessing(true);
+    setProcessingAction("approve");
     setMessage("");
 
     try {
@@ -345,6 +356,7 @@ function ReviewExpenseModal({
 
       if (!result.success) {
         setMessage(result.message);
+        setDialog(null);
         return;
       }
 
@@ -352,12 +364,18 @@ function ReviewExpenseModal({
     } catch (error) {
       console.error("Approve expense error:", error);
       setMessage("Unable to approve expense.");
+      setDialog(null);
     } finally {
       setProcessing(false);
+      setProcessingAction(null);
     }
   }
 
   async function handleReject() {
+    if (processing) {
+      return;
+    }
+
     const reason = rejectionReason.trim();
 
     if (!reason) {
@@ -365,8 +383,8 @@ function ReviewExpenseModal({
       return;
     }
 
-    setDialog(null);
     setProcessing(true);
+    setProcessingAction("reject");
     setMessage("");
 
     try {
@@ -374,6 +392,7 @@ function ReviewExpenseModal({
 
       if (!result.success) {
         setMessage(result.message);
+        setDialog(null);
         return;
       }
 
@@ -381,12 +400,18 @@ function ReviewExpenseModal({
     } catch (error) {
       console.error("Reject expense error:", error);
       setMessage("Unable to reject expense.");
+      setDialog(null);
     } finally {
       setProcessing(false);
+      setProcessingAction(null);
     }
   }
 
   async function handleDelete() {
+    if (processing) {
+      return;
+    }
+
     const reason = deletionReason.trim();
 
     if (!reason) {
@@ -394,8 +419,8 @@ function ReviewExpenseModal({
       return;
     }
 
-    setDialog(null);
     setProcessing(true);
+    setProcessingAction("delete");
     setMessage("");
 
     try {
@@ -403,6 +428,7 @@ function ReviewExpenseModal({
 
       if (!result.success) {
         setMessage(result.message);
+        setDialog(null);
         return;
       }
 
@@ -410,12 +436,18 @@ function ReviewExpenseModal({
     } catch (error) {
       console.error("Admin delete expense error:", error);
       setMessage("Unable to delete expense.");
+      setDialog(null);
     } finally {
       setProcessing(false);
+      setProcessingAction(null);
     }
   }
 
   async function openProof(endpoint: string, errorMessage: string) {
+    if (processing) {
+      return;
+    }
+
     try {
       const response = await fetch(endpoint);
       const data = await response.json();
@@ -431,6 +463,15 @@ function ReviewExpenseModal({
       setMessage(errorMessage);
     }
   }
+
+  const dialogLoadingLabel =
+    processingAction === "approve"
+      ? "Approving..."
+      : processingAction === "reject"
+        ? "Rejecting..."
+        : processingAction === "delete"
+          ? "Deleting..."
+          : "Processing...";
 
   return (
     <>
@@ -451,7 +492,7 @@ function ReviewExpenseModal({
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="rounded-lg px-3 py-2 text-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="rounded-lg px-3 py-2 text-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Close review"
             >
               ×
@@ -474,7 +515,10 @@ function ReviewExpenseModal({
 
                 <Detail
                   label="Amount"
-                  value={formatCurrency(expense.amount, expense.currency)}
+                  value={formatCurrency(
+                    expense.displayAmount ?? expense.amount,
+                    expense.currency,
+                  )}
                 />
 
                 <Detail label="Category" value={expense.category} />
@@ -501,13 +545,14 @@ function ReviewExpenseModal({
                 {expense.ocrReceiptPath && (
                   <button
                     type="button"
+                    disabled={processing}
                     onClick={() =>
                       openProof(
                         `/api/expenses/${expense.id}/ocr-receipt`,
                         "Unable to open original receipt.",
                       )
                     }
-                    className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                    className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     View Original Receipt
                   </button>
@@ -516,13 +561,14 @@ function ReviewExpenseModal({
                 {expense.billProofPath && (
                   <button
                     type="button"
+                    disabled={processing}
                     onClick={() =>
                       openProof(
                         `/api/expenses/${expense.id}/bill-proof`,
                         "Unable to open bill proof.",
                       )
                     }
-                    className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+                    className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     View Bill Proof
                   </button>
@@ -564,7 +610,7 @@ function ReviewExpenseModal({
                   disabled={processing}
                   rows={4}
                   placeholder="Explain why this expense is being rejected..."
-                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400"
+                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-50"
                 />
 
                 <button
@@ -580,9 +626,13 @@ function ReviewExpenseModal({
                       type: "approve",
                     });
                   }}
-                  className="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {processing ? "Rejecting..." : "Confirm Rejection"}
+                  {processingAction === "reject" && <ActionSpinner size="sm" />}
+
+                  {processingAction === "reject"
+                    ? "Rejecting..."
+                    : "Confirm Rejection"}
                 </button>
               </section>
             )}
@@ -608,7 +658,7 @@ function ReviewExpenseModal({
                   disabled={processing}
                   rows={4}
                   placeholder="Explain why this expense is being deleted..."
-                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400"
+                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-50"
                 />
 
                 <button
@@ -624,9 +674,13 @@ function ReviewExpenseModal({
                       type: "approve",
                     });
                   }}
-                  className="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {processing ? "Deleting..." : "Confirm Delete"}
+                  {processingAction === "delete" && <ActionSpinner size="sm" />}
+
+                  {processingAction === "delete"
+                    ? "Deleting..."
+                    : "Confirm Delete"}
                 </button>
               </section>
             )}
@@ -643,7 +697,7 @@ function ReviewExpenseModal({
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Close
             </button>
@@ -690,14 +744,20 @@ function ReviewExpenseModal({
             <button
               type="button"
               onClick={() => {
+                if (processing) {
+                  return;
+                }
+
                 setDialog({
                   type: "approve",
                 });
               }}
               disabled={processing}
-              className="rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {processing ? "Processing..." : "Approve"}
+              {processingAction === "approve" && <ActionSpinner size="sm" />}
+
+              {processingAction === "approve" ? "Approving..." : "Approve"}
             </button>
           </div>
         </div>
@@ -723,9 +783,17 @@ function ReviewExpenseModal({
         confirmLabel={showReject ? "Reject" : showDelete ? "Delete" : "Approve"}
         cancelLabel="Cancel"
         loading={processing}
-        loadingLabel="Processing..."
-        onCancel={() => setDialog(null)}
+        loadingLabel={dialogLoadingLabel}
+        onCancel={() => {
+          if (!processing) {
+            setDialog(null);
+          }
+        }}
         onConfirm={() => {
+          if (processing) {
+            return;
+          }
+
           if (showReject) {
             void handleReject();
             return;
