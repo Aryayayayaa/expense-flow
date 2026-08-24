@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { Role } from "@prisma/client";
 
+import AppDialog from "@/components/common/AppDialog";
+
 import {
   approveRoleRequestAction,
   rejectRoleRequestAction,
@@ -32,6 +34,10 @@ export default function RoleRequestManagement({
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectRequestId, setRejectRequestId] = useState<number | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
   async function handleApprove(requestId: number) {
     setProcessingId(requestId);
     setMessage("");
@@ -55,30 +61,50 @@ export default function RoleRequestManagement({
     }
   }
 
-  async function handleReject(requestId: number) {
-    const reason = window.prompt("Enter the reason for rejection:");
+  function openRejectDialog(requestId: number) {
+    setRejectRequestId(requestId);
+    setRejectionReason("");
+    setMessage("");
+    setRejectDialogOpen(true);
+  }
 
-    if (reason === null) {
+  function closeRejectDialog() {
+    if (processingId !== null) {
       return;
     }
 
-    if (!reason.trim()) {
-      setMessage("A rejection reason is required.");
+    setRejectDialogOpen(false);
+    setRejectRequestId(null);
+    setRejectionReason("");
+  }
+
+  async function handleReject() {
+    if (rejectRequestId === null) {
       return;
     }
 
-    setProcessingId(requestId);
+    const reason = rejectionReason.trim();
+
+    if (!reason) {
+      return;
+    }
+
+    setProcessingId(rejectRequestId);
     setMessage("");
 
     try {
-      const result = await rejectRoleRequestAction(requestId, reason);
+      const result = await rejectRoleRequestAction(rejectRequestId, reason);
 
       setMessage(result.message);
 
       if (result.success) {
         setItems((current) =>
-          current.filter((request) => request.id !== requestId),
+          current.filter((request) => request.id !== rejectRequestId),
         );
+
+        setRejectDialogOpen(false);
+        setRejectRequestId(null);
+        setRejectionReason("");
       }
     } catch (error) {
       console.error("Reject role request error:", error);
@@ -97,6 +123,24 @@ export default function RoleRequestManagement({
         </p>
 
         {message && <p className="mt-3 text-sm text-slate-600">{message}</p>}
+
+        <AppDialog
+          open={rejectDialogOpen}
+          onCancel={closeRejectDialog}
+          title="Reject Role Request"
+          description="Enter a reason for rejecting this role verification request."
+          confirmLabel="Reject"
+          cancelLabel="Cancel"
+          onConfirm={handleReject}
+          variant="danger"
+          loading={processingId !== null}
+          loadingLabel="Rejecting..."
+          requiresReason
+          reason={rejectionReason}
+          reasonLabel="Rejection Reason"
+          reasonPlaceholder="Enter the reason for rejection..."
+          onReasonChange={setRejectionReason}
+        />
       </div>
     );
   }
@@ -197,7 +241,7 @@ export default function RoleRequestManagement({
                         <button
                           type="button"
                           disabled={processing}
-                          onClick={() => handleReject(request.id)}
+                          onClick={() => openRejectDialog(request.id)}
                           className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Reject
@@ -211,6 +255,24 @@ export default function RoleRequestManagement({
           </table>
         </div>
       </div>
+
+      <AppDialog
+        open={rejectDialogOpen}
+        onCancel={closeRejectDialog}
+        title="Reject Role Request"
+        description="Enter a reason for rejecting this role verification request."
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
+        onConfirm={handleReject}
+        variant="danger"
+        loading={processingId !== null}
+        loadingLabel="Rejecting..."
+        requiresReason
+        reason={rejectionReason}
+        reasonLabel="Rejection Reason"
+        reasonPlaceholder="Enter the reason for rejection..."
+        onReasonChange={setRejectionReason}
+      />
     </div>
   );
 }

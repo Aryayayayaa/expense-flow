@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import AppDialog from "@/components/common/AppDialog";
+
 import {
   approveRoleRequestAction,
   rejectRoleRequestAction,
@@ -29,6 +31,21 @@ type RoleVerificationTableProps = {
   canReview: boolean;
 };
 
+type DialogState =
+  | {
+      type: "approve";
+      requestId: number;
+    }
+  | {
+      type: "reject";
+      requestId: number;
+    }
+  | {
+      type: "error";
+      message: string;
+    }
+  | null;
+
 export default function RoleVerificationTable({
   requests,
   canReview,
@@ -36,12 +53,11 @@ export default function RoleVerificationTable({
   const [items, setItems] = useState(requests);
   const [processingId, setProcessingId] = useState<number | null>(null);
 
-  async function handleApprove(requestId: number) {
-    const confirmed = window.confirm(
-      "Are you sure you want to approve this role request?",
-    );
+  const [dialog, setDialog] = useState<DialogState>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
-    if (!confirmed) {
+  async function handleApprove(requestId: number) {
+    if (processingId !== null) {
       return;
     }
 
@@ -51,7 +67,11 @@ export default function RoleVerificationTable({
       const result = await approveRoleRequestAction(requestId);
 
       if (!result.success) {
-        alert(result.message);
+        setDialog({
+          type: "error",
+          message: result.message,
+        });
+
         return;
       }
 
@@ -65,35 +85,47 @@ export default function RoleVerificationTable({
             : request,
         ),
       );
+
+      setDialog(null);
     } catch (error) {
       console.error("Approve role request error:", error);
-      alert("Unable to approve role request.");
+
+      setDialog({
+        type: "error",
+        message: "Unable to approve role request.",
+      });
     } finally {
       setProcessingId(null);
     }
   }
 
   async function handleReject(requestId: number) {
-    const reason = window.prompt(
-      "Enter the reason for rejecting this role request:",
-    );
+    const reason = rejectionReason.trim();
 
-    if (reason === null) {
+    if (!reason) {
+      setDialog({
+        type: "error",
+        message: "A rejection reason is required.",
+      });
+
       return;
     }
 
-    if (!reason.trim()) {
-      alert("A rejection reason is required.");
+    if (processingId !== null) {
       return;
     }
 
     setProcessingId(requestId);
 
     try {
-      const result = await rejectRoleRequestAction(requestId, reason.trim());
+      const result = await rejectRoleRequestAction(requestId, reason);
 
       if (!result.success) {
-        alert(result.message);
+        setDialog({
+          type: "error",
+          message: result.message,
+        });
+
         return;
       }
 
@@ -107,12 +139,28 @@ export default function RoleVerificationTable({
             : request,
         ),
       );
+
+      setDialog(null);
+      setRejectionReason("");
     } catch (error) {
       console.error("Reject role request error:", error);
-      alert("Unable to reject role request.");
+
+      setDialog({
+        type: "error",
+        message: "Unable to reject role request.",
+      });
     } finally {
       setProcessingId(null);
     }
+  }
+
+  function closeDialog() {
+    if (processingId !== null) {
+      return;
+    }
+
+    setDialog(null);
+    setRejectionReason("");
   }
 
   if (items.length === 0) {
@@ -130,143 +178,220 @@ export default function RoleVerificationTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1000px] text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50">
-            <tr>
-              <th className="px-6 py-4 font-semibold text-slate-700">
-                Employee
-              </th>
-
-              <th className="px-6 py-4 font-semibold text-slate-700">
-                Requested Role
-              </th>
-
-              <th className="px-6 py-4 font-semibold text-slate-700">Status</th>
-
-              <th className="px-6 py-4 font-semibold text-slate-700">
-                Submitted
-              </th>
-
-              <th className="px-6 py-4 font-semibold text-slate-700">Proof</th>
-
-              {canReview && (
-                <th className="px-6 py-4 text-right font-semibold text-slate-700">
-                  Actions
+    <>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1000px] text-left text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50">
+              <tr>
+                <th className="px-6 py-4 font-semibold text-slate-700">
+                  Employee
                 </th>
-              )}
-            </tr>
-          </thead>
 
-          <tbody className="divide-y divide-slate-200">
-            {items.map((request) => {
-              const isProcessing = processingId === request.id;
-              const isPending = request.status === "PENDING";
+                <th className="px-6 py-4 font-semibold text-slate-700">
+                  Requested Role
+                </th>
 
-              return (
-                <tr key={request.id} className="transition hover:bg-slate-50">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-slate-900">
-                      {request.user.name}
-                    </div>
+                <th className="px-6 py-4 font-semibold text-slate-700">
+                  Status
+                </th>
 
-                    <div className="mt-1 text-xs text-slate-500">
-                      {request.user.email}
-                    </div>
-                  </td>
+                <th className="px-6 py-4 font-semibold text-slate-700">
+                  Submitted
+                </th>
 
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                      {request.requestedRole}
-                    </span>
-                  </td>
+                <th className="px-6 py-4 font-semibold text-slate-700">
+                  Proof
+                </th>
 
-                  <td className="px-6 py-4">
-                    <StatusBadge status={request.status} />
-                  </td>
+                {canReview && (
+                  <th className="px-6 py-4 text-right font-semibold text-slate-700">
+                    Actions
+                  </th>
+                )}
+              </tr>
+            </thead>
 
-                  <td className="px-6 py-4 text-slate-600">
-                    {new Date(request.createdAt).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </td>
+            <tbody className="divide-y divide-slate-200">
+              {items.map((request) => {
+                const isProcessing = processingId === request.id;
+                const isPending = request.status === "PENDING";
 
-                  <td className="px-6 py-4">
-                    {request.proofPath ? (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(
-                              `/api/role-verification/upload/${request.id}/proof`,
-                            );
-
-                            const data = await response.json();
-
-                            if (!response.ok) {
-                              alert(
-                                data.error ??
-                                  "Unable to open verification proof.",
-                              );
-                              return;
-                            }
-
-                            window.open(
-                              data.url,
-                              "_blank",
-                              "noopener,noreferrer",
-                            );
-                          } catch (error) {
-                            console.error("Proof view error:", error);
-                            alert("Unable to open verification proof.");
-                          }
-                        }}
-                        className="font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        View Proof
-                      </button>
-                    ) : (
-                      <span className="text-sm text-slate-400">No proof</span>
-                    )}
-                  </td>
-
-                  {canReview && (
+                return (
+                  <tr key={request.id} className="transition hover:bg-slate-50">
                     <td className="px-6 py-4">
-                      {isPending ? (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            disabled={isProcessing}
-                            onClick={() => handleApprove(request.id)}
-                            className="rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {isProcessing ? "Processing..." : "Approve"}
-                          </button>
+                      <div className="font-medium text-slate-900">
+                        {request.user.name}
+                      </div>
 
-                          <button
-                            type="button"
-                            disabled={isProcessing}
-                            onClick={() => handleReject(request.id)}
-                            className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        </div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        {request.user.email}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        {request.requestedRole}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <StatusBadge status={request.status} />
+                    </td>
+
+                    <td className="px-6 py-4 text-slate-600">
+                      {new Date(request.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {request.proofPath ? (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(
+                                `/api/role-verification/upload/${request.id}/proof`,
+                              );
+
+                              const data = await response.json();
+
+                              if (!response.ok) {
+                                setDialog({
+                                  type: "error",
+                                  message:
+                                    data.error ??
+                                    "Unable to open verification proof.",
+                                });
+
+                                return;
+                              }
+
+                              window.open(
+                                data.url,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
+                            } catch (error) {
+                              console.error("Proof view error:", error);
+
+                              setDialog({
+                                type: "error",
+                                message: "Unable to open verification proof.",
+                              });
+                            }
+                          }}
+                          className="font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          View Proof
+                        </button>
                       ) : (
-                        <span className="text-xs text-slate-400">Reviewed</span>
+                        <span className="text-sm text-slate-400">No proof</span>
                       )}
                     </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+
+                    {canReview && (
+                      <td className="px-6 py-4">
+                        {isPending ? (
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              disabled={isProcessing}
+                              onClick={() =>
+                                setDialog({
+                                  type: "approve",
+                                  requestId: request.id,
+                                })
+                              }
+                              className="rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isProcessing ? "Processing..." : "Approve"}
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={isProcessing}
+                              onClick={() => {
+                                setRejectionReason("");
+
+                                setDialog({
+                                  type: "reject",
+                                  requestId: request.id,
+                                });
+                              }}
+                              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">
+                            Reviewed
+                          </span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <AppDialog
+        open={dialog?.type === "approve"}
+        title="Approve Role Request"
+        description="Are you sure you want to approve this role request?"
+        variant="success"
+        confirmLabel="Approve"
+        cancelLabel="Cancel"
+        loading={processingId !== null}
+        loadingLabel="Processing..."
+        onConfirm={() => {
+          if (dialog?.type === "approve") {
+            void handleApprove(dialog.requestId);
+          }
+        }}
+        onCancel={closeDialog}
+      />
+
+      <AppDialog
+        open={dialog?.type === "reject"}
+        title="Reject Role Request"
+        description="Please provide a reason for rejecting this role request."
+        variant="danger"
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
+        requiresReason
+        reason={rejectionReason}
+        reasonLabel="Rejection Reason"
+        reasonPlaceholder="Enter the reason for rejecting this role request..."
+        onReasonChange={setRejectionReason}
+        loading={processingId !== null}
+        loadingLabel="Processing..."
+        onConfirm={() => {
+          if (dialog?.type === "reject") {
+            void handleReject(dialog.requestId);
+          }
+        }}
+        onCancel={closeDialog}
+      />
+
+      <AppDialog
+        open={dialog?.type === "error"}
+        title="Unable to Complete Action"
+        description={dialog?.type === "error" ? dialog.message : undefined}
+        variant="error"
+        confirmLabel="Close"
+        showCancel={false}
+        onConfirm={closeDialog}
+        onCancel={closeDialog}
+      />
+    </>
   );
 }
 

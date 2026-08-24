@@ -8,6 +8,8 @@ import {
   rejectEmployeeVerificationAction,
 } from "../actions/employee-verification-actions";
 
+import AppDialog from "@/components/common/AppDialog";
+
 type EmployeeVerificationRequest = {
   id: number;
   proofUrl: string | null;
@@ -29,45 +31,84 @@ export default function EmployeeVerificationTable({ requests }: Props) {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectRequestId, setRejectRequestId] = useState<number | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
   async function handleApprove(id: number) {
     setProcessingId(id);
     setMessage("");
 
-    const result = await approveEmployeeVerificationAction(id);
+    try {
+      const result = await approveEmployeeVerificationAction(id);
 
-    setMessage(result.message);
+      setMessage(result.message);
 
-    if (result.success) {
-      setItems((current) => current.filter((request) => request.id !== id));
+      if (result.success) {
+        setItems((current) => current.filter((request) => request.id !== id));
+      }
+    } catch (error) {
+      console.error("Approve employee verification error:", error);
+      setMessage("Unable to approve employee verification request.");
+    } finally {
+      setProcessingId(null);
     }
-
-    setProcessingId(null);
   }
 
-  async function handleReject(id: number) {
-    const reason = window.prompt("Enter the reason for rejection:");
+  function openRejectDialog(id: number) {
+    setRejectRequestId(id);
+    setRejectionReason("");
+    setMessage("");
+    setRejectDialogOpen(true);
+  }
 
-    if (reason === null) {
+  function closeRejectDialog() {
+    if (processingId !== null) {
       return;
     }
 
-    if (!reason.trim()) {
-      setMessage("A rejection reason is required.");
+    setRejectDialogOpen(false);
+    setRejectRequestId(null);
+    setRejectionReason("");
+  }
+
+  async function handleReject() {
+    if (rejectRequestId === null) {
       return;
     }
 
-    setProcessingId(id);
+    const reason = rejectionReason.trim();
+
+    if (!reason) {
+      return;
+    }
+
+    setProcessingId(rejectRequestId);
     setMessage("");
 
-    const result = await rejectEmployeeVerificationAction(id, reason);
+    try {
+      const result = await rejectEmployeeVerificationAction(
+        rejectRequestId,
+        reason,
+      );
 
-    setMessage(result.message);
+      setMessage(result.message);
 
-    if (result.success) {
-      setItems((current) => current.filter((request) => request.id !== id));
+      if (result.success) {
+        setItems((current) =>
+          current.filter((request) => request.id !== rejectRequestId),
+        );
+
+        setRejectDialogOpen(false);
+        setRejectRequestId(null);
+        setRejectionReason("");
+      }
+    } catch (error) {
+      console.error("Reject employee verification error:", error);
+      setMessage("Unable to reject employee verification request.");
+    } finally {
+      setProcessingId(null);
     }
-
-    setProcessingId(null);
   }
 
   if (items.length === 0) {
@@ -76,6 +117,24 @@ export default function EmployeeVerificationTable({ requests }: Props) {
         <p className="text-sm text-slate-500">
           No pending employee verification requests.
         </p>
+
+        <AppDialog
+          open={rejectDialogOpen}
+          onCancel={closeRejectDialog}
+          title="Reject Employee Verification"
+          description="Enter a reason for rejecting this employee verification request."
+          confirmLabel="Reject"
+          cancelLabel="Cancel"
+          onConfirm={handleReject}
+          variant="danger"
+          loading={processingId !== null}
+          loadingLabel="Rejecting..."
+          requiresReason
+          reason={rejectionReason}
+          reasonLabel="Rejection Reason"
+          reasonPlaceholder="Enter the reason for rejection..."
+          onReasonChange={setRejectionReason}
+        />
       </div>
     );
   }
@@ -190,7 +249,7 @@ export default function EmployeeVerificationTable({ requests }: Props) {
                         <button
                           type="button"
                           disabled={processing}
-                          onClick={() => handleReject(request.id)}
+                          onClick={() => openRejectDialog(request.id)}
                           className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Reject
@@ -204,6 +263,24 @@ export default function EmployeeVerificationTable({ requests }: Props) {
           </table>
         </div>
       </div>
+
+      <AppDialog
+        open={rejectDialogOpen}
+        onCancel={closeRejectDialog}
+        title="Reject Employee Verification"
+        description="Enter a reason for rejecting this employee verification request."
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
+        onConfirm={handleReject}
+        variant="danger"
+        loading={processingId !== null}
+        loadingLabel="Rejecting..."
+        requiresReason
+        reason={rejectionReason}
+        reasonLabel="Rejection Reason"
+        reasonPlaceholder="Enter the reason for rejection..."
+        onReasonChange={setRejectionReason}
+      />
     </div>
   );
 }
