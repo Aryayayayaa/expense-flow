@@ -319,7 +319,15 @@ export default function AddExpenseForm({
     <Card>
       <form
         ref={formRef}
-        action={handleSubmit}
+        onSubmit={(event) => {
+          event.preventDefault();
+
+          if (pending) {
+            return;
+          }
+
+          void handleSubmit(new FormData(event.currentTarget));
+        }}
         className="space-y-5 text-black"
       >
         <div className="border-b pb-4">
