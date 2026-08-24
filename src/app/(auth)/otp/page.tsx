@@ -1,6 +1,3 @@
-// src/app/(auth)/otp/page.tsx
-
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import OtpVerificationForm from "@/features/auth/components/OtpVerificationForm";
@@ -34,13 +31,6 @@ export default async function OtpPage({
         <div className="mt-6">
           <OtpVerificationForm email={email} />
         </div>
-
-        <Link
-          href="/forgot-password"
-          className="mt-6 block text-center text-sm font-medium text-blue-600 hover:text-blue-800"
-        >
-          Request a new OTP
-        </Link>
       </div>
     </main>
   );

@@ -21,6 +21,7 @@ const initialState = {
 };
 
 const OTP_DURATION_SECONDS = 60;
+const REDIRECT_COUNTDOWN_SECONDS = 3;
 
 export default function OtpVerificationForm({ email }: Props) {
   const [state, formAction, pending] = useActionState(
@@ -30,6 +31,10 @@ export default function OtpVerificationForm({ email }: Props) {
 
   const [secondsRemaining, setSecondsRemaining] =
     useState(OTP_DURATION_SECONDS);
+
+  const [redirectSeconds, setRedirectSeconds] = useState(
+    REDIRECT_COUNTDOWN_SECONDS,
+  );
 
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
@@ -48,6 +53,25 @@ export default function OtpVerificationForm({ email }: Props) {
     };
   }, [secondsRemaining]);
 
+  useEffect(() => {
+    if (secondsRemaining > 0) {
+      return;
+    }
+
+    if (redirectSeconds <= 0) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRedirectSeconds((current) => Math.max(current - 1, 0));
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [secondsRemaining, redirectSeconds]);
+
   async function handleResend() {
     if (resending || secondsRemaining > 0) {
       return;
@@ -63,10 +87,6 @@ export default function OtpVerificationForm({ email }: Props) {
 
       const result = await requestPasswordResetAction(initialState, formData);
 
-      /*
-       * Successful request redirects to /otp.
-       * This branch mainly handles unexpected non-redirect responses.
-       */
       if (!result.success) {
         setResendMessage(result.message || "Unable to send a new OTP.");
         return;
@@ -74,10 +94,6 @@ export default function OtpVerificationForm({ email }: Props) {
 
       setSecondsRemaining(OTP_DURATION_SECONDS);
     } catch (error) {
-      /*
-       * redirect() is intentionally thrown by the server action.
-       * Next.js handles that redirect automatically.
-       */
       if (
         error &&
         typeof error === "object" &&
@@ -100,6 +116,26 @@ export default function OtpVerificationForm({ email }: Props) {
   const seconds = secondsRemaining % 60;
 
   const countdown = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+  if (secondsRemaining <= 0) {
+    return (
+      <div className="w-full max-w-md text-center">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-5">
+          <h2 className="text-lg font-semibold text-red-700">OTP Expired</h2>
+
+          <p className="mt-2 text-sm text-red-600">Your OTP has expired.</p>
+
+          <p className="mt-4 text-sm text-slate-600">
+            Redirecting you back to the Login Page in{" "}
+            <span className="font-semibold text-slate-900">
+              {redirectSeconds}
+            </span>{" "}
+            seconds
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md">
@@ -137,19 +173,15 @@ export default function OtpVerificationForm({ email }: Props) {
         )}
 
         <div className="text-center">
-          {secondsRemaining > 0 ? (
-            <p className="text-sm text-slate-500">
-              OTP expires in{" "}
-              <span className="font-semibold text-slate-700">{countdown}</span>
-            </p>
-          ) : (
-            <p className="text-sm font-medium text-red-600">OTP expired.</p>
-          )}
+          <p className="text-sm text-slate-500">
+            OTP expires in{" "}
+            <span className="font-semibold text-slate-700">{countdown}</span>
+          </p>
         </div>
 
         <button
           type="submit"
-          disabled={pending || secondsRemaining <= 0}
+          disabled={pending}
           className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? "Verifying..." : "Verify OTP"}
