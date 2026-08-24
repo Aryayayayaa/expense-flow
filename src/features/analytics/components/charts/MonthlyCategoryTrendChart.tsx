@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   CartesianGrid,
@@ -58,6 +58,20 @@ export default function MonthlyCategoryTrendChart({
   defaultCurrency,
 }: MonthlyCategoryTrendChartProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedCategory(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const reportCurrency =
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
