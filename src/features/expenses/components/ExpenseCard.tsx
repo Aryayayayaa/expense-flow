@@ -12,7 +12,6 @@ import {
   Banknote,
   ShieldAlert,
   ReceiptText,
-  Eye,
 } from "lucide-react";
 
 import { formatCurrency } from "@/utils/formatCurrency";
@@ -36,9 +35,10 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
 
   const isApproved = expense.status === "APPROVED";
   const isRejected = expense.status === "REJECTED";
+  const isPending = expense.status === "PENDING";
+
   const isReimbursed = expense.reimbursementStatus === "REIMBURSED";
   const isReimbursementRejected = expense.reimbursementStatus === "REJECTED";
-  const isPending = expense.status === "PENDING";
 
   const hasAdminModification = Boolean(expense.adminModification);
   const hasReceipt = Boolean(expense.ocrReceiptUrl);
@@ -58,15 +58,17 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
           handleOpenExpense();
         }
       }}
-      className="cursor-pointer rounded-xl transition hover:-translate-y-1 hover:shadow-lg"
+      className="h-full cursor-pointer rounded-xl transition hover:-translate-y-1 hover:shadow-lg"
     >
-      <Card className="flex min-h-60 flex-col text-black">
+      <Card className="flex h-[650px] flex-col overflow-hidden text-black">
         {/* Expense information */}
         <div className="space-y-2">
-          <h2 className="mb-3 break-words text-3xl font-semibold">
+          {/* Fixed title area */}
+          <h2 className="mb-3 line-clamp-2 min-h-[72px] break-words text-3xl font-semibold">
             {expense.title}
           </h2>
 
+          {/* Amount */}
           <div>
             <p className="text-2xl font-bold tracking-tight text-green-600">
               {formatCurrency(displayAmount, defaultCurrency)}
@@ -105,7 +107,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
 
         {/* Admin Modification Notice */}
         {hasAdminModification && expense.adminModification && (
-          <div className="mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
+          <div className="mt-4 max-h-[180px] overflow-hidden rounded-lg border border-purple-200 bg-purple-50 p-4">
             <div className="flex items-start gap-3">
               <ShieldAlert
                 size={19}
@@ -137,7 +139,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
                   Changes made
                 </p>
 
-                <div className="space-y-2">
+                <div className="max-h-[80px] space-y-2 overflow-hidden">
                   {Object.entries(expense.adminModification.changes).map(
                     ([field, change]) => (
                       <div
@@ -259,42 +261,10 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
               )}
             </div>
           )}
-
-          {isReimbursed && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-green-600" />
-
-                <div>
-                  <p className="text-sm font-semibold text-green-800">
-                    Approval Status
-                  </p>
-
-                  <p className="text-sm text-green-700">Approved</p>
-                </div>
-              </div>
-
-              {expense.decidedBy && (
-                <div className="mt-3 border-t border-green-200 pt-3 text-sm text-green-700">
-                  <p>
-                    <span className="font-medium">Approved by:</span>{" "}
-                    {expense.decidedBy.name}
-                  </p>
-
-                  {expense.decidedAt && (
-                    <p className="mt-1">
-                      <span className="font-medium">Approved on:</span>{" "}
-                      {formatDate(expense.decidedAt)}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Reimbursement Status */}
-        {isApproved || isReimbursed ? (
+        {!isRejected && (
           <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
             <div className="flex items-center gap-2">
               <Banknote size={18} className="text-blue-600" />
@@ -330,7 +300,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
               </div>
             )}
           </div>
-        ) : null}
+        )}
 
         {/* Receipt */}
         {hasReceipt && (
