@@ -12,6 +12,8 @@ This subtask is limited to the UI/UX redesign of the Expense Details page and sh
 
 #### 1. Expense Details Layout
 
+##### STATUS: COMPLETED
+
 Redesign the page with a clear visual hierarchy for:
 
 - Expense title
@@ -24,6 +26,8 @@ Redesign the page with a clear visual hierarchy for:
 - Created/updated information, where available
 
 #### 2. Expense Status
+
+##### STATUS: COMPLETED
 
 Display the current expense status clearly.
 
@@ -55,6 +59,8 @@ Do not introduce new reimbursement functionality as part of this subtask.
 
 #### 4. Receipt Section
 
+##### STATUS: COMPLETED
+
 Create a dedicated receipt area in the Expense Details page.
 
 For the current UI redesign:
@@ -69,6 +75,8 @@ Receipt upload/edit behavior will be handled separately in the remaining Task 13
 
 #### 5. Actions
 
+##### STATUS: COMPLETED
+
 Keep the existing supported expense actions available where appropriate.
 
 The redesigned page should provide a clear location for actions such as:
@@ -80,6 +88,8 @@ Do not introduce new expense actions unless required by the existing functionali
 
 #### 6. Responsive Design
 
+##### STATUS: COMPLETED
+
 The redesigned `/expenses/[id]` page should work properly across:
 
 - Desktop
@@ -89,6 +99,8 @@ The redesigned `/expenses/[id]` page should work properly across:
 The layout should remain readable and usable without unnecessary horizontal scrolling.
 
 #### 7. Visual Consistency
+
+##### STATUS: COMPLETED
 
 The redesigned page should follow the existing ExpenseFlow design language:
 
@@ -120,19 +132,19 @@ These will be handled in subsequent Task 13 subtasks.
 
 ### Acceptance Criteria
 
-- [ ] `/expenses/[id]` has a redesigned and polished UI.
-- [ ] Expense information has a clear visual hierarchy.
-- [ ] Expense status is clearly displayed.
-- [ ] Reimbursement information is displayed when available.
-- [ ] Receipt information has a dedicated section.
-- [ ] Existing receipt can be viewed/accessed where applicable.
-- [ ] No separate Bill Proof UI is introduced.
-- [ ] Appropriate empty states are displayed.
-- [ ] Existing supported actions remain functional.
-- [ ] Page is responsive on desktop, tablet, and mobile.
-- [ ] Existing ExpenseFlow styling/components are respected.
-- [ ] No unrelated backend or business-logic changes are introduced.
-- [ ] `npm run build` passes successfully.
+- [x] `/expenses/[id]` has a redesigned and polished UI.
+- [x] Expense information has a clear visual hierarchy.
+- [x] Expense status is clearly displayed.
+- [x] Reimbursement information is displayed when available.
+- [x] Receipt information has a dedicated section.
+- [x] Existing receipt can be viewed/accessed where applicable.
+- [x] No separate Bill Proof UI is introduced.
+- [x] Appropriate empty states are displayed.
+- [x] Existing supported actions remain functional.
+- [x] Page is responsive on desktop, tablet, and mobile.
+- [x] Existing ExpenseFlow styling/components are respected.
+- [x] No unrelated backend or business-logic changes are introduced.
+- [x] `npm run build` passes successfully.
 
 ### Verification
 
