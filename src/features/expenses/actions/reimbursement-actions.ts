@@ -16,6 +16,11 @@ type ReimbursementActionResult = {
   message: string;
 };
 
+type ReimbursementProcessor = {
+  userId: number;
+  role: "HR" | "ADMIN";
+};
+
 async function requireReimbursementProcessor() {
   const session = await auth();
 
@@ -40,11 +45,15 @@ async function requireReimbursementProcessor() {
   };
 }
 
-async function getReimbursementExpense(expenseId: number, hrId: number) {
+async function getReimbursementExpense(
+  expenseId: number,
+  processor: ReimbursementProcessor,
+) {
   const expense = await prisma.expense.findUnique({
     where: {
       id: expenseId,
     },
+
     select: {
       id: true,
       title: true,
@@ -53,7 +62,9 @@ async function getReimbursementExpense(expenseId: number, hrId: number) {
       expenseDate: true,
       status: true,
       reimbursementStatus: true,
+      reimbursementReason: true,
       userId: true,
+      decidedById: true,
 
       user: {
         select: {
@@ -71,7 +82,7 @@ async function getReimbursementExpense(expenseId: number, hrId: number) {
     };
   }
 
-  if (expense.userId === hrId) {
+  if (expense.userId === processor.userId) {
     return {
       success: false as const,
       message: "You cannot process reimbursement for your own expense.",
@@ -92,6 +103,27 @@ async function getReimbursementExpense(expenseId: number, hrId: number) {
     };
   }
 
+  /*
+   * ------------------------------------------------------------------------
+   * Admin approval/reimbursement separation
+   * ------------------------------------------------------------------------
+   *
+   * An Admin cannot reimburse an expense that the same Admin approved.
+   *
+   * Other Admins and all authorized HR users remain eligible to reimburse.
+   *
+   * IMPORTANT:
+   * This restriction is based on `decidedById` (the Admin who approved
+   * the expense), NOT on who most recently modified the expense.
+   */
+  if (processor.role === "ADMIN" && expense.decidedById === processor.userId) {
+    return {
+      success: false as const,
+      message:
+        "You cannot reimburse an expense that you approved. Another Admin or HR must process the reimbursement.",
+    };
+  }
+
   return {
     success: true as const,
     expense,
@@ -102,13 +134,16 @@ export async function reimburseExpenseAction(
   expenseId: number,
 ): Promise<ReimbursementActionResult> {
   try {
-    const hr = await requireReimbursementProcessor();
+    const processor = await requireReimbursementProcessor();
 
-    if (!hr.success) {
-      return hr;
+    if (!processor.success) {
+      return processor;
     }
 
-    const expenseResult = await getReimbursementExpense(expenseId, hr.userId);
+    const expenseResult = await getReimbursementExpense(expenseId, {
+      userId: processor.userId,
+      role: processor.role,
+    });
 
     if (!expenseResult.success) {
       return expenseResult;
@@ -119,10 +154,11 @@ export async function reimburseExpenseAction(
         where: {
           id: expenseId,
         },
+
         data: {
           reimbursementStatus: "REIMBURSED",
           reimbursementAt: new Date(),
-          reimbursementById: hr.userId,
+          reimbursementById: processor.userId,
           reimbursementReason: null,
         },
       });
@@ -130,7 +166,7 @@ export async function reimburseExpenseAction(
       await tx.expenseAuditLog.create({
         data: {
           expenseId,
-          actorId: hr.userId,
+          actorId: processor.userId,
           action: "REIMBURSED",
           metadata: {
             previousReimbursementStatus: "PENDING",
@@ -200,10 +236,10 @@ export async function rejectReimbursementAction(
       };
     }
 
-    const expenseResult = await getReimbursementExpense(
-      expenseId,
-      processor.userId,
-    );
+    const expenseResult = await getReimbursementExpense(expenseId, {
+      userId: processor.userId,
+      role: processor.role,
+    });
 
     if (!expenseResult.success) {
       return expenseResult;
@@ -214,6 +250,7 @@ export async function rejectReimbursementAction(
         where: {
           id: expenseId,
         },
+
         data: {
           reimbursementStatus: "REJECTED",
           reimbursementAt: new Date(),
