@@ -1,15 +1,11 @@
 import type { OcrResult } from "../types/ocr";
 
 /*
- * Parse a numeric amount from a string.
+ * --------------------------------------------------------------------------
+ * Numeric Amount Parser
+ * --------------------------------------------------------------------------
  *
- * Supports:
- *   84
- *   84.00
- *   1,234.50
- *   ₹84
- *   Rs. 84
- *   INR 84
+ * Converts a string containing a monetary value into a number.
  */
 function parseNumericAmount(value: string): number | null {
   const cleaned = value
@@ -30,27 +26,36 @@ function parseNumericAmount(value: string): number | null {
 }
 
 /*
- * Extract the amount that most likely represents the final amount
- * payable by the customer.
+ * --------------------------------------------------------------------------
+ * Amount Parser
+ * --------------------------------------------------------------------------
+ *
+ * Attempts to identify the FINAL amount payable by the customer.
  *
  * Priority:
  *
  *   1. Explicit final amount labels
- *      - Grand Total
- *      - Total Amount
- *      - Amount Due
- *      - Amount Payable
- *      - Net Payable
- *      - AMOUNT
- *      - Balance
+ *   2. Tax-inclusive totals
+ *   3. Generic receipt totals
+ *   4. Currency-prefixed amounts
  *
- *   2. Tax-inclusive labels
+ * Important:
  *
- *   3. Generic Total
+ * Receipt OCR does not always preserve the visual layout.
  *
- *   4. Currency-prefixed amount fallback
+ * For example, the receipt may visually contain:
  *
- * Pre-tax values such as Sub-total and Taxable Amount are ignored.
+ *   Eat-In Total       188.00
+ *
+ * but Mindee may return:
+ *
+ *   Eat-In Total
+ *   188.00
+ *
+ * Therefore this parser checks BOTH:
+ *
+ *   - the same line
+ *   - the following line
  */
 function parseAmount(text: string): number | null {
   const lines = text
@@ -58,20 +63,97 @@ function parseAmount(text: string): number | null {
     .map((line) => line.trim())
     .filter(Boolean);
 
+  /*
+   * Matches monetary-looking values.
+   *
+   * Examples:
+   *
+   *   188.00
+   *   1,234.50
+   *   ₹188.00
+   *   Rs. 188.00
+   *   INR 188.00
+   */
   const numberPattern = /(?:₹|rs\.?|inr|\$|€|£)?\s*\d[\d,]*(?:\.\d{1,2})?/gi;
 
   /*
-   * Highest priority:
-   * Explicit final/payable amount labels.
+   * ------------------------------------------------------------------------
+   * Helper: extract amount from a line
+   * ------------------------------------------------------------------------
+   */
+  function extractAmountFromLine(line: string): number | null {
+    const matches = line.match(numberPattern);
+
+    if (!matches || matches.length === 0) {
+      return null;
+    }
+
+    /*
+     * If a line somehow contains multiple numbers, the last one is
+     * generally the monetary value associated with the label.
+     *
+     * Example:
+     *
+     *   GST @ 2.5%  4.48
+     *
+     * We want 4.48 rather than 2.5.
+     */
+    for (let index = matches.length - 1; index >= 0; index--) {
+      const amount = parseNumericAmount(matches[index]);
+
+      if (amount !== null) {
+        return amount;
+      }
+    }
+
+    return null;
+  }
+
+  /*
+   * ------------------------------------------------------------------------
+   * Helper: extract amount from current line OR next line
+   * ------------------------------------------------------------------------
    *
-   * This handles both:
+   * This is particularly important for OCR because labels and values may
+   * be separated into different lines.
+   */
+  function extractAmountNearLine(index: number): number | null {
+    /*
+     * First check the same line.
+     */
+    const sameLineAmount = extractAmountFromLine(lines[index]);
+
+    if (sameLineAmount !== null) {
+      return sameLineAmount;
+    }
+
+    /*
+     * Then check the immediately following line.
+     *
+     * Example:
+     *
+     *   Eat-In Total
+     *   188.00
+     */
+    const nextLine = lines[index + 1];
+
+    if (nextLine) {
+      const nextLineAmount = extractAmountFromLine(nextLine);
+
+      if (nextLineAmount !== null) {
+        return nextLineAmount;
+      }
+    }
+
+    return null;
+  }
+
+  /*
+   * ------------------------------------------------------------------------
+   * 1. Highest priority: explicit final amount labels
+   * ------------------------------------------------------------------------
    *
-   *   AMOUNT 84.80
-   *
-   * and OCR where the label and value are on separate lines:
-   *
-   *   AMOUNT
-   *   84.80
+   * These labels strongly indicate the final payable amount.
    */
   const finalAmountPatterns = [
     /\bgrand\s*total\b/i,
@@ -84,6 +166,21 @@ function parseAmount(text: string): number | null {
     /\bpayable\s*amount\b/i,
     /\bto\s*pay\b/i,
     /\bbalance\b/i,
+
+    /*
+     * Receipt-specific final-total formats.
+     *
+     * For example:
+     *
+     *   Eat-In Total
+     *   188.00
+     *
+     * This is the format visible on the provided receipt.
+     */
+    /\beat[\s-]*in\s*total\b/i,
+    /\btotal\s*bill\b/i,
+    /\btotal\s*sale\b/i,
+    /\btotal\s*purchase\b/i,
   ];
 
   for (let index = 0; index < lines.length; index++) {
@@ -97,53 +194,23 @@ function parseAmount(text: string): number | null {
       continue;
     }
 
-    /*
-     * First try to find an amount on the same line.
-     *
-     * Example:
-     *   Balance 84.80
-     */
-    const sameLineMatches = line.match(numberPattern);
+    const amount = extractAmountNearLine(index);
 
-    if (sameLineMatches && sameLineMatches.length > 0) {
-      const amount = parseNumericAmount(
-        sameLineMatches[sameLineMatches.length - 1],
-      );
-
-      if (amount !== null) {
-        return amount;
-      }
-    }
-
-    /*
-     * OCR may put the amount on the line immediately after
-     * the label.
-     *
-     * Example:
-     *
-     *   AMOUNT
-     *   84.80
-     */
-    const nextLine = lines[index + 1];
-
-    if (nextLine) {
-      const nextLineMatches = nextLine.match(numberPattern);
-
-      if (nextLineMatches && nextLineMatches.length > 0) {
-        const amount = parseNumericAmount(
-          nextLineMatches[nextLineMatches.length - 1],
-        );
-
-        if (amount !== null) {
-          return amount;
-        }
-      }
+    if (amount !== null) {
+      return amount;
     }
   }
 
   /*
-   * Second priority:
-   * Explicit tax-inclusive amounts.
+   * ------------------------------------------------------------------------
+   * 2. Tax-inclusive totals
+   * ------------------------------------------------------------------------
+   *
+   * Examples:
+   *
+   *   Total including GST 188.00
+   *   Total including tax
+   *   188.00
    */
   const taxInclusivePatterns = [
     /\btotal\s*(?:including|incl\.?|inclusive)\s*(?:tax|gst|vat)\b/i,
@@ -165,37 +232,36 @@ function parseAmount(text: string): number | null {
       continue;
     }
 
-    const sameLineMatches = line.match(numberPattern);
+    const amount = extractAmountNearLine(index);
 
-    if (sameLineMatches && sameLineMatches.length > 0) {
-      const amount = parseNumericAmount(
-        sameLineMatches[sameLineMatches.length - 1],
-      );
-
-      if (amount !== null) {
-        return amount;
-      }
-    }
-
-    const nextLine = lines[index + 1];
-
-    if (nextLine) {
-      const nextLineMatches = nextLine.match(numberPattern);
-
-      if (nextLineMatches && nextLineMatches.length > 0) {
-        const amount = parseNumericAmount(
-          nextLineMatches[nextLineMatches.length - 1],
-        );
-
-        if (amount !== null) {
-          return amount;
-        }
-      }
+    if (amount !== null) {
+      return amount;
     }
   }
 
   /*
-   * Explicitly ignore common pre-tax values.
+   * ------------------------------------------------------------------------
+   * 3. Generic receipt total
+   * ------------------------------------------------------------------------
+   *
+   * Many receipts simply use:
+   *
+   *   Total
+   *   188.00
+   *
+   * or:
+   *
+   *   Total 188.00
+   *
+   * We therefore check both the current line and the next line.
+   *
+   * However, we explicitly exclude:
+   *
+   *   Sub-Total
+   *   Taxable Amount
+   *   Before Tax
+   *
+   * because those are not the final payable amount.
    */
   const excludedPatterns = [
     /\bsubtotal\b/i,
@@ -209,24 +275,18 @@ function parseAmount(text: string): number | null {
     /\btaxable\b/i,
   ];
 
-  /*
-   * Generic "total" is preferable to arbitrary numbers.
-   */
-  const genericTotalLines = lines.filter((line) => {
-    return (
-      /\btotal\b/i.test(line) &&
-      !excludedPatterns.some((pattern) => pattern.test(line))
-    );
-  });
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
 
-  for (const line of genericTotalLines) {
-    const matches = line.match(numberPattern);
-
-    if (!matches || matches.length === 0) {
+    if (!/\btotal\b/i.test(line)) {
       continue;
     }
 
-    const amount = parseNumericAmount(matches[matches.length - 1]);
+    if (excludedPatterns.some((pattern) => pattern.test(line))) {
+      continue;
+    }
+
+    const amount = extractAmountNearLine(index);
 
     if (amount !== null) {
       return amount;
@@ -234,13 +294,63 @@ function parseAmount(text: string): number | null {
   }
 
   /*
-   * Currency-prefixed amount fallback.
+   * ------------------------------------------------------------------------
+   * 4. Payment-line fallback
+   * ------------------------------------------------------------------------
    *
-   * The last currency amount is usually closest to the final
-   * payable amount on a receipt.
+   * Some receipts do not clearly expose a "Total" amount but repeat the
+   * final amount under the payment method.
+   *
+   * Example:
+   *
+   *   Total
+   *   188.00
+   *   Card
+   *   188.00
+   *
+   * We only use this as a fallback because payment lines can sometimes
+   * contain unrelated values.
+   */
+  const paymentPatterns = [
+    /\bcard\b/i,
+    /\bcash\b/i,
+    /\bupi\b/i,
+    /\bcredit\s*card\b/i,
+    /\bdebit\s*card\b/i,
+    /\bpayment\b/i,
+    /\bpaid\b/i,
+  ];
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index];
+
+    if (!paymentPatterns.some((pattern) => pattern.test(line))) {
+      continue;
+    }
+
+    const amount = extractAmountNearLine(index);
+
+    if (amount !== null) {
+      return amount;
+    }
+  }
+
+  /*
+   * ------------------------------------------------------------------------
+   * 5. Currency-prefixed amount fallback
+   * ------------------------------------------------------------------------
+   *
+   * Used when the receipt contains values such as:
+   *
+   *   ₹188.00
+   *   Rs. 188.00
+   *   INR 188.00
+   *
+   * The last currency-prefixed amount is generally closest to the final
+   * payable amount.
    */
   const currencyMatches = text.match(
-    /(?:₹|rs\.?|inr|\$|€|£)\s*\d[\d,]*(?:\.\d{1,2})?/gi,
+    /(?:₹|rs\.?|inr)\s*\d[\d,]*(?:\.\d{1,2})?/gi,
   );
 
   if (currencyMatches && currencyMatches.length > 0) {
@@ -253,9 +363,17 @@ function parseAmount(text: string): number | null {
     }
   }
 
+  /*
+   * No reliable amount could be identified.
+   */
   return null;
 }
 
+/*
+ * --------------------------------------------------------------------------
+ * Vendor Parser
+ * --------------------------------------------------------------------------
+ */
 function parseVendor(text: string): string | null {
   const lines = text
     .split(/\r?\n/)
@@ -280,7 +398,9 @@ function parseVendor(text: string): string | null {
 }
 
 /*
- * Convert a detected date into YYYY-MM-DD.
+ * --------------------------------------------------------------------------
+ * Date Validation
+ * --------------------------------------------------------------------------
  */
 function normalizeDate(
   year: number,
@@ -308,7 +428,9 @@ function normalizeDate(
 }
 
 /*
- * Parse a date from common receipt formats.
+ * --------------------------------------------------------------------------
+ * Date Parser
+ * --------------------------------------------------------------------------
  */
 function parseDate(text: string): string | null {
   const currentYear = new Date().getFullYear();
@@ -470,7 +592,9 @@ function parseDate(text: string): string | null {
 }
 
 /*
- * Parse a time from common receipt formats.
+ * --------------------------------------------------------------------------
+ * Time Parser
+ * --------------------------------------------------------------------------
  */
 function parseTime(text: string): string | null {
   const timeMatch = text.match(
@@ -510,8 +634,19 @@ function parseTime(text: string): string | null {
 }
 
 /*
- * Combine OCR date + OCR time into the exact format expected by
- * <input type="datetime-local">.
+ * --------------------------------------------------------------------------
+ * Expense Date Parser
+ * --------------------------------------------------------------------------
+ *
+ * Combines:
+ *
+ *   OCR date
+ *   +
+ *   OCR time
+ *
+ * into the format expected by:
+ *
+ *   <input type="datetime-local">
  */
 function parseExpenseDate(text: string): string | null {
   const date = parseDate(text);
@@ -525,6 +660,11 @@ function parseExpenseDate(text: string): string | null {
   return `${date}T${time}`;
 }
 
+/*
+ * --------------------------------------------------------------------------
+ * Public Parser
+ * --------------------------------------------------------------------------
+ */
 export function parseReceiptText(text: string): OcrResult {
   return {
     vendor: parseVendor(text),
