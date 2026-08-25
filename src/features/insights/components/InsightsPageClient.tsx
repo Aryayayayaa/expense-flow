@@ -20,14 +20,14 @@ import TopCategories from "@/features/analytics/components/reports/TopCategories
 
 import type { AnalyticsExpense } from "@/features/analytics/types";
 
-import {
-  type ExpenseApprovalStatus,
-  type ExpenseReimbursementStatus,
+import type {
+  ExpenseApprovalStatus,
+  ExpenseReimbursementStatus,
 } from "@/features/expenses/components/StatusFilters";
 
 import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
 
-type AnalyticsScope = "OWN" | "ALL" | "EMPLOYEES";
+import type { AnalyticsScope } from "@/features/analytics/lib/getAnalyticsData";
 
 type AnalyticsTab = "analysis" | "reports";
 
@@ -328,6 +328,62 @@ export default function InsightsPageClient({
     reimbursementStatus !== "ALL";
 
   /* ---------------------------------------------------------------------- */
+  /* Scope options                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  const scopeOptions: {
+    value: AnalyticsScope;
+    label: string;
+  }[] =
+    role === "ADMIN"
+      ? [
+          {
+            value: "OWN",
+            label: "OWN",
+          },
+          {
+            value: "ALL",
+            label: "ALL",
+          },
+          {
+            value: "EMPLOYEES",
+            label: "EMPLOYEES",
+          },
+          {
+            value: "OTHER_ADMINS",
+            label: "OTHER ADMINS",
+          },
+          {
+            value: "HRS",
+            label: "HRs",
+          },
+        ]
+      : role === "HR"
+        ? [
+            {
+              value: "OWN",
+              label: "OWN",
+            },
+            {
+              value: "ALL",
+              label: "ALL",
+            },
+            {
+              value: "EMPLOYEES",
+              label: "EMPLOYEES",
+            },
+            {
+              value: "OTHER_HRS",
+              label: "OTHER HRs",
+            },
+            {
+              value: "ADMINS",
+              label: "ADMINS",
+            },
+          ]
+        : [];
+
+  /* ---------------------------------------------------------------------- */
   /* UI                                                                     */
   /* ---------------------------------------------------------------------- */
 
@@ -350,9 +406,11 @@ export default function InsightsPageClient({
             }}
             className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
           >
-            <option value="OWN">OWN</option>
-            <option value="ALL">ALL</option>
-            <option value="EMPLOYEES">EMPLOYEES</option>
+            {scopeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       )}

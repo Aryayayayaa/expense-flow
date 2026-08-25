@@ -5,9 +5,27 @@ import { getExchangeRate } from "@/features/expenses/lib/exchange-rates";
 
 import type { AnalyticsExpense } from "../types";
 
-export type AnalyticsScope = "OWN" | "ALL" | "EMPLOYEES";
+export type AnalyticsScope =
+  | "OWN"
+  | "ALL"
+  | "EMPLOYEES"
+  | "OTHER_ADMINS"
+  | "HRS"
+  | "OTHER_HRS"
+  | "ADMINS";
 
-async function getExpensesForAnalytics(scope: AnalyticsScope, userId: number) {
+async function getExpensesForAnalytics(
+  scope: AnalyticsScope,
+  userId: number,
+  role: "ADMIN" | "HR" | "EMPLOYEE",
+) {
+  /*
+   * ---------------------------------------------------------
+   * OWN
+   * ---------------------------------------------------------
+   *
+   * Only the currently authenticated user's expenses.
+   */
   if (scope === "OWN") {
     return prisma.expense.findMany({
       where: {
@@ -18,6 +36,13 @@ async function getExpensesForAnalytics(scope: AnalyticsScope, userId: number) {
     });
   }
 
+  /*
+   * ---------------------------------------------------------
+   * EMPLOYEES
+   * ---------------------------------------------------------
+   *
+   * Expenses belonging to all EMPLOYEE accounts.
+   */
   if (scope === "EMPLOYEES") {
     return prisma.expense.findMany({
       where: {
@@ -30,6 +55,121 @@ async function getExpensesForAnalytics(scope: AnalyticsScope, userId: number) {
     });
   }
 
+  /*
+   * ---------------------------------------------------------
+   * OTHER_ADMINS
+   * ---------------------------------------------------------
+   *
+   * Only available to ADMIN.
+   *
+   * Includes expenses belonging to other ADMIN users,
+   * excluding the currently authenticated ADMIN.
+   */
+  if (scope === "OTHER_ADMINS") {
+    if (role !== "ADMIN") {
+      throw new Error("Forbidden");
+    }
+
+    return prisma.expense.findMany({
+      where: {
+        user: {
+          role: "ADMIN",
+          id: {
+            not: userId,
+          },
+        },
+      },
+
+      orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
+    });
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * HRS
+   * ---------------------------------------------------------
+   *
+   * Only available to ADMIN.
+   *
+   * Includes expenses belonging to all HR users.
+   */
+  if (scope === "HRS") {
+    if (role !== "ADMIN") {
+      throw new Error("Forbidden");
+    }
+
+    return prisma.expense.findMany({
+      where: {
+        user: {
+          role: "HR",
+        },
+      },
+
+      orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
+    });
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * OTHER_HRS
+   * ---------------------------------------------------------
+   *
+   * Only available to HR.
+   *
+   * Includes expenses belonging to other HR users,
+   * excluding the currently authenticated HR.
+   */
+  if (scope === "OTHER_HRS") {
+    if (role !== "HR") {
+      throw new Error("Forbidden");
+    }
+
+    return prisma.expense.findMany({
+      where: {
+        user: {
+          role: "HR",
+          id: {
+            not: userId,
+          },
+        },
+      },
+
+      orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
+    });
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * ADMINS
+   * ---------------------------------------------------------
+   *
+   * Only available to HR.
+   *
+   * Includes expenses belonging to all ADMIN users.
+   */
+  if (scope === "ADMINS") {
+    if (role !== "HR") {
+      throw new Error("Forbidden");
+    }
+
+    return prisma.expense.findMany({
+      where: {
+        user: {
+          role: "ADMIN",
+        },
+      },
+
+      orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
+    });
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * ALL
+   * ---------------------------------------------------------
+   *
+   * Includes expenses from every user.
+   */
   return prisma.expense.findMany({
     orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }],
   });
@@ -48,10 +188,42 @@ export async function getAnalyticsData(
   const role = session.user.role;
 
   /*
-   * Only ADMIN and HR can view expenses outside
-   * their own account.
+   * ---------------------------------------------------------
+   * Validate scope against the authenticated user's role.
+   * ---------------------------------------------------------
+   *
+   * EMPLOYEE:
+   *   OWN only
+   *
+   * ADMIN:
+   *   OWN
+   *   ALL
+   *   EMPLOYEES
+   *   OTHER_ADMINS
+   *   HRS
+   *
+   * HR:
+   *   OWN
+   *   ALL
+   *   EMPLOYEES
+   *   OTHER_HRS
+   *   ADMINS
    */
-  if (scope !== "OWN" && role !== "ADMIN" && role !== "HR") {
+  if (role === "EMPLOYEE" && scope !== "OWN") {
+    throw new Error("Forbidden");
+  }
+
+  if (
+    role === "ADMIN" &&
+    !["OWN", "ALL", "EMPLOYEES", "OTHER_ADMINS", "HRS"].includes(scope)
+  ) {
+    throw new Error("Forbidden");
+  }
+
+  if (
+    role === "HR" &&
+    !["OWN", "ALL", "EMPLOYEES", "OTHER_HRS", "ADMINS"].includes(scope)
+  ) {
     throw new Error("Forbidden");
   }
 
@@ -78,7 +250,7 @@ export async function getAnalyticsData(
 
   const defaultCurrency = user.defaultCurrency.trim().toUpperCase();
 
-  const expenses = await getExpensesForAnalytics(scope, userId);
+  const expenses = await getExpensesForAnalytics(scope, userId, role);
 
   /*
    * We only need current conversion rates for currencies

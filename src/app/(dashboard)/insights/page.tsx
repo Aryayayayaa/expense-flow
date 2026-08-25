@@ -3,8 +3,64 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import type { CurrencyCode } from "@/constants/currencies";
 
-import { getAnalyticsData } from "@/features/analytics/lib/getAnalyticsData";
+import {
+  getAnalyticsData,
+  type AnalyticsScope,
+} from "@/features/analytics/lib/getAnalyticsData";
+
 import InsightsPageClient from "@/features/insights/components/InsightsPageClient";
+
+function getValidScope(
+  requestedScope: string | undefined,
+  role: "ADMIN" | "HR" | "EMPLOYEE",
+): AnalyticsScope {
+  /*
+   * ---------------------------------------------------------
+   * ADMIN scopes
+   * ---------------------------------------------------------
+   */
+  if (role === "ADMIN") {
+    if (
+      requestedScope === "OWN" ||
+      requestedScope === "ALL" ||
+      requestedScope === "EMPLOYEES" ||
+      requestedScope === "OTHER_ADMINS" ||
+      requestedScope === "HRS"
+    ) {
+      return requestedScope;
+    }
+
+    return "OWN";
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * HR scopes
+   * ---------------------------------------------------------
+   */
+  if (role === "HR") {
+    if (
+      requestedScope === "OWN" ||
+      requestedScope === "ALL" ||
+      requestedScope === "EMPLOYEES" ||
+      requestedScope === "OTHER_HRS" ||
+      requestedScope === "ADMINS"
+    ) {
+      return requestedScope;
+    }
+
+    return "OWN";
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * EMPLOYEE
+   * ---------------------------------------------------------
+   *
+   * Employees can only view their own expenses.
+   */
+  return "OWN";
+}
 
 export default async function InsightsPage({
   searchParams,
@@ -19,15 +75,13 @@ export default async function InsightsPage({
 
   const params = await searchParams;
 
-  const scope =
-    params.scope === "ALL" || params.scope === "EMPLOYEES"
-      ? params.scope
-      : "OWN";
+  const role = session.user.role;
+
+  const scope = getValidScope(params.scope, role);
 
   const expenses = await getAnalyticsData(scope);
 
-  const canChooseScope =
-    session.user.role === "ADMIN" || session.user.role === "HR";
+  const canChooseScope = role === "ADMIN" || role === "HR";
 
   return (
     <div className="p-6">
@@ -43,7 +97,7 @@ export default async function InsightsPage({
         <InsightsPageClient
           expenses={expenses}
           scope={scope}
-          role={session.user.role}
+          role={role}
           canChooseScope={canChooseScope}
           defaultCurrency={session.user.defaultCurrency as CurrencyCode}
         />
