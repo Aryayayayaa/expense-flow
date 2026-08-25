@@ -35,6 +35,45 @@ type ExpenseActionState = {
   expenseId: number | undefined;
 };
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+type ExpenseChange = {
+  from: string | number | null;
+  to: string | number | null;
+};
+
+function formatExpenseChanges(changes: Record<string, ExpenseChange>) {
+  const labels: Record<string, string> = {
+    title: "Title",
+    amount: "Amount",
+    currency: "Currency",
+    category: "Category",
+    expenseDate: "Expense date",
+  };
+
+  return Object.entries(changes)
+    .map(([field, change]) => {
+      const label = labels[field] ?? field;
+
+      const from =
+        change.from === null || change.from === ""
+          ? "Not set"
+          : String(change.from);
+
+      const to =
+        change.to === null || change.to === "" ? "Not set" : String(change.to);
+
+      return `${label}: ${from} → ${to}`;
+    })
+    .join("; ");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Create Expense                                                             */
+/* -------------------------------------------------------------------------- */
+
 export async function createExpenseAction(
   prevState: unknown,
   formData: FormData,
@@ -254,6 +293,10 @@ export async function createExpenseAction(
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* OCR Receipt                                                                */
+/* -------------------------------------------------------------------------- */
+
 export async function saveOcrReceiptAction(
   expenseId: number,
   ocrReceiptUrl: string,
@@ -366,6 +409,10 @@ export async function saveOcrReceiptAction(
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* Update Expense                                                             */
+/* -------------------------------------------------------------------------- */
+
 export async function updateExpenseAction(
   id: number,
   formData: FormData,
@@ -456,13 +503,7 @@ export async function updateExpenseAction(
       exchangeRateAt: exchangeRateResult.rateDate,
     };
 
-    const changes: Record<
-      string,
-      {
-        from: string | number | null;
-        to: string | number | null;
-      }
-    > = {};
+    const changes: Record<string, ExpenseChange> = {};
 
     if (existingExpense.title !== result.data.title) {
       changes.title = {
@@ -475,6 +516,13 @@ export async function updateExpenseAction(
       changes.amount = {
         from: Number(existingExpense.amount),
         to: Number(result.data.amount),
+      };
+    }
+
+    if (existingExpense.currency !== currency) {
+      changes.currency = {
+        from: existingExpense.currency,
+        to: currency,
       };
     }
 
@@ -513,12 +561,10 @@ export async function updateExpenseAction(
           });
 
     /*
-     * Admin modifications are now audited inside
-     * updateExpenseAsAdmin() so that the update and audit
-     * record are created together.
+     * Admin modifications are audited inside updateExpenseAsAdmin()
+     * so that the expense update and audit record are created together.
      *
-     * Employee/HR edits continue to use the existing audit
-     * behavior here.
+     * Employee/HR edits continue to use the existing audit behavior here.
      */
     if (role !== "ADMIN" && Object.keys(changes).length > 0) {
       await createExpenseAuditLog({
@@ -531,18 +577,30 @@ export async function updateExpenseAction(
       });
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Notifications after Admin/HR modification                         */
+    /* ------------------------------------------------------------------ */
+
     if (
       (role === "ADMIN" || role === "HR") &&
       existingExpense.userId !== null &&
       Object.keys(changes).length > 0
     ) {
+      const formattedChanges = formatExpenseChanges(changes);
+
+      /*
+       * Notify the owner of the expense.
+       *
+       * The notification now explicitly tells the owner
+       * what was changed.
+       */
       await createNotification({
         userId: existingExpense.userId,
         type: "EXPENSE_MODIFIED",
         title: "Expense Modified",
-        message: `Your expense "${updatedExpense.title}" has been modified by ${
+        message: `Your expense "${updatedExpense.title}" was modified by ${
           role === "ADMIN" ? "Admin" : "HR"
-        }.`,
+        }. Changes: ${formattedChanges}.`,
         expenseId: updatedExpense.id,
         metadata: {
           expenseTitle: updatedExpense.title,
@@ -551,6 +609,56 @@ export async function updateExpenseAction(
           modifiedByRole: role,
         },
       });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Notify other Admins after an Admin modification                   */
+    /* ------------------------------------------------------------------ */
+
+    if (role === "ADMIN" && Object.keys(changes).length > 0) {
+      const formattedChanges = formatExpenseChanges(changes);
+
+      /*
+       * Every other Admin is notified.
+       *
+       * The Admin who performed the modification is explicitly excluded.
+       *
+       * This matches the approval rule:
+       *
+       * "The Admin who most recently modified the expense cannot
+       * approve/reject/delete it. Another eligible Admin must perform
+       * the action."
+       */
+      const otherAdmins = await prisma.user.findMany({
+        where: {
+          role: "ADMIN",
+          id: {
+            not: userId,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (otherAdmins.length > 0) {
+        await createNotifications(
+          otherAdmins.map((admin) => ({
+            userId: admin.id,
+            type: "EXPENSE_MODIFIED",
+            title: "Expense Modified — Review Required",
+            message: `Admin ${session.user.name ?? "an Admin"} modified the expense "${updatedExpense.title}". Please review the changes before approving, rejecting, or deleting it. Changes: ${formattedChanges}.`,
+            expenseId: updatedExpense.id,
+            metadata: {
+              expenseTitle: updatedExpense.title,
+              changes,
+              modifiedById: userId,
+              modifiedByRole: role,
+              reviewRequired: true,
+            },
+          })),
+        );
+      }
     }
 
     revalidatePath("/expenses");
@@ -578,6 +686,10 @@ export async function updateExpenseAction(
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* Delete Expense                                                             */
+/* -------------------------------------------------------------------------- */
+
 export async function deleteExpenseAction(id: number) {
   const session = await auth();
 
@@ -601,6 +713,10 @@ export async function deleteExpenseAction(id: number) {
 
   revalidatePath("/expenses");
 }
+
+/* -------------------------------------------------------------------------- */
+/* Admin Delete Expense                                                       */
+/* -------------------------------------------------------------------------- */
 
 export async function deleteExpenseAsAdminAction(
   id: number,

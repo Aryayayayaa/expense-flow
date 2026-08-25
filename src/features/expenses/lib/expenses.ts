@@ -962,6 +962,34 @@ export async function deleteExpenseAsAdmin(
     throw new Error("Expense has no associated user.");
   }
 
+  /*
+   * Task 4B:
+   *
+   * The Admin who most recently modified the expense
+   * cannot delete it.
+   *
+   * IMPORTANT:
+   * We check only the latest Admin modification.
+   *
+   * Example:
+   *
+   * X modifies
+   * Y modifies
+   * X modifies again
+   *
+   * Latest modifier = X
+   *
+   * X -> blocked
+   * Y -> allowed
+   */
+  const latestAdminModifierId = await getLatestAdminModifierId(id);
+
+  if (latestAdminModifierId === adminId) {
+    throw new Error(
+      "You cannot delete an expense that you most recently modified. Another Admin must review it.",
+    );
+  }
+
   const ownerId = expense.userId;
 
   const deletedExpense = await prisma.$transaction(async (tx) => {
@@ -1311,4 +1339,30 @@ function getReimbursementScopeFilter(
     default:
       return {};
   }
+}
+
+/* Returns the ID of the Admin who most recently modified the expense.*/
+export async function getLatestAdminModifierId(
+  expenseId: number,
+): Promise<number | null> {
+  const latestModification = await prisma.expenseAuditLog.findFirst({
+    where: {
+      expenseId,
+      action: "UPDATED",
+
+      actor: {
+        role: "ADMIN",
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+
+    select: {
+      actorId: true,
+    },
+  });
+
+  return latestModification?.actorId ?? null;
 }

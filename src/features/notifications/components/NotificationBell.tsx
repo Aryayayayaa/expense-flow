@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Check, CheckCheck } from "lucide-react";
 
@@ -33,6 +33,12 @@ type RequestType =
   | "name-change"
   | "role-verification"
   | "identity-verification";
+
+type DropdownPosition = {
+  top: number;
+  left: number;
+  width: number;
+};
 
 function formatNotificationTime(date: Date) {
   const notificationDate = new Date(date);
@@ -361,6 +367,39 @@ function getNotificationDestination(
 
   /*
    * ------------------------------------------------------------------------
+   * Expense modified
+   * ------------------------------------------------------------------------
+   *
+   * ADMIN:
+   *   An Admin receiving this notification is another Admin who can
+   *   review the modified expense.
+   *
+   *   -> /approvals
+   *
+   * EMPLOYEE / HR:
+   *   The notification is sent to the owner of the expense.
+   *
+   *   -> /expenses/[id]
+   *
+   * This intentionally does NOT use the generic expense navigation below.
+   */
+
+  if (notification.type === "EXPENSE_MODIFIED") {
+    const expenseId = getExpenseId(notification);
+
+    if (expenseId === null) {
+      return null;
+    }
+
+    if (userRole === "ADMIN") {
+      return "/approvals";
+    }
+
+    return `/expenses/${expenseId}`;
+  }
+
+  /*
+   * ------------------------------------------------------------------------
    * Expense deleted
    * ------------------------------------------------------------------------
    */
@@ -407,6 +446,14 @@ function getNavigationLabel(
     return null;
   }
 
+  if (notification.type === "EXPENSE_MODIFIED") {
+    if (userRole === "ADMIN") {
+      return "Review modified expense";
+    }
+
+    return "View expense";
+  }
+
   if (notification.type === "EXPENSE_DELETED") {
     return userRole === "ADMIN" ? "View deleted expense history" : null;
   }
@@ -445,6 +492,81 @@ export default function NotificationBell({
   const [items, setItems] = useState(notifications);
 
   const [count, setCount] = useState(unreadCount);
+
+  /*
+   * ------------------------------------------------------------------------
+   * Responsive dropdown positioning
+   * ------------------------------------------------------------------------
+   *
+   * The old implementation used:
+   *
+   *   absolute right-0
+   *
+   * This can cause the notification panel to be clipped or positioned
+   * incorrectly when the header/sidebar layout changes around tablet and
+   * mobile breakpoints.
+   *
+   * We instead position the dropdown relative to the Bell button using
+   * viewport coordinates.
+   */
+
+  const bellButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const [dropdownPosition, setDropdownPosition] =
+    useState<DropdownPosition | null>(null);
+
+  function updateDropdownPosition() {
+    const button = bellButtonRef.current;
+
+    if (!button) {
+      return;
+    }
+
+    const rect = button.getBoundingClientRect();
+
+    const viewportPadding = 8;
+
+    const dropdownWidth = Math.min(
+      360,
+      Math.max(0, window.innerWidth - viewportPadding * 2),
+    );
+
+    const desiredLeft = rect.right - dropdownWidth;
+
+    const maxLeft = Math.max(
+      viewportPadding,
+      window.innerWidth - dropdownWidth - viewportPadding,
+    );
+
+    const left = Math.min(Math.max(viewportPadding, desiredLeft), maxLeft);
+
+    setDropdownPosition({
+      top: rect.bottom + 8,
+      left,
+      width: dropdownWidth,
+    });
+  }
+
+  useEffect(() => {
+    if (!open) {
+      setDropdownPosition(null);
+      return;
+    }
+
+    updateDropdownPosition();
+
+    function handleViewportChange() {
+      updateDropdownPosition();
+    }
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [open]);
 
   /*
    * ------------------------------------------------------------------------
@@ -543,6 +665,7 @@ export default function NotificationBell({
   return (
     <div className="relative">
       <button
+        ref={bellButtonRef}
         type="button"
         aria-label="Notifications"
         aria-expanded={open}
@@ -558,10 +681,17 @@ export default function NotificationBell({
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-            <div>
+      {open && dropdownPosition && (
+        <div
+          className="fixed z-[100] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+          style={{
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+          }}
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+            <div className="min-w-0">
               <h2 className="text-sm font-semibold text-slate-900">
                 Notifications
               </h2>
@@ -577,7 +707,7 @@ export default function NotificationBell({
               <button
                 type="button"
                 onClick={handleMarkAllAsRead}
-                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
               >
                 <CheckCheck size={14} />
                 Mark all read
@@ -585,7 +715,7 @@ export default function NotificationBell({
             )}
           </div>
 
-          <div className="max-h-[420px] overflow-y-auto">
+          <div className="max-h-[min(420px,calc(100vh-7rem))] overflow-y-auto">
             {items.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <Bell size={28} className="mx-auto text-slate-300" />

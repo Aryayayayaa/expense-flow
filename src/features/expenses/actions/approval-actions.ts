@@ -9,8 +9,11 @@ import {
   sendExpenseRejectedEmail,
 } from "@/lib/email";
 
-import { createExpenseAuditLog } from "@/features/expenses/lib/expense-audit";
-import { deleteExpenseAsAdmin } from "@/features/expenses/lib/expenses";
+import {
+  deleteExpenseAsAdmin,
+  getLatestAdminModifierId,
+} from "@/features/expenses/lib/expenses";
+
 import { createNotification } from "@/features/notifications/lib/notifications";
 
 type ApprovalActionResult = {
@@ -41,22 +44,42 @@ async function requireAdmin() {
   };
 }
 
-async function hasAdminModifiedExpense(
+/**
+ * Prevents the Admin who most recently modified an expense
+ * from approving or rejecting that same expense.
+ *
+ * IMPORTANT:
+ * We only check the LATEST Admin modification.
+ *
+ * Example:
+ *
+ * Admin X modifies
+ * Admin Y modifies
+ * Admin X modifies again
+ *
+ * Latest modifier = Admin X
+ *
+ * X -> blocked
+ * Y -> allowed
+ *
+ * This avoids permanently blocking every Admin who has
+ * ever modified the expense.
+ */
+async function ensureAdminCanReviewExpense(
   expenseId: number,
   adminId: number,
-): Promise<boolean> {
-  const modification = await prisma.expenseAuditLog.findFirst({
-    where: {
-      expenseId,
-      actorId: adminId,
-      action: "UPDATED",
-    },
-    select: {
-      id: true,
-    },
-  });
+): Promise<ApprovalActionResult | null> {
+  const latestAdminModifierId = await getLatestAdminModifierId(expenseId);
 
-  return modification !== null;
+  if (latestAdminModifierId === adminId) {
+    return {
+      success: false,
+      message:
+        "You cannot approve or reject an expense that you most recently modified. Another Admin must review it.",
+    };
+  }
+
+  return null;
 }
 
 export async function approveExpenseAction(
@@ -73,6 +96,7 @@ export async function approveExpenseAction(
       where: {
         id: expenseId,
       },
+
       select: {
         id: true,
         title: true,
@@ -113,17 +137,19 @@ export async function approveExpenseAction(
       };
     }
 
-    const modifiedByCurrentAdmin = await hasAdminModifiedExpense(
+    /*
+     * Task 4B:
+     *
+     * Only the most recent Admin modifier is prevented
+     * from approving the expense.
+     */
+    const reviewRestriction = await ensureAdminCanReviewExpense(
       expenseId,
       admin.userId,
     );
 
-    if (modifiedByCurrentAdmin) {
-      return {
-        success: false,
-        message:
-          "You cannot approve an expense that you previously modified. Another Admin must review and approve it.",
-      };
+    if (reviewRestriction) {
+      return reviewRestriction;
     }
 
     const decidedAt = new Date();
@@ -133,6 +159,7 @@ export async function approveExpenseAction(
         where: {
           id: expenseId,
         },
+
         data: {
           status: "APPROVED",
           decidedAt,
@@ -216,6 +243,7 @@ export async function rejectExpenseAction(
       where: {
         id: expenseId,
       },
+
       select: {
         id: true,
         title: true,
@@ -256,17 +284,19 @@ export async function rejectExpenseAction(
       };
     }
 
-    const modifiedByCurrentAdmin = await hasAdminModifiedExpense(
+    /*
+     * Task 4B:
+     *
+     * Only the most recent Admin modifier is prevented
+     * from rejecting the expense.
+     */
+    const reviewRestriction = await ensureAdminCanReviewExpense(
       expenseId,
       admin.userId,
     );
 
-    if (modifiedByCurrentAdmin) {
-      return {
-        success: false,
-        message:
-          "You cannot reject an expense that you previously modified. Another Admin must review it.",
-      };
+    if (reviewRestriction) {
+      return reviewRestriction;
     }
 
     const decidedAt = new Date();
@@ -276,6 +306,7 @@ export async function rejectExpenseAction(
         where: {
           id: expenseId,
         },
+
         data: {
           status: "REJECTED",
           decidedAt,
@@ -368,10 +399,16 @@ export async function deleteExpenseAsAdminAction(
       };
     }
 
+    /*
+     * deleteExpenseAsAdmin() performs the final Task 4B
+     * latest-modifier validation server-side.
+     */
     await deleteExpenseAsAdmin(expenseId, Number(session.user.id), reason);
 
     revalidatePath("/approvals");
     revalidatePath("/expenses");
+    revalidatePath("/dashboard");
+    revalidatePath("/admin");
 
     return {
       success: true,
