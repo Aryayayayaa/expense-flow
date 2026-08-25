@@ -1,4 +1,3 @@
-// src/features/expenses/components/EditExpenseDialog.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,10 +6,7 @@ import { upload } from "@vercel/blob/client";
 
 import Button from "@/components/common/Button";
 
-import {
-  saveOcrReceiptAction,
-  updateExpenseAction,
-} from "../actions/expense-actions";
+import { saveOcrReceiptAction } from "../actions/expense-actions";
 
 type EditExpense = {
   id: number;
@@ -141,16 +137,34 @@ export default function EditExpenseDialog({
           : expenseDate,
       );
 
-      const updateResult = await updateExpenseAction(
-        currentExpense.id,
-        formData,
-      );
+      /*
+       * ---------------------------------------------------------
+       * UPDATE EXISTING EXPENSE
+       * ---------------------------------------------------------
+       *
+       * Use the REST API directly so the browser sends:
+       *
+       * PATCH /api/expenses/[id]
+       *
+       * instead of invoking the Server Action directly.
+       */
+      const updateResponse = await fetch(`/api/expenses/${currentExpense.id}`, {
+        method: "PATCH",
+        body: formData,
+      });
 
-      if (!updateResult.success) {
+      const updateResult = await updateResponse.json();
+
+      if (!updateResponse.ok || !updateResult.success) {
         setError(updateResult.message || "Unable to update expense.");
         return;
       }
 
+      /*
+       * ---------------------------------------------------------
+       * REPLACE / SAVE RECEIPT IF ONE WAS SELECTED
+       * ---------------------------------------------------------
+       */
       if (receiptFile) {
         const extensionMap: Record<string, string> = {
           "image/jpeg": "jpg",
@@ -200,9 +214,7 @@ export default function EditExpenseDialog({
 
       setMessage(
         receiptFile
-          ? hasReceipt
-            ? "Expense and receipt updated successfully."
-            : "Expense and receipt updated successfully."
+          ? "Expense and receipt updated successfully."
           : "Expense updated successfully.",
       );
 

@@ -12,7 +12,6 @@ import {
 
 import {
   createExpenseAction,
-  updateExpenseAction,
   saveOcrReceiptAction,
 } from "../actions/expense-actions";
 
@@ -66,6 +65,18 @@ export default function AddExpenseForm({
 
   const formRef = useRef<HTMLFormElement>(null);
 
+  /*
+   * ---------------------------------------------------------
+   * CURRENT DATE/TIME
+   * ---------------------------------------------------------
+   *
+   * Returns the browser-local date/time in the format required
+   * by <input type="datetime-local">.
+   *
+   * Example:
+   *
+   * 2026-08-25T14:30
+   */
   function getCurrentDateTime() {
     const now = new Date();
 
@@ -79,6 +90,16 @@ export default function AddExpenseForm({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
+  /*
+   * ---------------------------------------------------------
+   * DATETIME → ISO
+   * ---------------------------------------------------------
+   *
+   * The datetime-local input contains browser-local time.
+   *
+   * Convert it to an ISO timestamp before sending it
+   * to the server.
+   */
   function toIsoDateTime(value: string): string {
     const date = new Date(value);
 
@@ -89,6 +110,11 @@ export default function AddExpenseForm({
     return date.toISOString();
   }
 
+  /*
+   * ---------------------------------------------------------
+   * RESET FORM
+   * ---------------------------------------------------------
+   */
   function resetForm() {
     setTitle("");
     setAmount("");
@@ -109,6 +135,14 @@ export default function AddExpenseForm({
     setCurrency(defaultCurrency);
   }
 
+  /*
+   * ---------------------------------------------------------
+   * LOAD EDITING EXPENSE
+   * ---------------------------------------------------------
+   *
+   * When editingExpense changes from null → an expense,
+   * populate the form with the existing expense values.
+   */
   useEffect(() => {
     if (!editingExpense) {
       if (!expenseDate) {
@@ -123,6 +157,10 @@ export default function AddExpenseForm({
     setTitle(editingExpense.title);
     setAmount(String(editingExpense.amount));
 
+    /*
+     * Determine whether the category is one of the default
+     * categories or a custom "Other" category.
+     */
     if (
       (DEFAULT_CATEGORIES as readonly string[]).includes(
         editingExpense.category,
@@ -135,12 +173,18 @@ export default function AddExpenseForm({
       setCustomCategory(editingExpense.category);
     }
 
+    /*
+     * Restore the original currency.
+     */
     setCurrency(
       SUPPORTED_CURRENCIES.some((item) => item.code === editingExpense.currency)
         ? (editingExpense.currency as CurrencyCode)
         : defaultCurrency,
     );
 
+    /*
+     * Restore the expense date/time.
+     */
     const date = new Date(
       editingExpense.expenseDate ?? editingExpense.createdAt,
     );
@@ -151,15 +195,32 @@ export default function AddExpenseForm({
         .slice(0, 16),
     );
 
+    /*
+     * OCR receipt is not changed when editing.
+     */
     setOcrResult(null);
     setReceiptFile(null);
 
+    /*
+     * Scroll the edit form into view.
+     */
     formRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
-  }, [editingExpense, defaultCurrency]);
+  }, [editingExpense, defaultCurrency, expenseDate]);
 
+  /*
+   * ---------------------------------------------------------
+   * APPLY OCR RESULT
+   * ---------------------------------------------------------
+   *
+   * When OCR completes, automatically populate:
+   *
+   * vendor      → title
+   * amount      → amount
+   * expenseDate → expense date
+   */
   useEffect(() => {
     if (!ocrResult) {
       return;
@@ -178,6 +239,14 @@ export default function AddExpenseForm({
     }
   }, [ocrResult]);
 
+  /*
+   * ---------------------------------------------------------
+   * SAVE ORIGINAL RECEIPT
+   * ---------------------------------------------------------
+   *
+   * This is used only when creating a NEW expense from
+   * an OCR receipt.
+   */
   async function saveOriginalReceipt(
     expenseId: number,
     file: File,
@@ -215,18 +284,44 @@ export default function AddExpenseForm({
     }
   }
 
+  /*
+   * ---------------------------------------------------------
+   * HANDLE SUBMIT
+   * ---------------------------------------------------------
+   *
+   * IMPORTANT:
+   *
+   * CREATE:
+   *
+   *     POST /api/expenses
+   *
+   * UPDATE:
+   *
+   *     PATCH /api/expenses/:id
+   *
+   * We intentionally DO NOT call updateExpenseAction()
+   * directly from the client.
+   *
+   * Calling a Server Action directly results in Next.js
+   * making an internal POST request.
+   *
+   * Instead, the client calls our REST-style PATCH API route.
+   */
   async function handleSubmit(formData: FormData) {
     if (pending) {
       return;
     }
 
     /*
-     * Set the loading state before doing ANY server action or upload.
+     * Set loading before making any request.
      */
     setPending(true);
     setState(initialState);
 
     try {
+      /*
+       * Convert browser-local datetime to ISO.
+       */
       if (expenseDate) {
         formData.set("expenseDate", toIsoDateTime(expenseDate));
       }
@@ -234,30 +329,65 @@ export default function AddExpenseForm({
       let result;
 
       /*
-       * ---------------------------------------------------------
+       * =========================================================
        * EDIT EXISTING EXPENSE
-       * ---------------------------------------------------------
+       * =========================================================
+       *
+       * THIS IS THE IMPORTANT FIX.
+       *
+       * Before:
+       *
+       *     updateExpenseAction(...)
+       *
+       * which resulted in a POST.
+       *
+       * Now:
+       *
+       *     PATCH /api/expenses/:id
        */
       if (editingExpense) {
-        result = await updateExpenseAction(editingExpense.id, formData);
+        const response = await fetch(`/api/expenses/${editingExpense.id}`, {
+          method: "PATCH",
+          body: formData,
+        });
 
-        setState(result);
+        const data = await response.json();
 
-        if (!result.success) {
+        if (!response.ok) {
+          setState({
+            success: false,
+            errors: data.errors ?? {},
+            message: data.message ?? "Unable to update expense.",
+            expenseId: undefined,
+          });
+
           return;
         }
 
+        result = data;
+
+        setState(result);
+
+        /*
+         * Give the user a short moment to see the
+         * successful update message.
+         */
         setTimeout(() => {
           resetForm();
+          router.refresh();
         }, 1000);
 
         return;
       }
 
       /*
-       * ---------------------------------------------------------
+       * =========================================================
        * CREATE NEW EXPENSE
-       * ---------------------------------------------------------
+       * =========================================================
+       *
+       * New expenses continue to use the Server Action.
+       *
+       * This is POST behavior.
        */
       result = await createExpenseAction(null, formData);
 
@@ -267,9 +397,9 @@ export default function AddExpenseForm({
       }
 
       /*
-       * ---------------------------------------------------------
-       * SAVE ORIGINAL RECEIPT
-       * ---------------------------------------------------------
+       * =========================================================
+       * SAVE ORIGINAL OCR RECEIPT
+       * =========================================================
        */
       if (result.expenseId && receiptFile) {
         try {
@@ -293,9 +423,9 @@ export default function AddExpenseForm({
       }
 
       /*
-       * ---------------------------------------------------------
+       * =========================================================
        * CREATION SUCCESS
-       * ---------------------------------------------------------
+       * =========================================================
        */
       setState(result);
 
@@ -330,6 +460,10 @@ export default function AddExpenseForm({
         }}
         className="space-y-5 text-black"
       >
+        {/* =====================================================
+            HEADER
+        ====================================================== */}
+
         <div className="border-b pb-4">
           <h2 className="text-2xl font-semibold">
             {editingExpense ? "Edit Expense" : "Add Expense"}
@@ -342,6 +476,10 @@ export default function AddExpenseForm({
           </p>
         </div>
 
+        {/* =====================================================
+            OCR RECEIPT
+        ====================================================== */}
+
         {!editingExpense && (
           <ReceiptOcrUpload
             onOcrComplete={(result: OcrResult | null, file: File) => {
@@ -350,6 +488,10 @@ export default function AddExpenseForm({
             }}
           />
         )}
+
+        {/* =====================================================
+            TITLE
+        ====================================================== */}
 
         <div className="space-y-1">
           <label className="mb-1 block">Title</label>
@@ -368,6 +510,10 @@ export default function AddExpenseForm({
           )}
         </div>
 
+        {/* =====================================================
+            AMOUNT
+        ====================================================== */}
+
         <div className="space-y-1">
           <label className="mb-1 block">Amount</label>
 
@@ -385,6 +531,10 @@ export default function AddExpenseForm({
             <p className="text-sm text-red-500">{state.errors.amount[0]}</p>
           )}
         </div>
+
+        {/* =====================================================
+            CURRENCY
+        ====================================================== */}
 
         <div className="space-y-1">
           <label className="mb-1 block" htmlFor="expense-currency">
@@ -410,6 +560,10 @@ export default function AddExpenseForm({
             <p className="text-sm text-red-500">{state.errors.currency[0]}</p>
           )}
         </div>
+
+        {/* =====================================================
+            CATEGORY
+        ====================================================== */}
 
         <div className="space-y-1">
           <label className="mb-1 block">Category</label>
@@ -451,6 +605,10 @@ export default function AddExpenseForm({
           )}
         </div>
 
+        {/* =====================================================
+            EXPENSE DATE
+        ====================================================== */}
+
         <div className="space-y-1">
           <label className="mb-1 block">Expense Date & Time</label>
 
@@ -487,6 +645,10 @@ export default function AddExpenseForm({
           </p>
         </div>
 
+        {/* =====================================================
+            LOADING
+        ====================================================== */}
+
         {pending && (
           <div
             className="flex items-center justify-center gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-700"
@@ -504,6 +666,10 @@ export default function AddExpenseForm({
           </div>
         )}
 
+        {/* =====================================================
+            SUBMIT BUTTON
+        ====================================================== */}
+
         <Button
           type="submit"
           disabled={pending}
@@ -518,6 +684,10 @@ export default function AddExpenseForm({
               : "Save Expense"}
         </Button>
 
+        {/* =====================================================
+            CANCEL EDIT
+        ====================================================== */}
+
         {editingExpense && (
           <Button
             disabled={pending}
@@ -529,6 +699,10 @@ export default function AddExpenseForm({
             Cancel Editing
           </Button>
         )}
+
+        {/* =====================================================
+            RESULT MESSAGE
+        ====================================================== */}
 
         {state.message && (
           <p

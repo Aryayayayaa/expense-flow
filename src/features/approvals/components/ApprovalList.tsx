@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   approveExpenseAction,
   rejectExpenseAction,
-  deleteExpenseAsAdminAction,
 } from "@/features/expenses/actions/approval-actions";
 
 import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
@@ -415,7 +414,24 @@ function ReviewExpenseModal({
     setMessage("");
 
     try {
-      const result = await deleteExpenseAsAdminAction(expense.id, reason);
+      const response = await fetch(`/api/expenses/${expense.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deletionReason: reason,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setMessage(result.message || "Unable to delete expense.");
+        return;
+      }
+
+      window.location.reload();
 
       if (!result.success) {
         setMessage(result.message);

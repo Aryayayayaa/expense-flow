@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { formatCurrency } from "@/utils/formatCurrency";
 import type { getExpenses } from "@/features/expenses/lib/expenses";
-import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
+//import { deleteExpenseAction } from "@/features/expenses/actions/expense-actions";
 import AppDialog from "@/components/common/AppDialog";
 
 type Expense = Awaited<ReturnType<typeof getExpenses>>["expenses"][number];
@@ -51,7 +51,15 @@ export default function MyExpenseStatusTable({
     setMessage("");
 
     try {
-      await deleteExpenseAction(deleteExpenseId);
+      const response = await fetch(`/api/expenses/${deleteExpenseId}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Unable to delete expense.");
+      }
 
       setDeleteExpenseId(null);
       router.refresh();

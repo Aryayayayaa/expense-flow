@@ -6,6 +6,8 @@ import {
   deleteExpenseAsAdmin,
 } from "@/features/expenses/lib/expenses";
 
+import { updateExpenseAction } from "@/features/expenses/actions/expense-actions";
+
 import { revalidatePath } from "next/cache";
 
 type RouteContext = {
@@ -13,6 +15,56 @@ type RouteContext = {
     id: string;
   }>;
 };
+
+export async function PATCH(request: Request, { params }: RouteContext) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized.",
+        },
+        { status: 401 },
+      );
+    }
+
+    const { id } = await params;
+    const expenseId = Number(id);
+
+    if (!Number.isInteger(expenseId) || expenseId <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid expense ID.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const formData = await request.formData();
+
+    const result = await updateExpenseAction(expenseId, formData);
+
+    if (!result.success) {
+      return NextResponse.json(result, { status: 400 });
+    }
+
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    console.error("PATCH Expense API Error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Unable to update expense.",
+      },
+      { status: 400 },
+    );
+  }
+}
 
 export async function DELETE(request: Request, { params }: RouteContext) {
   try {
