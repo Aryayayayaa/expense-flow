@@ -45,15 +45,11 @@ async function requireReimbursementProcessor() {
   };
 }
 
-async function getReimbursementExpense(
-  expenseId: number,
-  processor: ReimbursementProcessor,
-) {
+async function getReimbursementExpense(expenseId: number, userId: number) {
   const expense = await prisma.expense.findUnique({
     where: {
       id: expenseId,
     },
-
     select: {
       id: true,
       title: true,
@@ -62,7 +58,6 @@ async function getReimbursementExpense(
       expenseDate: true,
       status: true,
       reimbursementStatus: true,
-      reimbursementReason: true,
       userId: true,
       decidedById: true,
 
@@ -82,7 +77,7 @@ async function getReimbursementExpense(
     };
   }
 
-  if (expense.userId === processor.userId) {
+  if (expense.userId === userId) {
     return {
       success: false as const,
       message: "You cannot process reimbursement for your own expense.",
@@ -103,27 +98,6 @@ async function getReimbursementExpense(
     };
   }
 
-  /*
-   * ------------------------------------------------------------------------
-   * Admin approval/reimbursement separation
-   * ------------------------------------------------------------------------
-   *
-   * An Admin cannot reimburse an expense that the same Admin approved.
-   *
-   * Other Admins and all authorized HR users remain eligible to reimburse.
-   *
-   * IMPORTANT:
-   * This restriction is based on `decidedById` (the Admin who approved
-   * the expense), NOT on who most recently modified the expense.
-   */
-  if (processor.role === "ADMIN" && expense.decidedById === processor.userId) {
-    return {
-      success: false as const,
-      message:
-        "You cannot reimburse an expense that you approved. Another Admin or HR must process the reimbursement.",
-    };
-  }
-
   return {
     success: true as const,
     expense,
@@ -140,10 +114,25 @@ export async function reimburseExpenseAction(
       return processor;
     }
 
-    const expenseResult = await getReimbursementExpense(expenseId, {
-      userId: processor.userId,
-      role: processor.role,
-    });
+    const expenseResult = await getReimbursementExpense(
+      expenseId,
+      processor.userId,
+    );
+
+    if (!expenseResult.success) {
+      return expenseResult;
+    }
+
+    if (
+      processor.role === "ADMIN" &&
+      expenseResult.expense.decidedById === processor.userId
+    ) {
+      return {
+        success: false,
+        message:
+          "You cannot process the reimbursement for an expense you approved. Another Admin or an HR member must process it.",
+      };
+    }
 
     if (!expenseResult.success) {
       return expenseResult;
@@ -236,10 +225,25 @@ export async function rejectReimbursementAction(
       };
     }
 
-    const expenseResult = await getReimbursementExpense(expenseId, {
-      userId: processor.userId,
-      role: processor.role,
-    });
+    const expenseResult = await getReimbursementExpense(
+      expenseId,
+      processor.userId,
+    );
+
+    if (!expenseResult.success) {
+      return expenseResult;
+    }
+
+    if (
+      processor.role === "ADMIN" &&
+      expenseResult.expense.decidedById === processor.userId
+    ) {
+      return {
+        success: false,
+        message:
+          "You cannot process the reimbursement for an expense you approved. Another Admin or an HR member must process it.",
+      };
+    }
 
     if (!expenseResult.success) {
       return expenseResult;

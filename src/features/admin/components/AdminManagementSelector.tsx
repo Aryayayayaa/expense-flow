@@ -146,6 +146,8 @@ type RoleVerificationHistoryRequest = {
   rejectionReason: string | null;
   createdAt: Date;
   reviewedAt: Date | null;
+  proofUrl: string | null;
+  proofPath: string | null;
   user: {
     id: number;
     name: string;
@@ -212,6 +214,7 @@ type OwnNameChangeRequest = {
 /* -------------------------------------------------------------------------- */
 
 type Props = {
+  userId: number;
   userName: string;
   users: User[];
 
@@ -261,6 +264,7 @@ type ManagementView =
 /* -------------------------------------------------------------------------- */
 
 export default function AdminManagementSelector({
+  userId,
   userName,
   users,
 
@@ -302,10 +306,6 @@ export default function AdminManagementSelector({
 
     params.set("reimbursementScope", scope);
 
-    /*
-     * Reset both reimbursement paginations whenever
-     * the expense scope changes.
-     */
     params.set("reimbursementPage", "1");
     params.set("reimbursementHistoryPage", "1");
 
@@ -318,10 +318,6 @@ export default function AdminManagementSelector({
 
   return (
     <div className="mt-8">
-      {/* ------------------------------------------------------------------ */}
-      {/* Administration Selector                                             */}
-      {/* ------------------------------------------------------------------ */}
-
       <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <label
           htmlFor="admin-management-view"
@@ -348,10 +344,6 @@ export default function AdminManagementSelector({
         </select>
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Users                                                                */}
-      {/* ------------------------------------------------------------------ */}
-
       {view === "users" && (
         <section>
           <div className="mb-5">
@@ -367,10 +359,6 @@ export default function AdminManagementSelector({
           <UserManagementTable users={users} />
         </section>
       )}
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Employee Verification                                               */}
-      {/* ------------------------------------------------------------------ */}
 
       {view === "employee-verification" && (
         <>
@@ -443,10 +431,6 @@ export default function AdminManagementSelector({
         </>
       )}
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Name Change                                                          */}
-      {/* ------------------------------------------------------------------ */}
-
       {view === "name-change" && (
         <>
           <section>
@@ -510,10 +494,6 @@ export default function AdminManagementSelector({
         </>
       )}
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Role Verification                                                   */}
-      {/* ------------------------------------------------------------------ */}
-
       {view === "role-verification" && (
         <>
           <section>
@@ -547,16 +527,8 @@ export default function AdminManagementSelector({
         </>
       )}
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Reimbursements                                                       */}
-      {/* ------------------------------------------------------------------ */}
-
       {view === "reimbursements" && (
         <>
-          {/* -------------------------------------------------------------- */}
-          {/* Expense Scope                                                   */}
-          {/* -------------------------------------------------------------- */}
-
           <section>
             <div className="mb-5">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -575,10 +547,6 @@ export default function AdminManagementSelector({
             />
           </section>
 
-          {/* -------------------------------------------------------------- */}
-          {/* Pending Reimbursement Approvals                                */}
-          {/* -------------------------------------------------------------- */}
-
           <section className="mt-10">
             <div className="mb-5">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -592,7 +560,11 @@ export default function AdminManagementSelector({
               </p>
             </div>
 
-            <ReimbursementTable expenses={approvedExpenses} />
+            <ReimbursementTable
+              expenses={approvedExpenses}
+              userId={userId}
+              userRole="ADMIN"
+            />
 
             <Pagination
               page={reimbursementPage}
@@ -600,10 +572,6 @@ export default function AdminManagementSelector({
               paramName="reimbursementPage"
             />
           </section>
-
-          {/* -------------------------------------------------------------- */}
-          {/* Reimbursement History                                            */}
-          {/* -------------------------------------------------------------- */}
 
           <section className="mt-10">
             <div className="mb-5">

@@ -183,6 +183,7 @@ export default async function AdminPage({
         {/* ---------------------------------------------------------------- */}
 
         <AdminManagementSelector
+          userId={Number(session.user.id)}
           userName={session.user.name ?? ""}
           users={overview.users}
           /* Reimbursements */

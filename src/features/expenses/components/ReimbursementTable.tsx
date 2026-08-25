@@ -20,6 +20,8 @@ import {
 import { formatCurrency } from "@/utils/formatCurrency";
 import AppDialog from "@/components/common/AppDialog";
 
+import type { Role } from "@prisma/client";
+
 export type ReimbursementExpense = {
   id: number;
   title: string;
@@ -53,11 +55,17 @@ export type ReimbursementExpense = {
 
 type Props = {
   expenses: ReimbursementExpense[];
+  userId: number;
+  userRole: Role;
 };
 
 type DialogType = "reimburse" | "reject" | "error" | null;
 
-export default function ReimbursementTable({ expenses }: Props) {
+export default function ReimbursementTable({
+  expenses,
+  userId,
+  userRole,
+}: Props) {
   const [items, setItems] = useState(expenses);
 
   const [selectedExpense, setSelectedExpense] =
@@ -96,8 +104,20 @@ export default function ReimbursementTable({ expenses }: Props) {
     setMessage("");
   }
 
+  function isApprovedByCurrentAdmin(expense: ReimbursementExpense) {
+    return userRole === "ADMIN" && expense.decidedBy?.id === userId;
+  }
+
   function requestReimburse() {
-    if (processingId !== null) {
+    if (processingId !== null || !selectedExpense) {
+      return;
+    }
+
+    if (isApprovedByCurrentAdmin(selectedExpense)) {
+      setDialogMessage(
+        "You approved this expense, so you cannot reimburse it. Another Admin or an HR member must process the reimbursement.",
+      );
+      setDialog("error");
       return;
     }
 
@@ -106,7 +126,15 @@ export default function ReimbursementTable({ expenses }: Props) {
   }
 
   function requestReject() {
-    if (processingId !== null) {
+    if (processingId !== null || !selectedExpense) {
+      return;
+    }
+
+    if (isApprovedByCurrentAdmin(selectedExpense)) {
+      setDialogMessage(
+        "You approved this expense, so you cannot reject its reimbursement. Another Admin or an HR member must process the reimbursement.",
+      );
+      setDialog("error");
       return;
     }
 
@@ -123,12 +151,19 @@ export default function ReimbursementTable({ expenses }: Props) {
     setDialogMessage(
       "Are you sure you want to reject reimbursement for this expense?",
     );
-
     setDialog("reject");
   }
 
   async function handleReimburse() {
     if (!selectedExpense || processingId !== null) {
+      return;
+    }
+
+    if (isApprovedByCurrentAdmin(selectedExpense)) {
+      setDialogMessage(
+        "You approved this expense, so you cannot reimburse it. Another Admin or an HR member must process the reimbursement.",
+      );
+      setDialog("error");
       return;
     }
 
@@ -166,6 +201,14 @@ export default function ReimbursementTable({ expenses }: Props) {
 
   async function handleReject() {
     if (!selectedExpense || processingId !== null) {
+      return;
+    }
+
+    if (isApprovedByCurrentAdmin(selectedExpense)) {
+      setDialogMessage(
+        "You approved this expense, so you cannot reject its reimbursement. Another Admin or an HR member must process the reimbursement.",
+      );
+      setDialog("error");
       return;
     }
 
@@ -312,6 +355,9 @@ export default function ReimbursementTable({ expenses }: Props) {
               {items.map((expense) => {
                 const processing = processingId === expense.id;
 
+                const approvedByCurrentAdmin =
+                  isApprovedByCurrentAdmin(expense);
+
                 return (
                   <tr key={expense.id} className="transition hover:bg-slate-50">
                     <td className="px-5 py-4">
@@ -338,8 +384,24 @@ export default function ReimbursementTable({ expenses }: Props) {
                       {formatCurrency(Number(expense.amount), expense.currency)}
                     </td>
 
-                    <td className="px-5 py-4 text-slate-600">
-                      {expense.decidedBy?.name ?? "Unknown"}
+                    <td className="px-5 py-4">
+                      <p
+                        className={
+                          approvedByCurrentAdmin
+                            ? "font-medium text-blue-700"
+                            : "text-slate-600"
+                        }
+                      >
+                        {approvedByCurrentAdmin
+                          ? "You"
+                          : (expense.decidedBy?.name ?? "Unknown")}
+                      </p>
+
+                      {approvedByCurrentAdmin && (
+                        <p className="mt-1 text-xs text-blue-600">
+                          Approved by you
+                        </p>
+                      )}
                     </td>
 
                     <td className="px-5 py-4 text-slate-600">
@@ -537,8 +599,16 @@ export default function ReimbursementTable({ expenses }: Props) {
                     </p>
 
                     <p className="mt-1 text-sm text-green-800">
-                      {selectedExpense.decidedBy?.name ?? "Unknown"}
+                      {isApprovedByCurrentAdmin(selectedExpense)
+                        ? "You"
+                        : (selectedExpense.decidedBy?.name ?? "Unknown")}
                     </p>
+
+                    {isApprovedByCurrentAdmin(selectedExpense) && (
+                      <p className="mt-1 text-xs font-medium text-blue-700">
+                        You approved this expense.
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -560,6 +630,29 @@ export default function ReimbursementTable({ expenses }: Props) {
                   </div>
                 </div>
               </section>
+
+              {isApprovedByCurrentAdmin(selectedExpense) && (
+                <section className="rounded-xl border border-blue-200 bg-blue-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2
+                      size={20}
+                      className="mt-0.5 shrink-0 text-blue-600"
+                    />
+
+                    <div>
+                      <h3 className="font-semibold text-blue-900">
+                        Approved by you
+                      </h3>
+
+                      <p className="mt-1 text-sm leading-6 text-blue-700">
+                        You approved this expense, so you cannot reimburse or
+                        reject its reimbursement. Another Admin or an HR member
+                        must process the reimbursement.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <section className="rounded-xl border border-blue-200 bg-blue-50 p-5">
                 <div className="mb-4 flex items-center gap-2">
@@ -635,7 +728,10 @@ export default function ReimbursementTable({ expenses }: Props) {
 
                 <button
                   type="button"
-                  disabled={processingId !== null}
+                  disabled={
+                    processingId !== null ||
+                    isApprovedByCurrentAdmin(selectedExpense)
+                  }
                   onClick={requestReject}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -643,12 +739,17 @@ export default function ReimbursementTable({ expenses }: Props) {
 
                   {processingId === selectedExpense.id
                     ? "Processing..."
-                    : "Reject Reimbursement"}
+                    : isApprovedByCurrentAdmin(selectedExpense)
+                      ? "Approved by you"
+                      : "Reject Reimbursement"}
                 </button>
 
                 <button
                   type="button"
-                  disabled={processingId !== null}
+                  disabled={
+                    processingId !== null ||
+                    isApprovedByCurrentAdmin(selectedExpense)
+                  }
                   onClick={requestReimburse}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -656,7 +757,9 @@ export default function ReimbursementTable({ expenses }: Props) {
 
                   {processingId === selectedExpense.id
                     ? "Processing..."
-                    : "Reimburse Expense"}
+                    : isApprovedByCurrentAdmin(selectedExpense)
+                      ? "Approved by you"
+                      : "Reimburse Expense"}
                 </button>
               </div>
             </div>

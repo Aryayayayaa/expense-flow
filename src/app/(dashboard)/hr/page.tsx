@@ -406,14 +406,11 @@ export default async function HrPage({
                 </p>
               </div>
 
-              {/* Expense Scope */}
               <ReimbursementScopeSelector
                 scope={reimbursementScope}
                 basePath="/hr"
               />
             </section>
-
-            {/* Pending Reimbursement Approvals */}
 
             <section className="mt-10">
               <div className="mb-5">
@@ -428,7 +425,11 @@ export default async function HrPage({
                 </p>
               </div>
 
-              <ReimbursementTable expenses={approvedExpenses.expenses} />
+              <ReimbursementTable
+                expenses={approvedExpenses.expenses}
+                userId={hrId}
+                userRole="HR"
+              />
 
               <Pagination
                 page={approvedExpenses.page}
@@ -436,8 +437,6 @@ export default async function HrPage({
                 paramName="reimbursementPage"
               />
             </section>
-
-            {/* Reimbursement History */}
 
             <section className="mt-10">
               <div className="mb-5">
