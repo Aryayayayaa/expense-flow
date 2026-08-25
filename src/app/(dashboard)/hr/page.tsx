@@ -2,8 +2,6 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 
-import type { ReimbursementExpenseScope } from "@/features/expenses/lib/expenses";
-
 import {
   getEmployeeVerificationHistory,
   getEmployeeVerificationAttemptCount,
@@ -12,15 +10,9 @@ import {
   getEmployeeVerificationRequestsForUser,
 } from "@/features/auth/lib/employee-verification";
 
-import Pagination from "@/components/common/Pagination";
-
 import EmployeeVerificationTable from "@/features/auth/components/EmployeeVerificationTable";
 import EmployeeVerificationHistoryTable from "@/features/auth/components/EmployeeVerificationHistoryTable";
 import EmployeeVerificationRequest from "@/features/auth/components/EmployeeVerificationRequest";
-
-import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
-import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
-import ReimbursementScopeSelector from "@/features/expenses/components/ReimbursementScopeSelector";
 
 import HrManagementSelector from "@/features/auth/components/HrManagementSelector";
 
@@ -42,25 +34,13 @@ import {
   getPendingRoleRequests,
 } from "@/features/auth/lib/role-requests";
 
-import {
-  getApprovedExpensesForHR,
-  getReimbursementHistory,
-} from "@/features/expenses/lib/expenses";
-
-type Section =
-  | "verification"
-  | "reimbursement"
-  | "name-change"
-  | "role-verification";
+type Section = "verification" | "name-change" | "role-verification";
 
 export default async function HrPage({
   searchParams,
 }: {
   searchParams: Promise<{
     section?: string;
-    reimbursementPage?: string;
-    reimbursementHistoryPage?: string;
-    reimbursementScope?: string;
   }>;
 }) {
   const session = await auth();
@@ -76,49 +56,11 @@ export default async function HrPage({
   const params = await searchParams;
 
   /* ---------------------------------------------------------------------- */
-  /* Reimbursement Scope                                                    */
-  /* ---------------------------------------------------------------------- */
-
-  const reimbursementScope: ReimbursementExpenseScope =
-    params.reimbursementScope === "OWN" ||
-    params.reimbursementScope === "EMPLOYEES" ||
-    params.reimbursementScope === "OTHER_HRS" ||
-    params.reimbursementScope === "ADMINS"
-      ? params.reimbursementScope
-      : "EMPLOYEES";
-
-  /* ---------------------------------------------------------------------- */
-  /* Reimbursement Pagination                                               */
-  /* ---------------------------------------------------------------------- */
-
-  const requestedReimbursementPage = Number(params.reimbursementPage ?? "1");
-
-  const reimbursementPage =
-    Number.isInteger(requestedReimbursementPage) &&
-    requestedReimbursementPage > 0
-      ? requestedReimbursementPage
-      : 1;
-
-  const requestedReimbursementHistoryPage = Number(
-    params.reimbursementHistoryPage ?? "1",
-  );
-
-  const reimbursementHistoryPage =
-    Number.isInteger(requestedReimbursementHistoryPage) &&
-    requestedReimbursementHistoryPage > 0
-      ? requestedReimbursementHistoryPage
-      : 1;
-
-  const pageSize = 10;
-
-  /* ---------------------------------------------------------------------- */
   /* Management Section                                                     */
   /* ---------------------------------------------------------------------- */
 
   const section: Section =
-    params.section === "reimbursement" ||
-    params.section === "name-change" ||
-    params.section === "role-verification"
+    params.section === "name-change" || params.section === "role-verification"
       ? params.section
       : "verification";
 
@@ -134,8 +76,6 @@ export default async function HrPage({
     ownIdentityRequests,
     latestOwnIdentityRequest,
     ownIdentityAttemptCount,
-    approvedExpenses,
-    reimbursementHistory,
     nameChangeRequests,
     nameChangeRequestHistory,
     ownNameChangeRequests,
@@ -151,20 +91,6 @@ export default async function HrPage({
     getLatestEmployeeVerificationRequest(hrId),
 
     getEmployeeVerificationAttemptCount(hrId),
-
-    getApprovedExpensesForHR(
-      hrId,
-      reimbursementPage,
-      pageSize,
-      reimbursementScope,
-    ),
-
-    getReimbursementHistory(
-      reimbursementHistoryPage,
-      pageSize,
-      hrId,
-      reimbursementScope,
-    ),
 
     getPendingNameChangeRequests(hrId),
 
@@ -190,8 +116,8 @@ export default async function HrPage({
           </h1>
 
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Manage employee verification, account requests, role verification,
-            and approved expense reimbursements.
+            Manage employee verification, account requests, and role
+            verification.
           </p>
 
           <div className="mt-6">
@@ -383,81 +309,6 @@ export default async function HrPage({
 
               <RoleVerificationHistoryTable
                 requests={roleVerificationHistory}
-              />
-            </section>
-          </>
-        )}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Reimbursements                                                    */}
-        {/* ---------------------------------------------------------------- */}
-
-        {section === "reimbursement" && (
-          <>
-            <section>
-              <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Expense Reimbursements
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Review approved expenses and process reimbursements based on
-                  the selected expense scope.
-                </p>
-              </div>
-
-              <ReimbursementScopeSelector
-                scope={reimbursementScope}
-                basePath="/hr"
-              />
-            </section>
-
-            <section className="mt-10">
-              <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Pending Reimbursement Approvals
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Review approved expenses that are waiting to be reimbursed.
-                  You can review the expense proof and approve or reject the
-                  reimbursement.
-                </p>
-              </div>
-
-              <ReimbursementTable
-                expenses={approvedExpenses.expenses}
-                userId={hrId}
-                userRole="HR"
-              />
-
-              <Pagination
-                page={approvedExpenses.page}
-                totalPages={approvedExpenses.totalPages}
-                paramName="reimbursementPage"
-              />
-            </section>
-
-            <section className="mt-10">
-              <div className="mb-5">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Reimbursement History
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Review expenses that have already been reimbursed, including
-                  who approved and who processed the reimbursement.
-                </p>
-              </div>
-
-              <ReimbursementHistoryTable
-                expenses={reimbursementHistory.expenses}
-              />
-
-              <Pagination
-                page={reimbursementHistory.page}
-                totalPages={reimbursementHistory.totalPages}
-                paramName="reimbursementHistoryPage"
               />
             </section>
           </>

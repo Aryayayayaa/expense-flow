@@ -2,11 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-type Section =
-  | "verification"
-  | "reimbursement"
-  | "name-change"
-  | "role-verification";
+type Section = "verification" | "name-change" | "role-verification";
 
 type Props = {
   section: Section;
@@ -20,8 +16,6 @@ export default function HrManagementSelector({ section }: Props) {
     const params = new URLSearchParams(searchParams.toString());
 
     params.set("section", value);
-    params.delete("reimbursementPage");
-    params.delete("reimbursementHistoryPage");
 
     router.push(`/hr?${params.toString()}`);
   }
@@ -44,7 +38,6 @@ export default function HrManagementSelector({ section }: Props) {
         <option value="verification">Employee Verification</option>
         <option value="name-change">Name Change Requests</option>
         <option value="role-verification">Role Verification Requests</option>
-        <option value="reimbursement">Reimbursement</option>
       </select>
     </div>
   );

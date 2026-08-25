@@ -3,13 +3,19 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import type { ReimbursementExpenseScope } from "../lib/expenses";
+import type { Role } from "@prisma/client";
 
 type Props = {
   scope: ReimbursementExpenseScope;
-  basePath: "/admin" | "/hr";
+  basePath: "/reimbursements";
+  role: Extract<Role, "ADMIN" | "HR">;
 };
 
-export default function ReimbursementScopeSelector({ scope, basePath }: Props) {
+export default function ReimbursementScopeSelector({
+  scope,
+  basePath,
+  role,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -17,7 +23,7 @@ export default function ReimbursementScopeSelector({ scope, basePath }: Props) {
     value: ReimbursementExpenseScope;
     label: string;
   }[] =
-    basePath === "/admin"
+    role === "ADMIN"
       ? [
           {
             value: "OWN",
@@ -60,7 +66,6 @@ export default function ReimbursementScopeSelector({ scope, basePath }: Props) {
 
     params.set("reimbursementScope", value);
 
-    // Changing scope should always restart both tables from page 1.
     params.set("reimbursementPage", "1");
     params.set("reimbursementHistoryPage", "1");
 

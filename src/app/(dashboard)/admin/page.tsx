@@ -5,13 +5,6 @@ import { auth } from "@/auth";
 import { getAdminOverview } from "@/features/admin/lib/admin";
 
 import {
-  getApprovedExpensesForHR,
-  getReimbursementHistory,
-} from "@/features/expenses/lib/expenses";
-
-import type { ReimbursementExpenseScope } from "@/features/expenses/lib/expenses";
-
-import {
   getEmployeeVerificationHistory,
   getEmployeeVerificationAttemptCount,
   getEmployeeVerificationRequestsForUser,
@@ -32,15 +25,7 @@ import {
 
 import AdminManagementSelector from "@/features/admin/components/AdminManagementSelector";
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    reimbursementScope?: string;
-    reimbursementPage?: string;
-    reimbursementHistoryPage?: string;
-  }>;
-}) {
+export default async function AdminPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -53,52 +38,8 @@ export default async function AdminPage({
 
   const adminId = Number(session.user.id);
 
-  const params = await searchParams;
-
-  /* ---------------------------------------------------------------------- */
-  /* Reimbursement scope                                                    */
-  /* ---------------------------------------------------------------------- */
-
-  const reimbursementScope: ReimbursementExpenseScope =
-    params.reimbursementScope === "OWN" ||
-    params.reimbursementScope === "EMPLOYEES" ||
-    params.reimbursementScope === "OTHER_ADMINS" ||
-    params.reimbursementScope === "HRS"
-      ? params.reimbursementScope
-      : "EMPLOYEES";
-
-  /* ---------------------------------------------------------------------- */
-  /* Reimbursement pagination                                               */
-  /* ---------------------------------------------------------------------- */
-
-  const requestedReimbursementPage = Number(params.reimbursementPage ?? "1");
-
-  const reimbursementPage =
-    Number.isInteger(requestedReimbursementPage) &&
-    requestedReimbursementPage > 0
-      ? requestedReimbursementPage
-      : 1;
-
-  const requestedReimbursementHistoryPage = Number(
-    params.reimbursementHistoryPage ?? "1",
-  );
-
-  const reimbursementHistoryPage =
-    Number.isInteger(requestedReimbursementHistoryPage) &&
-    requestedReimbursementHistoryPage > 0
-      ? requestedReimbursementHistoryPage
-      : 1;
-
-  const pageSize = 10;
-
-  /* ---------------------------------------------------------------------- */
-  /* Data                                                                    */
-  /* ---------------------------------------------------------------------- */
-
   const [
     overview,
-    approvedExpenses,
-    reimbursementHistory,
     employeeVerificationRequests,
     employeeVerificationHistory,
     ownIdentityRequests,
@@ -111,20 +52,6 @@ export default async function AdminPage({
     roleRequestHistory,
   ] = await Promise.all([
     getAdminOverview(),
-
-    getApprovedExpensesForHR(
-      adminId,
-      reimbursementPage,
-      pageSize,
-      reimbursementScope,
-    ),
-
-    getReimbursementHistory(
-      reimbursementHistoryPage,
-      pageSize,
-      adminId,
-      reimbursementScope,
-    ),
 
     getPendingEmployeeVerificationRequests(adminId),
 
@@ -160,8 +87,8 @@ export default async function AdminPage({
           </h1>
 
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Manage users, verification requests, role requests, reimbursements,
-            and administrative activities.
+            Manage users, verification requests, role requests, and
+            administrative activities.
           </p>
         </div>
 
@@ -183,17 +110,9 @@ export default async function AdminPage({
         {/* ---------------------------------------------------------------- */}
 
         <AdminManagementSelector
-          userId={Number(session.user.id)}
+          userId={adminId}
           userName={session.user.name ?? ""}
           users={overview.users}
-          /* Reimbursements */
-          approvedExpenses={approvedExpenses.expenses}
-          reimbursementExpenses={reimbursementHistory.expenses}
-          reimbursementScope={reimbursementScope}
-          reimbursementPage={approvedExpenses.page}
-          reimbursementTotalPages={approvedExpenses.totalPages}
-          reimbursementHistoryPage={reimbursementHistory.page}
-          reimbursementHistoryTotalPages={reimbursementHistory.totalPages}
           /* Employee Verification */
           employeeVerificationRequests={employeeVerificationRequests}
           employeeVerificationHistory={employeeVerificationHistory}
