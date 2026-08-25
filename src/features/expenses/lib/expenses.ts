@@ -45,9 +45,6 @@ export type ReimbursementHistoryExpense = {
   ocrReceiptUrl: string | null;
   ocrReceiptPath: string | null;
 
-  billProofUrl: string | null;
-  billProofPath: string | null;
-
   user: {
     id: number;
     name: string;
@@ -954,9 +951,6 @@ export async function deleteExpenseAsAdmin(
         ocrReceiptPath: expense.ocrReceiptPath,
         ocrRawText: expense.ocrRawText,
 
-        billProofUrl: expense.billProofUrl,
-        billProofPath: expense.billProofPath,
-
         deletionReason: reason,
         deletedById: adminId,
         userId: ownerId,
@@ -1185,6 +1179,7 @@ export async function getReimbursementHistory(
 
     ...scopeFilter,
   };
+
   const [expenses, total] = await prisma.$transaction([
     prisma.expense.findMany({
       where,
@@ -1253,9 +1248,6 @@ export async function getReimbursementHistory(
 
         ocrReceiptUrl: expense.ocrReceiptUrl,
         ocrReceiptPath: expense.ocrReceiptPath,
-
-        billProofUrl: expense.billProofUrl,
-        billProofPath: expense.billProofPath,
 
         user: expense.user,
         decidedBy: expense.decidedBy,

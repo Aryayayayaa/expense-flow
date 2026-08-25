@@ -41,9 +41,7 @@ export default function HelpPage() {
               <li>Select the option to submit a new expense.</li>
               <li>Enter the expense title, amount, category, and date.</li>
               <li>Select the appropriate currency when required.</li>
-              <li>
-                Upload supporting documents such as receipts or bill proof.
-              </li>
+              <li>Upload supporting documents such as receipts.</li>
               <li>Review the information and submit the expense.</li>
             </ol>
 

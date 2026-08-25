@@ -498,6 +498,7 @@ export async function updateExpenseAction(
     }
 
     const oldDate = existingExpense.expenseDate?.toISOString() ?? null;
+
     const newDate = updatedExpense.expenseDate?.toISOString() ?? null;
 
     if (oldDate !== newDate) {
@@ -586,75 +587,6 @@ export async function deleteExpenseAction(id: number) {
   await deleteExpense(id, userId);
 
   revalidatePath("/expenses");
-}
-
-export async function saveBillProofAction(
-  expenseId: number,
-  billProofUrl: string,
-  billProofPath: string,
-) {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        message: "Unauthorized.",
-      };
-    }
-
-    const expense = await prisma.expense.findFirst({
-      where: {
-        id: expenseId,
-        userId: Number(session.user.id),
-      },
-    });
-
-    if (!expense) {
-      return {
-        success: false,
-        message: "Expense not found.",
-      };
-    }
-
-    if (expense.ocrReceiptUrl || expense.ocrReceiptPath) {
-      return {
-        success: false,
-        message: "This expense already has an original receipt attached.",
-      };
-    }
-
-    if (expense.billProofUrl || expense.billProofPath) {
-      return {
-        success: false,
-        message: "Bill proof has already been uploaded and cannot be replaced.",
-      };
-    }
-
-    await prisma.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: {
-        billProofUrl,
-        billProofPath,
-      },
-    });
-
-    revalidatePath("/expenses");
-
-    return {
-      success: true,
-      message: "Bill proof saved successfully.",
-    };
-  } catch (error) {
-    console.error("Save Bill Proof Error:", error);
-
-    return {
-      success: false,
-      message: "Unable to save bill proof.",
-    };
-  }
 }
 
 export async function deleteExpenseAsAdminAction(

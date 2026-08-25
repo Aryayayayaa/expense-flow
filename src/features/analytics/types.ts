@@ -6,7 +6,7 @@ export type AnalyticsExpense = {
   amount: number;
   currency: string;
 
-  //status filtering variables
+  // Status filtering variables.
   status: "PENDING" | "APPROVED" | "REJECTED";
   reimbursementStatus: "PENDING" | "REIMBURSED" | "REJECTED";
 
@@ -22,8 +22,6 @@ export type AnalyticsExpense = {
 
   category: string;
   expenseDate: Date | null;
-  billProofUrl: string | null;
-  billProofPath: string | null;
   createdAt: Date;
   updatedAt: Date;
   userId: number | null;

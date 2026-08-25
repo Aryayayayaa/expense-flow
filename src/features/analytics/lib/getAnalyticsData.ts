@@ -169,8 +169,6 @@ export async function getAnalyticsData(
         reimbursementStatus: expense.reimbursementStatus,
 
         expenseDate: expense.expenseDate,
-        billProofUrl: expense.billProofUrl,
-        billProofPath: expense.billProofPath,
         createdAt: expense.createdAt,
         updatedAt: expense.updatedAt,
 
@@ -208,8 +206,6 @@ export async function getAnalyticsData(
         reimbursementStatus: expense.reimbursementStatus,
 
         expenseDate: expense.expenseDate,
-        billProofUrl: expense.billProofUrl,
-        billProofPath: expense.billProofPath,
         createdAt: expense.createdAt,
         updatedAt: expense.updatedAt,
 
@@ -245,8 +241,6 @@ export async function getAnalyticsData(
         reimbursementStatus: expense.reimbursementStatus,
 
         expenseDate: expense.expenseDate,
-        billProofUrl: expense.billProofUrl,
-        billProofPath: expense.billProofPath,
         createdAt: expense.createdAt,
         updatedAt: expense.updatedAt,
 
@@ -289,8 +283,6 @@ export async function getAnalyticsData(
         reimbursementStatus: expense.reimbursementStatus,
 
         expenseDate: expense.expenseDate,
-        billProofUrl: expense.billProofUrl,
-        billProofPath: expense.billProofPath,
         createdAt: expense.createdAt,
         updatedAt: expense.updatedAt,
 
@@ -319,8 +311,6 @@ export async function getAnalyticsData(
       reimbursementStatus: expense.reimbursementStatus,
 
       expenseDate: expense.expenseDate,
-      billProofUrl: expense.billProofUrl,
-      billProofPath: expense.billProofPath,
       createdAt: expense.createdAt,
       updatedAt: expense.updatedAt,
 

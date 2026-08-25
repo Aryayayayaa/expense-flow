@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import {
-  Calendar,
   CheckCircle2,
   Eye,
   FileText,
@@ -33,9 +32,6 @@ export type ReimbursementExpense = {
   status: "PENDING" | "APPROVED" | "REJECTED";
 
   reimbursementStatus: "PENDING" | "REIMBURSED" | "REJECTED";
-
-  billProofUrl: string | null;
-  billProofPath: string | null;
 
   ocrReceiptUrl: string | null;
   ocrReceiptPath: string | null;
@@ -100,7 +96,7 @@ export default function ReimbursementTable({ expenses }: Props) {
     setMessage("");
   }
 
-  function requestReimburse(id: number) {
+  function requestReimburse() {
     if (processingId !== null) {
       return;
     }
@@ -109,7 +105,7 @@ export default function ReimbursementTable({ expenses }: Props) {
     setDialog("reimburse");
   }
 
-  function requestReject(id: number) {
+  function requestReject() {
     if (processingId !== null) {
       return;
     }
@@ -215,30 +211,27 @@ export default function ReimbursementTable({ expenses }: Props) {
     }
   }
 
-  async function openProof(
-    expenseId: number,
-    type: "ocr-receipt" | "bill-proof",
-  ) {
+  async function openProof(expenseId: number) {
     if (processingId !== null) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/expenses/${expenseId}/${type}`);
+      const response = await fetch(`/api/expenses/${expenseId}/ocr-receipt`);
 
       const data = await response.json();
 
       if (!response.ok) {
-        setDialogMessage(data.error ?? "Unable to open the expense proof.");
+        setDialogMessage(data.error ?? "Unable to open the original receipt.");
         setDialog("error");
         return;
       }
 
       window.open(data.url, "_blank", "noopener,noreferrer");
     } catch (error) {
-      console.error("Open proof error:", error);
+      console.error("Open receipt error:", error);
 
-      setDialogMessage("Unable to open the expense proof.");
+      setDialogMessage("Unable to open the original receipt.");
       setDialog("error");
     }
   }
@@ -262,7 +255,7 @@ export default function ReimbursementTable({ expenses }: Props) {
           open={dialog !== null}
           title={dialog === "error" ? "Unable to Continue" : "Confirm Action"}
           description={dialogMessage}
-          variant={dialog === "error" ? "danger" : "danger"}
+          variant="danger"
           confirmLabel="OK"
           cancelLabel={dialog === "error" ? undefined : "Cancel"}
           loading={processingId !== null}
@@ -395,8 +388,8 @@ export default function ReimbursementTable({ expenses }: Props) {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Review the expense details and supporting proof before making
-                  a reimbursement decision.
+                  Review the expense details and supporting receipt before
+                  making a reimbursement decision.
                 </p>
               </div>
 
@@ -573,50 +566,31 @@ export default function ReimbursementTable({ expenses }: Props) {
                   <FileText size={18} className="text-blue-600" />
 
                   <h3 className="font-semibold text-blue-900">
-                    Supporting Proof
+                    Supporting Receipt
                   </h3>
                 </div>
 
                 <p className="mb-4 text-sm text-blue-700">
-                  Review the attached receipt or bill proof before making the
+                  Review the attached original receipt before making the
                   reimbursement decision.
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  {selectedExpense.ocrReceiptUrl && (
+                  {selectedExpense.ocrReceiptUrl ? (
                     <button
                       type="button"
                       disabled={processingId !== null}
-                      onClick={() =>
-                        openProof(selectedExpense.id, "ocr-receipt")
-                      }
+                      onClick={() => openProof(selectedExpense.id)}
                       className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Eye size={16} />
                       View Original Receipt
                     </button>
+                  ) : (
+                    <p className="text-sm text-blue-700">
+                      No original receipt is attached to this expense.
+                    </p>
                   )}
-
-                  {selectedExpense.billProofUrl && (
-                    <button
-                      type="button"
-                      disabled={processingId !== null}
-                      onClick={() =>
-                        openProof(selectedExpense.id, "bill-proof")
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-white px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Eye size={16} />
-                      View Bill Proof
-                    </button>
-                  )}
-
-                  {!selectedExpense.ocrReceiptUrl &&
-                    !selectedExpense.billProofUrl && (
-                      <p className="text-sm text-blue-700">
-                        No supporting proof is attached to this expense.
-                      </p>
-                    )}
                 </div>
               </section>
 
@@ -662,7 +636,7 @@ export default function ReimbursementTable({ expenses }: Props) {
                 <button
                   type="button"
                   disabled={processingId !== null}
-                  onClick={() => requestReject(selectedExpense.id)}
+                  onClick={requestReject}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <XCircle size={16} />
@@ -675,7 +649,7 @@ export default function ReimbursementTable({ expenses }: Props) {
                 <button
                   type="button"
                   disabled={processingId !== null}
-                  onClick={() => requestReimburse(selectedExpense.id)}
+                  onClick={requestReimburse}
                   className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <CheckCircle2 size={16} />

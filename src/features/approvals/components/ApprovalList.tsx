@@ -294,25 +294,16 @@ export default function ApprovalList({
 
 function EvidenceIndicator({ expense }: { expense: ApprovalExpense }) {
   const hasReceipt = Boolean(expense.ocrReceiptPath);
-  const hasBillProof = Boolean(expense.billProofPath);
 
-  if (!hasReceipt && !hasBillProof) {
+  if (!hasReceipt) {
     return <span className="text-xs font-medium text-red-600">No proof</span>;
   }
 
   return (
     <div className="flex flex-wrap gap-1">
-      {hasReceipt && (
-        <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-          Receipt
-        </span>
-      )}
-
-      {hasBillProof && (
-        <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-          Bill
-        </span>
-      )}
+      <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+        Receipt
+      </span>
     </div>
   );
 }
@@ -558,23 +549,7 @@ function ReviewExpenseModal({
                   </button>
                 )}
 
-                {expense.billProofPath && (
-                  <button
-                    type="button"
-                    disabled={processing}
-                    onClick={() =>
-                      openProof(
-                        `/api/expenses/${expense.id}/bill-proof`,
-                        "Unable to open bill proof.",
-                      )
-                    }
-                    className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    View Bill Proof
-                  </button>
-                )}
-
-                {!expense.ocrReceiptPath && !expense.billProofPath && (
+                {!expense.ocrReceiptPath && (
                   <p className="text-sm text-red-600">
                     No supporting documents have been uploaded.
                   </p>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Wallet, Calendar, Folder, Plus, AlertTriangle } from "lucide-react";
+import { Wallet, Calendar, Folder, Plus } from "lucide-react";
 
 import Pagination from "@/components/common/Pagination";
 import Filters from "@/components/common/Filters";
@@ -38,9 +38,6 @@ type DeletedExpense = {
   ocrReceiptUrl: string | null;
   ocrReceiptPath: string | null;
   ocrRawText: string | null;
-
-  billProofUrl: string | null;
-  billProofPath: string | null;
 
   deletionReason: string;
   deletedAt: Date;
@@ -431,6 +428,7 @@ export default function ExpensesPageClient({
   /* ---------------------------------------------------------------------- */
   /* Summary                                                                */
   /* ---------------------------------------------------------------------- */
+
   const summaryCurrency =
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 

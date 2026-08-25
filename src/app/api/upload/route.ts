@@ -39,7 +39,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
 
       onUploadCompleted: async ({ blob }) => {
-        console.log("Bill proof uploaded:", blob.pathname);
+        console.log("File uploaded:", blob.pathname);
       },
     });
 
