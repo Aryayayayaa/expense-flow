@@ -25,6 +25,7 @@ type NotificationItem = {
 type NotificationBellProps = {
   notifications: NotificationItem[];
   unreadCount: number;
+  userId: number;
   userRole: Role;
 };
 
@@ -46,7 +47,7 @@ function formatNotificationTime(date: Date) {
 
 /*
  * --------------------------------------------------------------------------
- * Expense notification navigation
+ * Expense notification helpers
  * --------------------------------------------------------------------------
  */
 
@@ -61,12 +62,6 @@ const EXPENSE_NAVIGATION_TYPES = new Set([
 ]);
 
 function getExpenseId(notification: NotificationItem) {
-  /*
-   * Prefer the direct relational expenseId.
-   *
-   * This is safer than trying to extract an ID from arbitrary
-   * notification metadata.
-   */
   if (
     typeof notification.expenseId === "number" &&
     Number.isInteger(notification.expenseId) &&
@@ -76,6 +71,49 @@ function getExpenseId(notification: NotificationItem) {
   }
 
   return null;
+}
+
+function getNotificationMetadata(
+  notification: NotificationItem,
+): Record<string, Prisma.JsonValue> | null {
+  if (
+    typeof notification.metadata !== "object" ||
+    notification.metadata === null ||
+    Array.isArray(notification.metadata)
+  ) {
+    return null;
+  }
+
+  return notification.metadata as Record<string, Prisma.JsonValue>;
+}
+
+function getSubmittedById(notification: NotificationItem) {
+  const metadata = getNotificationMetadata(notification);
+
+  const submittedById = metadata?.submittedById;
+
+  if (
+    typeof submittedById === "number" &&
+    Number.isInteger(submittedById) &&
+    submittedById > 0
+  ) {
+    return submittedById;
+  }
+
+  return null;
+}
+
+function isOwnExpenseSubmission(
+  notification: NotificationItem,
+  userId: number,
+) {
+  if (notification.type !== "EXPENSE_SUBMITTED") {
+    return false;
+  }
+
+  const submittedById = getSubmittedById(notification);
+
+  return submittedById !== null && submittedById === userId;
 }
 
 function canNavigateToExpense(notification: NotificationItem) {
@@ -93,27 +131,18 @@ function canNavigateToExpense(notification: NotificationItem) {
  */
 
 const REQUEST_ACTION_TO_TYPE: Record<string, RequestType> = {
-  /*
-   * Name change
-   */
   NAME_CHANGE_REQUESTED: "name-change",
   NAME_CHANGE_APPROVED: "name-change",
   NAME_CHANGE_REJECTED: "name-change",
   NAME_CHANGE_REMINDER: "name-change",
   NAME_CHANGE_AUTO_REJECTED: "name-change",
 
-  /*
-   * Role verification
-   */
   ROLE_VERIFICATION_PENDING: "role-verification",
   ROLE_VERIFICATION_APPROVED: "role-verification",
   ROLE_VERIFICATION_REJECTED: "role-verification",
   ROLE_VERIFICATION_REMINDER: "role-verification",
   ROLE_VERIFICATION_AUTO_REJECTED: "role-verification",
 
-  /*
-   * Identity verification
-   */
   IDENTITY_VERIFICATION_PENDING: "identity-verification",
   IDENTITY_VERIFICATION_APPROVED: "identity-verification",
   IDENTITY_VERIFICATION_REJECTED: "identity-verification",
@@ -121,29 +150,11 @@ const REQUEST_ACTION_TO_TYPE: Record<string, RequestType> = {
   IDENTITY_VERIFICATION_AUTO_REJECTED: "identity-verification",
 };
 
-function getNotificationMetadata(
-  notification: NotificationItem,
-): Record<string, Prisma.JsonValue> | null {
-  if (
-    typeof notification.metadata !== "object" ||
-    notification.metadata === null ||
-    Array.isArray(notification.metadata)
-  ) {
-    return null;
-  }
-
-  return notification.metadata as Record<string, Prisma.JsonValue>;
-}
-
 function getRequestTypeFromNotification(
   notification: NotificationItem,
 ): RequestType | null {
   const metadata = getNotificationMetadata(notification);
 
-  /*
-   * Request notifications created by the request workflows
-   * contain an explicit action in metadata.
-   */
   const action = metadata?.action;
 
   if (typeof action === "string") {
@@ -154,10 +165,6 @@ function getRequestTypeFromNotification(
     }
   }
 
-  /*
-   * Fallback for notifications whose type itself identifies
-   * the request workflow.
-   */
   if (
     notification.type === "ROLE_VERIFICATION_PENDING" ||
     notification.type === "ROLE_VERIFICATION_APPROVED" ||
@@ -174,16 +181,65 @@ function getRequestTypeFromNotification(
     return "identity-verification";
   }
 
-  /*
-   * Name-change notifications currently use
-   * EMPLOYEE_ACCOUNT_UPDATED, so metadata.action is the
-   * reliable identifier for those notifications.
-   */
   return null;
 }
 
+/*
+ * --------------------------------------------------------------------------
+ * Expense notification presentation
+ * --------------------------------------------------------------------------
+ */
+
+function getExpenseNotificationContent(
+  notification: NotificationItem,
+  userId: number,
+  userRole: Role,
+) {
+  if (notification.type !== "EXPENSE_SUBMITTED") {
+    return {
+      title: notification.title,
+      message: notification.message,
+    };
+  }
+
+  const ownExpense = isOwnExpenseSubmission(notification, userId);
+
+  if (ownExpense) {
+    return {
+      title: "Expense Submitted",
+      message: "Your expense has been submitted successfully.",
+    };
+  }
+
+  if (userRole === "ADMIN") {
+    return {
+      title: "New Expense Submitted",
+      message: "A new expense has been submitted and requires your review.",
+    };
+  }
+
+  if (userRole === "HR") {
+    return {
+      title: "New Expense Submitted",
+      message: "A new expense has been submitted by another user.",
+    };
+  }
+
+  return {
+    title: notification.title,
+    message: notification.message,
+  };
+}
+
+/*
+ * --------------------------------------------------------------------------
+ * Notification destination
+ * --------------------------------------------------------------------------
+ */
+
 function getNotificationDestination(
   notification: NotificationItem,
+  userId: number,
   userRole: Role,
 ) {
   /*
@@ -271,13 +327,57 @@ function getNotificationDestination(
 
   /*
    * ------------------------------------------------------------------------
-   * Existing expense navigation
+   * Expense submitted
+   * ------------------------------------------------------------------------
+   *
+   * Own submission:
+   *   ADMIN    -> /expenses/[id]
+   *   HR       -> /expenses/[id]
+   *   EMPLOYEE -> /expenses/[id]
+   *
+   * Someone else's submission:
+   *   ADMIN    -> /approvals
+   *   HR       -> no navigation because HR currently has no
+   *               corresponding expense approval page
+   */
+
+  if (notification.type === "EXPENSE_SUBMITTED") {
+    const expenseId = getExpenseId(notification);
+
+    if (expenseId === null) {
+      return null;
+    }
+
+    if (isOwnExpenseSubmission(notification, userId)) {
+      return `/expenses/${expenseId}`;
+    }
+
+    if (userRole === "ADMIN") {
+      return "/approvals";
+    }
+
+    return null;
+  }
+
+  /*
+   * ------------------------------------------------------------------------
+   * Expense deleted
    * ------------------------------------------------------------------------
    */
 
   if (notification.type === "EXPENSE_DELETED") {
-    return "/approvals";
+    if (userRole === "ADMIN") {
+      return "/approvals";
+    }
+
+    return null;
   }
+
+  /*
+   * ------------------------------------------------------------------------
+   * Other expense notifications
+   * ------------------------------------------------------------------------
+   */
 
   if (canNavigateToExpense(notification)) {
     const expenseId = getExpenseId(notification);
@@ -290,9 +390,25 @@ function getNotificationDestination(
   return null;
 }
 
-function getNavigationLabel(notification: NotificationItem) {
+function getNavigationLabel(
+  notification: NotificationItem,
+  userId: number,
+  userRole: Role,
+) {
+  if (notification.type === "EXPENSE_SUBMITTED") {
+    if (isOwnExpenseSubmission(notification, userId)) {
+      return "View your expense";
+    }
+
+    if (userRole === "ADMIN") {
+      return "Review submitted expenses";
+    }
+
+    return null;
+  }
+
   if (notification.type === "EXPENSE_DELETED") {
-    return "View deleted expense history";
+    return userRole === "ADMIN" ? "View deleted expense history" : null;
   }
 
   if (canNavigateToExpense(notification)) {
@@ -319,6 +435,7 @@ function getNavigationLabel(notification: NotificationItem) {
 export default function NotificationBell({
   notifications,
   unreadCount,
+  userId,
   userRole,
 }: NotificationBellProps) {
   const router = useRouter();
@@ -333,10 +450,8 @@ export default function NotificationBell({
    * ------------------------------------------------------------------------
    * Mark one notification as read
    * ------------------------------------------------------------------------
-   *
-   * This function only handles the read state.
-   * Navigation is handled separately by handleNotificationClick().
    */
+
   async function handleMarkAsRead(notificationId: number) {
     const notification = items.find((item) => item.id === notificationId);
 
@@ -344,10 +459,6 @@ export default function NotificationBell({
       return false;
     }
 
-    /*
-     * Already-read notifications do not need another
-     * database operation.
-     */
     if (notification.isRead) {
       return true;
     }
@@ -379,6 +490,7 @@ export default function NotificationBell({
    * Mark all notifications as read
    * ------------------------------------------------------------------------
    */
+
   async function handleMarkAllAsRead() {
     if (count === 0) {
       return;
@@ -405,38 +517,25 @@ export default function NotificationBell({
    * Notification click
    * ------------------------------------------------------------------------
    */
+
   async function handleNotificationClick(notification: NotificationItem) {
-    /*
-     * Always mark the clicked notification as read first.
-     */
     const markedAsRead = await handleMarkAsRead(notification.id);
 
-    /*
-     * Do not navigate if marking the notification as read failed.
-     */
     if (!markedAsRead) {
       return;
     }
 
-    const destination = getNotificationDestination(notification, userRole);
+    const destination = getNotificationDestination(
+      notification,
+      userId,
+      userRole,
+    );
 
-    /*
-     * No destination means this is an informational notification.
-     *
-     * This safely handles:
-     * - missing expenseId
-     * - invalid expenseId
-     * - notification types without navigation
-     * - unrelated system notifications
-     */
+    setOpen(false);
+
     if (!destination) {
       return;
     }
-
-    /*
-     * Close the notification dropdown before navigation.
-     */
-    setOpen(false);
 
     router.push(destination);
   }
@@ -503,12 +602,23 @@ export default function NotificationBell({
               items.map((notification) => {
                 const destination = getNotificationDestination(
                   notification,
+                  userId,
                   userRole,
                 );
 
-                const navigationLabel = getNavigationLabel(notification);
+                const navigationLabel = getNavigationLabel(
+                  notification,
+                  userId,
+                  userRole,
+                );
 
                 const navigable = destination !== null;
+
+                const content = getExpenseNotificationContent(
+                  notification,
+                  userId,
+                  userRole,
+                );
 
                 return (
                   <button
@@ -537,7 +647,7 @@ export default function NotificationBell({
                                 : "font-semibold text-slate-900"
                             }`}
                           >
-                            {notification.title}
+                            {content.title}
                           </p>
 
                           <span className="shrink-0 text-[10px] text-slate-400">
@@ -546,7 +656,7 @@ export default function NotificationBell({
                         </div>
 
                         <p className="mt-1 text-xs leading-5 text-slate-500">
-                          {notification.message}
+                          {content.message}
                         </p>
 
                         {navigable && navigationLabel && (

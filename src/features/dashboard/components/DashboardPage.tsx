@@ -39,6 +39,7 @@ export default async function DashboardPage() {
           <NotificationBell
             notifications={notifications}
             unreadCount={unreadNotificationCount}
+            userId={Number(session.user.id)}
             userRole={session.user.role}
           />
 
