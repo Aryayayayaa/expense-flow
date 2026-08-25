@@ -1,4 +1,3 @@
-// src/features/expenses/actions/expense-actions.ts
 "use server";
 
 import { del } from "@vercel/blob";
@@ -457,17 +456,6 @@ export async function updateExpenseAction(
       exchangeRateAt: exchangeRateResult.rateDate,
     };
 
-    const updatedExpense =
-      role === "ADMIN"
-        ? await updateExpenseAsAdmin(id, {
-            ...result.data,
-            ...currencyData,
-          })
-        : await updateExpense(id, userId, {
-            ...result.data,
-            ...currencyData,
-          });
-
     const changes: Record<
       string,
       {
@@ -476,30 +464,30 @@ export async function updateExpenseAction(
       }
     > = {};
 
-    if (existingExpense.title !== updatedExpense.title) {
+    if (existingExpense.title !== result.data.title) {
       changes.title = {
         from: existingExpense.title,
-        to: updatedExpense.title,
+        to: result.data.title,
       };
     }
 
-    if (Number(existingExpense.amount) !== Number(updatedExpense.amount)) {
+    if (Number(existingExpense.amount) !== Number(result.data.amount)) {
       changes.amount = {
         from: Number(existingExpense.amount),
-        to: Number(updatedExpense.amount),
+        to: Number(result.data.amount),
       };
     }
 
-    if (existingExpense.category !== updatedExpense.category) {
+    if (existingExpense.category !== result.data.category) {
       changes.category = {
         from: existingExpense.category,
-        to: updatedExpense.category,
+        to: result.data.category,
       };
     }
 
     const oldDate = existingExpense.expenseDate?.toISOString() ?? null;
 
-    const newDate = updatedExpense.expenseDate?.toISOString() ?? null;
+    const newDate = result.data.expenseDate?.toISOString() ?? null;
 
     if (oldDate !== newDate) {
       changes.expenseDate = {
@@ -508,7 +496,31 @@ export async function updateExpenseAction(
       };
     }
 
-    if (Object.keys(changes).length > 0) {
+    const updatedExpense =
+      role === "ADMIN"
+        ? await updateExpenseAsAdmin(
+            id,
+            userId,
+            {
+              ...result.data,
+              ...currencyData,
+            },
+            changes,
+          )
+        : await updateExpense(id, userId, {
+            ...result.data,
+            ...currencyData,
+          });
+
+    /*
+     * Admin modifications are now audited inside
+     * updateExpenseAsAdmin() so that the update and audit
+     * record are created together.
+     *
+     * Employee/HR edits continue to use the existing audit
+     * behavior here.
+     */
+    if (role !== "ADMIN" && Object.keys(changes).length > 0) {
       await createExpenseAuditLog({
         expenseId: updatedExpense.id,
         actorId: userId,
@@ -517,27 +529,28 @@ export async function updateExpenseAction(
           changes,
         },
       });
+    }
 
-      if (
-        (role === "ADMIN" || role === "HR") &&
-        existingExpense.userId !== null
-      ) {
-        await createNotification({
-          userId: existingExpense.userId,
-          type: "EXPENSE_MODIFIED",
-          title: "Expense Modified",
-          message: `Your expense "${updatedExpense.title}" has been modified by ${
-            role === "ADMIN" ? "Admin" : "HR"
-          }.`,
-          expenseId: updatedExpense.id,
-          metadata: {
-            expenseTitle: updatedExpense.title,
-            changes,
-            modifiedById: userId,
-            modifiedByRole: role,
-          },
-        });
-      }
+    if (
+      (role === "ADMIN" || role === "HR") &&
+      existingExpense.userId !== null &&
+      Object.keys(changes).length > 0
+    ) {
+      await createNotification({
+        userId: existingExpense.userId,
+        type: "EXPENSE_MODIFIED",
+        title: "Expense Modified",
+        message: `Your expense "${updatedExpense.title}" has been modified by ${
+          role === "ADMIN" ? "Admin" : "HR"
+        }.`,
+        expenseId: updatedExpense.id,
+        metadata: {
+          expenseTitle: updatedExpense.title,
+          changes,
+          modifiedById: userId,
+          modifiedByRole: role,
+        },
+      });
     }
 
     revalidatePath("/expenses");

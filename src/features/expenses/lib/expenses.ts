@@ -514,6 +514,7 @@ export async function getAllExpensesForAdmin() {
 /* -------------------------------------------------------------------------- */
 
 export type AdminExpenseScope = "OWN" | "EMPLOYEES" | "HRS" | "OTHER_ADMINS";
+
 export type ReimbursementExpenseScope =
   | "OWN"
   | "EMPLOYEES"
@@ -864,11 +865,17 @@ export async function getExpenseForAdmin(id: number) {
 /**
  * Update another user's pending expense as an Admin.
  *
- * The caller is responsible for verifying that the authenticated user
- * actually has the ADMIN role.
+ * The caller must provide the authenticated Admin's id.
+ *
+ * Every Admin modification is recorded as an UPDATED audit entry.
+ *
+ * The `metadata.changes` object contains the exact values that changed.
+ * This allows hasAdminModifiedExpense() to reliably determine whether
+ * the current Admin previously modified the expense.
  */
 export async function updateExpenseAsAdmin(
   id: number,
+  adminId: number,
   data: Partial<{
     title: string;
     amount: number;
@@ -879,6 +886,13 @@ export async function updateExpenseAsAdmin(
     category: string;
     expenseDate: Date;
   }>,
+  changes: Record<
+    string,
+    {
+      from: string | number | null;
+      to: string | number | null;
+    }
+  >,
 ) {
   const expense = await prisma.expense.findUnique({
     where: {
@@ -894,11 +908,28 @@ export async function updateExpenseAsAdmin(
     throw new Error("Only pending expenses can be edited.");
   }
 
-  return prisma.expense.update({
-    where: {
-      id,
-    },
-    data,
+  return prisma.$transaction(async (tx) => {
+    const updatedExpense = await tx.expense.update({
+      where: {
+        id,
+      },
+      data,
+    });
+
+    if (Object.keys(changes).length > 0) {
+      await tx.expenseAuditLog.create({
+        data: {
+          expenseId: updatedExpense.id,
+          actorId: adminId,
+          action: "UPDATED",
+          metadata: {
+            changes,
+          },
+        },
+      });
+    }
+
+    return updatedExpense;
   });
 }
 
@@ -934,10 +965,6 @@ export async function deleteExpenseAsAdmin(
   const ownerId = expense.userId;
 
   const deletedExpense = await prisma.$transaction(async (tx) => {
-    /*
-     * Preserve the complete expense information before deleting
-     * the original Expense record.
-     */
     const deletedExpense = await tx.deletedExpense.create({
       data: {
         originalExpenseId: expense.id,
@@ -957,9 +984,6 @@ export async function deleteExpenseAsAdmin(
       },
     });
 
-    /*
-     * Keep the existing audit trail as well.
-     */
     await tx.expenseAuditLog.create({
       data: {
         expenseId: expense.id,
@@ -973,10 +997,6 @@ export async function deleteExpenseAsAdmin(
       },
     });
 
-    /*
-     * Delete the original expense only after the historical
-     * snapshot and audit record have been successfully created.
-     */
     await tx.expense.delete({
       where: {
         id: expense.id,
@@ -986,12 +1006,6 @@ export async function deleteExpenseAsAdmin(
     return deletedExpense;
   });
 
-  /*
-   * Notify the employee who originally owned the expense.
-   *
-   * The original Expense record no longer exists, so the notification
-   * points to the deleted-expense history instead of /expenses/[id].
-   */
   await createNotification({
     userId: ownerId,
     type: "EXPENSE_DELETED",
@@ -1012,12 +1026,6 @@ export async function deleteExpenseAsAdmin(
 /* Deleted Expense History                                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Get expenses deleted by an Admin that originally belonged to a user.
- *
- * This allows the employee/HR account to see that their expense was
- * removed and understand why it was deleted.
- */
 export async function getDeletedExpensesForUser(userId: number) {
   const deletedExpenses = await prisma.deletedExpense.findMany({
     where: {
@@ -1025,16 +1033,6 @@ export async function getDeletedExpensesForUser(userId: number) {
     },
 
     include: {
-      /*
-       * Include the original owner of the deleted expense.
-       *
-       * For an employee this will always be the currently
-       * authenticated user because the query is restricted
-       * by userId above.
-       *
-       * The same data shape is also used by
-       * ApprovalDeleteHistory.
-       */
       user: {
         select: {
           id: true,
@@ -1043,10 +1041,6 @@ export async function getDeletedExpensesForUser(userId: number) {
         },
       },
 
-      /*
-       * Include the Admin who deleted the expense so the user
-       * can see who performed the deletion.
-       */
       deletedBy: {
         select: {
           id: true,
@@ -1068,20 +1062,10 @@ export async function getDeletedExpensesForUser(userId: number) {
   }));
 }
 
-// HR Reimbursement Functions
+/* -------------------------------------------------------------------------- */
+/* HR Reimbursement Functions                                                 */
+/* -------------------------------------------------------------------------- */
 
-/**
- * Get approved expenses that are still waiting for HR reimbursement
- * processing.
- *
- * Expense approval and reimbursement are separate workflows:
- *
- * ExpenseStatus:
- *   PENDING -> APPROVED / REJECTED
- *
- * ReimbursementStatus:
- *   PENDING -> REIMBURSED / REJECTED
- */
 export async function getApprovedExpensesForHR(
   hrId: number,
   page: number,
@@ -1092,6 +1076,7 @@ export async function getApprovedExpensesForHR(
   const safePageSize = Math.max(1, pageSize);
 
   const scopeFilter = getReimbursementScopeFilter(scope, hrId);
+
   const where: Prisma.ExpenseWhereInput = {
     status: "APPROVED",
     reimbursementStatus: "PENDING",
