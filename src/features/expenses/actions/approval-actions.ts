@@ -41,6 +41,24 @@ async function requireAdmin() {
   };
 }
 
+async function hasAdminModifiedExpense(
+  expenseId: number,
+  adminId: number,
+): Promise<boolean> {
+  const modification = await prisma.expenseAuditLog.findFirst({
+    where: {
+      expenseId,
+      actorId: adminId,
+      action: "UPDATED",
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return modification !== null;
+}
+
 export async function approveExpenseAction(
   expenseId: number,
 ): Promise<ApprovalActionResult> {
@@ -92,6 +110,19 @@ export async function approveExpenseAction(
       return {
         success: false,
         message: "Only pending expenses can be approved.",
+      };
+    }
+
+    const modifiedByCurrentAdmin = await hasAdminModifiedExpense(
+      expenseId,
+      admin.userId,
+    );
+
+    if (modifiedByCurrentAdmin) {
+      return {
+        success: false,
+        message:
+          "You cannot approve an expense that you previously modified. Another Admin must review and approve it.",
       };
     }
 
@@ -222,6 +253,19 @@ export async function rejectExpenseAction(
       return {
         success: false,
         message: "Only pending expenses can be rejected.",
+      };
+    }
+
+    const modifiedByCurrentAdmin = await hasAdminModifiedExpense(
+      expenseId,
+      admin.userId,
+    );
+
+    if (modifiedByCurrentAdmin) {
+      return {
+        success: false,
+        message:
+          "You cannot reject an expense that you previously modified. Another Admin must review it.",
       };
     }
 

@@ -1,5 +1,7 @@
+// src/features/expenses/actions/expense-actions.ts
 "use server";
 
+import { del } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -79,17 +81,6 @@ export async function createExpenseAction(
 
     const rawExpenseDate = String(formData.get("expenseDate") ?? "").trim();
 
-    /*
-     * The browser sends datetime-local as:
-     *
-     *   2026-08-23T23:57
-     *
-     * There is no timezone information in that value.
-     *
-     * Convert it on the client before it reaches this action.
-     *
-     * If it is already an ISO timestamp, leave it untouched.
-     */
     const expenseDate = rawExpenseDate;
 
     const currency = String(formData.get("currency") ?? "INR")
@@ -280,10 +271,19 @@ export async function saveOcrReceiptAction(
       };
     }
 
-    const expense = await prisma.expense.findFirst({
+    const userId = Number(session.user.id);
+    const role = session.user.role;
+
+    const expense = await prisma.expense.findUnique({
       where: {
         id: expenseId,
-        userId: Number(session.user.id),
+      },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        ocrReceiptUrl: true,
+        ocrReceiptPath: true,
       },
     });
 
@@ -294,12 +294,28 @@ export async function saveOcrReceiptAction(
       };
     }
 
-    if (expense.ocrReceiptUrl || expense.ocrReceiptPath) {
+    if (expense.status !== "PENDING") {
       return {
         success: false,
-        message: "An original OCR receipt already exists for this expense.",
+        message: "Only pending expenses can have their receipt updated.",
       };
     }
+
+    if (role !== "ADMIN" && expense.userId !== userId) {
+      return {
+        success: false,
+        message: "You are not authorized to update this expense receipt.",
+      };
+    }
+
+    if (!ocrReceiptUrl.trim() || !ocrReceiptPath.trim()) {
+      return {
+        success: false,
+        message: "A valid receipt is required.",
+      };
+    }
+
+    const previousReceiptPath = expense.ocrReceiptPath;
 
     await prisma.expense.update({
       where: {
@@ -312,18 +328,41 @@ export async function saveOcrReceiptAction(
       },
     });
 
+    if (previousReceiptPath && previousReceiptPath !== ocrReceiptPath) {
+      try {
+        await del(previousReceiptPath);
+      } catch (error) {
+        console.error("Delete Previous OCR Receipt Error:", error);
+      }
+    }
+
+    await createExpenseAuditLog({
+      expenseId,
+      actorId: userId,
+      action: "UPDATED",
+      metadata: {
+        receiptReplaced: Boolean(previousReceiptPath),
+        previousReceiptPath,
+        newReceiptPath: ocrReceiptPath,
+      },
+    });
+
     revalidatePath("/expenses");
+    revalidatePath(`/expenses/${expenseId}`);
+    revalidatePath("/approvals");
 
     return {
       success: true,
-      message: "Original receipt saved successfully.",
+      message: previousReceiptPath
+        ? "Receipt replaced successfully."
+        : "Receipt saved successfully.",
     };
   } catch (error) {
     console.error("Save OCR Receipt Error:", error);
 
     return {
       success: false,
-      message: "Unable to save original receipt.",
+      message: "Unable to save receipt.",
     };
   }
 }

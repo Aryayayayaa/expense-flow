@@ -1,4 +1,4 @@
-// EditExpenseDialog.tsx
+// src/features/expenses/components/EditExpenseDialog.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -151,7 +151,7 @@ export default function EditExpenseDialog({
         return;
       }
 
-      if (receiptFile && !hasReceipt) {
+      if (receiptFile) {
         const extensionMap: Record<string, string> = {
           "image/jpeg": "jpg",
           "image/png": "png",
@@ -159,7 +159,14 @@ export default function EditExpenseDialog({
           "application/pdf": "pdf",
         };
 
-        const extension = extensionMap[receiptFile.type] ?? "bin";
+        const extension = extensionMap[receiptFile.type];
+
+        if (!extension) {
+          setError(
+            "Unsupported receipt format. Please upload JPG, PNG, WEBP, or PDF.",
+          );
+          return;
+        }
 
         const safePath = `expenses/${currentExpense.id}/original-receipt-${Date.now()}.${extension}`;
 
@@ -191,7 +198,13 @@ export default function EditExpenseDialog({
         }
       }
 
-      setMessage("Expense updated successfully.");
+      setMessage(
+        receiptFile
+          ? hasReceipt
+            ? "Expense and receipt updated successfully."
+            : "Expense and receipt updated successfully."
+          : "Expense updated successfully.",
+      );
 
       onSuccess?.();
 
@@ -223,7 +236,7 @@ export default function EditExpenseDialog({
         <h2 className="text-2xl font-semibold text-slate-900">Edit Expense</h2>
 
         <p className="mt-2 text-sm text-slate-500">
-          Update the expense details.
+          Update the expense details and replace the receipt if needed.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -299,49 +312,44 @@ export default function EditExpenseDialog({
             />
           </div>
 
-          {!hasReceipt && (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Receipt
-              </label>
+          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Receipt
+            </label>
 
+            {hasReceipt ? (
               <p className="mb-3 text-sm text-slate-500">
-                No receipt is attached yet. You can upload the receipt now.
+                A receipt is already attached. Select a new receipt below to
+                replace the existing one.
               </p>
-
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                disabled={saving}
-                onChange={(event) => {
-                  setReceiptFile(event.target.files?.[0] ?? null);
-                }}
-                className="block w-full text-sm disabled:cursor-not-allowed"
-              />
-
-              {receiptFile && (
-                <p className="mt-2 text-sm text-blue-600">
-                  Selected: {receiptFile.name}
-                </p>
-              )}
-
-              <p className="mt-2 text-xs text-slate-500">
-                Once attached, the receipt cannot be replaced.
+            ) : (
+              <p className="mb-3 text-sm text-slate-500">
+                No receipt is attached yet. You can upload one now.
               </p>
-            </div>
-          )}
+            )}
 
-          {hasReceipt && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-              <p className="font-medium text-green-800">
-                Receipt already attached
-              </p>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              disabled={saving}
+              onChange={(event) => {
+                setReceiptFile(event.target.files?.[0] ?? null);
+              }}
+              className="block w-full text-sm disabled:cursor-not-allowed"
+            />
 
-              <p className="mt-1 text-sm text-green-700">
-                This receipt cannot be replaced or uploaded again.
+            {receiptFile && (
+              <p className="mt-2 text-sm text-blue-600">
+                Selected: {receiptFile.name}
               </p>
-            </div>
-          )}
+            )}
+
+            <p className="mt-2 text-xs text-slate-500">
+              {hasReceipt
+                ? "Uploading a new receipt will replace the existing receipt."
+                : "You can upload a receipt now or leave it unchanged."}
+            </p>
+          </div>
 
           {saving && (
             <div
