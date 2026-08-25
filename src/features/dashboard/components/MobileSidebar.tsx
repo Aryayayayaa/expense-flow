@@ -137,7 +137,7 @@ export default function MobileSidebar({
             {userRole === "EMPLOYEE" && (
               <MobileNavLink
                 href="/requests"
-                label="Requests"
+                label="Claims"
                 onClick={closeMenu}
                 icon={<RequestsIcon />}
               />

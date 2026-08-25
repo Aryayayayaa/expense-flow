@@ -80,7 +80,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
           {userRole === "EMPLOYEE" && (
             <SidebarLink
               href="/requests"
-              label="Requests"
+              label="Claims"
               tooltip="Submit and track your account-related requests"
               icon={<RequestsIcon />}
               active={pathname.startsWith("/requests")}

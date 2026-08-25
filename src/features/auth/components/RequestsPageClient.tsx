@@ -146,7 +146,7 @@ export default function RequestsPageClient({
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-            Requests
+            Claims
           </h1>
 
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
