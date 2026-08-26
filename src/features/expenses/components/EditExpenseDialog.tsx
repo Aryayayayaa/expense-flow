@@ -7,6 +7,7 @@ import { upload } from "@vercel/blob/client";
 import Button from "@/components/common/Button";
 
 import { saveOcrReceiptAction } from "../actions/expense-actions";
+import { SUPPORTED_CURRENCIES } from "@/constants/currencies";
 
 type EditExpense = {
   id: number;
@@ -284,16 +285,14 @@ export default function EditExpenseDialog({
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Currency
             </label>
-
-            <input
-              value={currency}
-              disabled={saving}
-              maxLength={3}
-              onChange={(event) =>
-                setCurrency(event.target.value.toUpperCase())
-              }
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 uppercase outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50"
-            />
+            
+            <select className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-50">
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.code}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
