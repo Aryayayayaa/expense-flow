@@ -110,7 +110,7 @@ export default async function HrPage({
         {/* Page Header                                                       */}
         {/* ---------------------------------------------------------------- */}
 
-        <div className="mb-8">
+        <div className="mb-8 border-b border-slate-300 pb-8 dark:border-slate-800">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
             People Management
           </h1>
@@ -119,10 +119,6 @@ export default async function HrPage({
             Manage employee verification, account requests, and role
             verification.
           </p>
-
-          <div className="mt-6">
-            <HrManagementSelector section={section} />
-          </div>
         </div>
 
         {/* ---------------------------------------------------------------- */}

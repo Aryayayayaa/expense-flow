@@ -144,7 +144,7 @@ export default function RequestsPageClient({
   return (
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8">
+        <div className="mb-8 border-b border-slate-300 pb-8 dark:border-slate-800">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
             Claims
           </h1>
@@ -158,29 +158,6 @@ export default function RequestsPageClient({
         {/* Request Type Selector                                             */}
         {/* ---------------------------------------------------------------- */}
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-              Request Type
-            </h2>
-
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Select the request or verification workflow you want to view.
-            </p>
-          </div>
-
-          <select
-            value={selectedType}
-            onChange={(event) =>
-              handleTypeChange(event.target.value as RequestType)
-            }
-            className="w-full max-w-md rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          >
-            <option value="name-change">Name Change</option>
-            <option value="role-verification">Role Verification</option>
-            <option value="identity-verification">Identity Verification</option>
-          </select>
-        </section>
 
         {/* ---------------------------------------------------------------- */}
         {/* Employee                                                         */}

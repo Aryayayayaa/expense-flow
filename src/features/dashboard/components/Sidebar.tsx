@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import ThemeToggle from "./ThemeToggle";
 import LogoutButton from "@/features/auth/components/LogoutButton";
@@ -12,7 +13,21 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ userRole }: SidebarProps) {
+  const searchParams = useSearchParams();
   const pathname = usePathname();
+
+  /* -------------------------------------------------------------------------- */
+  /* Sidebar Groups                                                              */
+  /* -------------------------------------------------------------------------- */
+
+  const isRequestsOpen = pathname.startsWith("/requests");
+  const isReimbursementsOpen = pathname.startsWith("/reimbursements");
+  const isHROpen = pathname.startsWith("/hr");
+  const isAdminOpen = pathname.startsWith("/admin");
+
+  /* -------------------------------------------------------------------------- */
+  /* Render                                                                      */
+  /* -------------------------------------------------------------------------- */
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col dark:border-slate-800 dark:bg-slate-900">
@@ -37,6 +52,10 @@ export default function Sidebar({ userRole }: SidebarProps) {
         </p>
 
         <div className="space-y-1">
+          {/* ------------------------------------------------------------------ */}
+          {/* Dashboard                                                          */}
+          {/* ------------------------------------------------------------------ */}
+
           <SidebarLink
             href="/dashboard"
             label="Dashboard"
@@ -44,6 +63,10 @@ export default function Sidebar({ userRole }: SidebarProps) {
             icon={<DashboardIcon />}
             active={pathname === "/dashboard"}
           />
+
+          {/* ------------------------------------------------------------------ */}
+          {/* Expenses                                                           */}
+          {/* ------------------------------------------------------------------ */}
 
           <SidebarLink
             href="/expenses"
@@ -61,6 +84,10 @@ export default function Sidebar({ userRole }: SidebarProps) {
             active={pathname === "/expenses/new"}
           />
 
+          {/* ------------------------------------------------------------------ */}
+          {/* Approvals                                                          */}
+          {/* ------------------------------------------------------------------ */}
+
           <SidebarLink
             href="/approvals"
             label="Approvals"
@@ -69,15 +96,110 @@ export default function Sidebar({ userRole }: SidebarProps) {
             active={pathname.startsWith("/approvals")}
           />
 
+          {/* ------------------------------------------------------------------ */}
+          {/* Reimbursements                                                     */}
+          {/* ------------------------------------------------------------------ */}
+
           {(userRole === "ADMIN" || userRole === "HR") && (
-            <SidebarLink
-              href="/reimbursements"
-              label="Reimbursements"
-              tooltip="Process expense reimbursements and view reimbursement history"
-              icon={<WalletIcon />}
-              active={pathname.startsWith("/reimbursements")}
-            />
+            <>
+              <SidebarLink
+                href="/reimbursements"
+                label="Reimbursements"
+                tooltip="Process expense reimbursements and view reimbursement history"
+                icon={<WalletIcon />}
+                active={false}
+              />
+
+              {isReimbursementsOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  {/* Default: Employees */}
+                  <SidebarLink
+                    href="/reimbursements?reimbursementScope=EMPLOYEES"
+                    label="Employees"
+                    tooltip="View employee expenses for reimbursement"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/reimbursements" &&
+                      (!searchParams.get("reimbursementScope") ||
+                        searchParams.get("reimbursementScope") ===
+                          "EMPLOYEES")
+                    }
+                  />
+
+                  <SidebarLink
+                    href="/reimbursements?reimbursementScope=OWN"
+                    label="Own Expenses"
+                    tooltip="View your own approved expenses"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/reimbursements" &&
+                      searchParams.get("reimbursementScope") === "OWN"
+                    }
+                  />
+
+                  {/* HR Scopes */}
+                  {userRole === "HR" && (
+                    <>
+                      <SidebarLink
+                        href="/reimbursements?reimbursementScope=OTHER_HRS"
+                        label="Other HRs"
+                        tooltip="View expenses submitted by other HR users"
+                        icon={<span className="text-xs">•</span>}
+                        active={
+                          pathname === "/reimbursements" &&
+                          searchParams.get("reimbursementScope") ===
+                            "OTHER_HRS"
+                        }
+                      />
+
+                      <SidebarLink
+                        href="/reimbursements?reimbursementScope=ADMINS"
+                        label="Admins"
+                        tooltip="View admin expenses for reimbursement"
+                        icon={<span className="text-xs">•</span>}
+                        active={
+                          pathname === "/reimbursements" &&
+                          searchParams.get("reimbursementScope") === "ADMINS"
+                        }
+                      />
+                    </>
+                  )}
+
+                  {/* Admin Scopes */}
+                  {userRole === "ADMIN" && (
+                    <>
+                      <SidebarLink
+                        href="/reimbursements?reimbursementScope=OTHER_ADMINS"
+                        label="Other Admins"
+                        tooltip="View expenses submitted by other admins"
+                        icon={<span className="text-xs">•</span>}
+                        active={
+                          pathname === "/reimbursements" &&
+                          searchParams.get("reimbursementScope") ===
+                            "OTHER_ADMINS"
+                        }
+                      />
+
+                      <SidebarLink
+                        href="/reimbursements?reimbursementScope=HRS"
+                        label="HRs"
+                        tooltip="View HR expenses for reimbursement"
+                        icon={<span className="text-xs">•</span>}
+                        active={
+                          pathname === "/reimbursements" &&
+                          searchParams.get("reimbursementScope") === "HRS"
+                        }
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </>
           )}
+
+          {/* ------------------------------------------------------------------ */}
+          {/* Insights                                                           */}
+          {/* ------------------------------------------------------------------ */}
 
           <SidebarLink
             href="/insights"
@@ -87,35 +209,189 @@ export default function Sidebar({ userRole }: SidebarProps) {
             active={pathname.startsWith("/insights")}
           />
 
+          {/* ------------------------------------------------------------------ */}
+          {/* Employee Claims                                                    */}
+          {/* ------------------------------------------------------------------ */}
+
           {userRole === "EMPLOYEE" && (
-            <SidebarLink
-              href="/requests"
-              label="Claims"
-              tooltip="Submit and track your account-related requests"
-              icon={<RequestsIcon />}
-              active={pathname.startsWith("/requests")}
-            />
+            <>
+              <SidebarLink
+                href="/requests"
+                label="Claims"
+                tooltip="Submit and track your account-related requests"
+                icon={<RequestsIcon />}
+                active={false}
+              />
+
+              {isRequestsOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  {/* Default: Name Change */}
+                  <SidebarLink
+                    href="/requests?type=name-change"
+                    label="Name Change"
+                    tooltip="Submit a name change request"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/requests" &&
+                      (!searchParams.get("type") ||
+                        searchParams.get("type") === "name-change")
+                    }
+                  />
+
+                  <SidebarLink
+                    href="/requests?type=role-verification"
+                    label="Role Verification"
+                    tooltip="Submit a role verification request"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/requests" &&
+                      searchParams.get("type") === "role-verification"
+                    }
+                  />
+
+                  <SidebarLink
+                    href="/requests?type=identity-verification"
+                    label="Identity Verification"
+                    tooltip="Submit an identity verification request"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/requests" &&
+                      searchParams.get("type") === "identity-verification"
+                    }
+                  />
+                </div>
+              )}
+            </>
           )}
+
+          {/* ------------------------------------------------------------------ */}
+          {/* Administration                                                     */}
+          {/* ------------------------------------------------------------------ */}
 
           {userRole === "ADMIN" && (
-            <SidebarLink
-              href="/admin"
-              label="Administration"
-              tooltip="Manage users, expenses, and administrative activities"
-              icon={<SettingsIcon />}
-              active={pathname.startsWith("/admin")}
-            />
-          )}
+  <>
+    {/* Main Administration Section */}
+    <SidebarLink
+      href="/admin"
+      label="Administration"
+      tooltip="Manage users, expenses, and administrative activities"
+      icon={<SettingsIcon />}
+      active={false}
+    />
+
+    {/* Administration Submenus */}
+    {isAdminOpen && (
+      <div className="ml-6 mt-1 space-y-1">
+        {/* Default: Users */}
+        <SidebarLink
+          href="/admin?view=users"
+          label="Users"
+          tooltip="Manage users and their accounts"
+          icon={<span className="text-xs">•</span>}
+          active={
+            pathname === "/admin" &&
+            (
+              !searchParams.get("view") ||
+              searchParams.get("view") === "users"
+            )
+          }
+        />
+
+        <SidebarLink
+          href="/admin?view=employee-verification"
+          label="Employee Verification"
+          tooltip="Review employee verification requests"
+          icon={<span className="text-xs">•</span>}
+          active={
+            pathname === "/admin" &&
+            searchParams.get("view") === "employee-verification"
+          }
+        />
+
+        <SidebarLink
+          href="/admin?view=name-change"
+          label="Name Change Requests"
+          tooltip="Review name change requests"
+          icon={<span className="text-xs">•</span>}
+          active={
+            pathname === "/admin" &&
+            searchParams.get("view") === "name-change"
+          }
+        />
+
+        <SidebarLink
+          href="/admin?view=role-verification"
+          label="Role Verification Requests"
+          tooltip="Review role verification requests"
+          icon={<span className="text-xs">•</span>}
+          active={
+            pathname === "/admin" &&
+            searchParams.get("view") === "role-verification"
+          }
+        />
+      </div>
+    )}
+  </>
+)}
+
+          {/* ------------------------------------------------------------------ */}
+          {/* People Management                                                  */}
+          {/* ------------------------------------------------------------------ */}
 
           {userRole === "HR" && (
-            <SidebarLink
-              href="/hr"
-              label="People Management"
-              tooltip="Manage employee verification, requests, and HR activities"
-              icon={<SettingsIcon />}
-              active={pathname.startsWith("/hr")}
-            />
+            <>
+              <SidebarLink
+                href="/hr"
+                label="People Management"
+                tooltip="Manage employee verification, requests, and HR activities"
+                icon={<SettingsIcon />}
+                active={false}
+              />
+
+              {isHROpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  {/* Default: Employee Verification */}
+                  <SidebarLink
+                    href="/hr?section=verification"
+                    label="Employee Verification"
+                    tooltip="Manage identity verification requests"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/hr" &&
+                      (!searchParams.get("section") ||
+                        searchParams.get("section") === "verification")
+                    }
+                  />
+
+                  <SidebarLink
+                    href="/hr?section=name-change"
+                    label="Name Change Requests"
+                    tooltip="Manage name change requests"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/hr" &&
+                      searchParams.get("section") === "name-change"
+                    }
+                  />
+
+                  <SidebarLink
+                    href="/hr?section=role-verification"
+                    label="Role Verification Requests"
+                    tooltip="Manage employee role verification requests"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/hr" &&
+                      searchParams.get("section") === "role-verification"
+                    }
+                  />
+                </div>
+              )}
+            </>
           )}
+
+          {/* ------------------------------------------------------------------ */}
+          {/* Profile                                                            */}
+          {/* ------------------------------------------------------------------ */}
 
           <SidebarLink
             href="/profile"
