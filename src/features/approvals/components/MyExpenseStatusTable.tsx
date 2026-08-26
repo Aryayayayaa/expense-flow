@@ -151,13 +151,12 @@ export default function MyExpenseStatusTable({
 
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        expense.status === "APPROVED"
-                          ? "bg-green-100 text-green-700"
-                          : expense.status === "REJECTED"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                      }`}
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${expense.status === "APPROVED"
+                        ? "bg-green-100 text-green-700"
+                        : expense.status === "REJECTED"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                        }`}
                     >
                       {expense.status}
                     </span>
@@ -171,17 +170,21 @@ export default function MyExpenseStatusTable({
                   </td>
 
                   <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        expense.reimbursementStatus === "REIMBURSED"
-                          ? "bg-green-100 text-green-700"
-                          : expense.reimbursementStatus === "REJECTED"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {expense.reimbursementStatus}
-                    </span>
+                    {expense.status === "REJECTED" ? (<span className="text-slate-600 text-center">—</span>) : (
+                      <>
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${expense.reimbursementStatus === "REIMBURSED"
+                            ? "bg-green-100 text-green-700"
+                            : expense.reimbursementStatus === "REJECTED"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                            }`}
+                        >
+                          {expense.reimbursementStatus}
+                        </span>
+                        {expense.reimbursementStatus === "REJECTED" && expense.rejectionReason}
+                            
+                      </>)}
                   </td>
 
                   <td className="px-5 py-4 text-slate-600">
