@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -30,9 +32,9 @@ export default function Sidebar({ userRole }: SidebarProps) {
   /* -------------------------------------------------------------------------- */
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white md:flex md:flex-col dark:border-slate-800 dark:bg-slate-900">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 overflow-hidden border-r border-slate-200 bg-white md:flex md:flex-col dark:border-slate-800 dark:bg-slate-900">
       {/* Logo */}
-      <div className="border-b border-slate-200 px-6 py-6 dark:border-slate-800">
+      <div className="shrink-0 border-b border-slate-200 px-6 py-6 dark:border-slate-800">
         <Link
           href="/dashboard"
           className="text-2xl font-semibold tracking-tight"
@@ -46,7 +48,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6">
+      <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-6">
         <p className="px-3 pb-3 text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-400">
           Workspace
         </p>
@@ -404,7 +406,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       </nav>
 
       {/* Theme + Logout */}
-      <div className="border-t border-slate-200 p-4 dark:border-slate-800">
+      <div className="mt-auto shrink-0 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-2">
           <ThemeToggle />
         </div>
@@ -434,8 +436,28 @@ function SidebarLink({
   icon,
   active = false,
 }: SidebarLinkProps) {
+  const [tooltipPos, setTooltipPos] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
+  const updateTooltipPos = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+
+    setTooltipPos({
+      top: rect.top + rect.height / 2,
+      left: rect.right + 12,
+    });
+  };
+
   return (
-    <div className="group relative">
+    <div
+      className="relative"
+      onMouseEnter={(event) => updateTooltipPos(event.currentTarget)}
+      onMouseLeave={() => setTooltipPos(null)}
+      onFocus={(event) => updateTooltipPos(event.currentTarget)}
+      onBlur={() => setTooltipPos(null)}
+    >
       <Link
         href={href}
         aria-label={label}
@@ -449,13 +471,17 @@ function SidebarLink({
         {label}
       </Link>
 
-      {/* Tooltip */}
-      <div
-        role="tooltip"
-        className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-slate-700"
-      >
-        {tooltip}
-      </div>
+      {tooltipPos &&
+        createPortal(
+          <div
+            role="tooltip"
+            style={{ top: tooltipPos.top, left: tooltipPos.left }}
+            className="pointer-events-none fixed z-[100] -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-lg dark:bg-slate-700"
+          >
+            {tooltip}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
