@@ -111,7 +111,7 @@ export default async function ReimbursementsPage({
         {/* Page Header                                                       */}
         {/* ---------------------------------------------------------------- */}
 
-        <div className="mb-8">
+        <div className="mb-8 border-b border-slate-300 pb-8 dark:border-slate-800">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
             Reimbursements
           </h1>
@@ -126,11 +126,6 @@ export default async function ReimbursementsPage({
         {/* Expense Scope                                                     */}
         {/* ---------------------------------------------------------------- */}
 
-        <ReimbursementScopeSelector
-          scope={reimbursementScope}
-          basePath="/reimbursements"
-          role={role}
-        />
 
         {/* ---------------------------------------------------------------- */}
         {/* Pending Reimbursement Approvals                                  */}
