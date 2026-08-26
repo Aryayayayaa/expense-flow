@@ -29,7 +29,75 @@ import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
 
 import type { AnalyticsScope } from "@/features/analytics/lib/getAnalyticsData";
 
+import { capitalize } from "@/utils/capitalize";
+import { formatDate } from "@/utils/formatDate";
+
 type AnalyticsTab = "analysis" | "reports";
+
+type AppliedFilter = {
+  key: string;
+  label: string;
+  value: string;
+};
+
+const MONTH_LABELS: Record<string, string> = {
+  "1": "January",
+  "2": "February",
+  "3": "March",
+  "4": "April",
+  "5": "May",
+  "6": "June",
+  "7": "July",
+  "8": "August",
+  "9": "September",
+  "10": "October",
+  "11": "November",
+  "12": "December",
+};
+
+const DATE_FILTER_LABELS: Record<string, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  "last-7-days": "Last 7 Days",
+  "last-30-days": "Last 30 Days",
+  "this-month": "This Month",
+  "last-month": "Last Month",
+  "this-year": "This Year",
+};
+
+function formatDateInput(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return formatDate(new Date(year, month - 1, day));
+}
+
+function getDateFilterValue(
+  dateFilter: string,
+  customStartDate: string,
+  customEndDate: string,
+) {
+  if (dateFilter === "custom") {
+    if (customStartDate && customEndDate) {
+      return `${formatDateInput(customStartDate)} – ${formatDateInput(customEndDate)}`;
+    }
+
+    if (customStartDate) {
+      return `From ${formatDateInput(customStartDate)}`;
+    }
+
+    if (customEndDate) {
+      return `Until ${formatDateInput(customEndDate)}`;
+    }
+
+    return "Custom Range";
+  }
+
+  return DATE_FILTER_LABELS[dateFilter] ?? dateFilter;
+}
 
 type InsightsPageClientProps = {
   expenses: AnalyticsExpense[];
@@ -327,6 +395,65 @@ export default function InsightsPageClient({
     approvalStatus !== "ALL" ||
     reimbursementStatus !== "ALL";
 
+  const appliedFilters: AppliedFilter[] = [
+    {
+      key: "currency",
+      label: "Currency",
+      value:
+        selectedCurrency === ALL_CURRENCIES
+          ? "All Currencies"
+          : selectedCurrency,
+    },
+  ];
+
+  if (approvalStatus !== "ALL") {
+    appliedFilters.push({
+      key: "approval",
+      label: "Approval",
+      value: capitalize(approvalStatus),
+    });
+  }
+
+  if (reimbursementStatus !== "ALL") {
+    appliedFilters.push({
+      key: "reimbursement",
+      label: "Reimbursement",
+      value: capitalize(reimbursementStatus),
+    });
+  }
+
+  if (selectedCategory !== "") {
+    appliedFilters.push({
+      key: "category",
+      label: "Category",
+      value: selectedCategory,
+    });
+  }
+
+  if (selectedYear !== "") {
+    appliedFilters.push({
+      key: "year",
+      label: "Year",
+      value: selectedYear,
+    });
+  }
+
+  if (selectedMonth !== "") {
+    appliedFilters.push({
+      key: "month",
+      label: "Month",
+      value: MONTH_LABELS[selectedMonth] ?? selectedMonth,
+    });
+  }
+
+  if (dateFilter !== "all") {
+    appliedFilters.push({
+      key: "date",
+      label: "Date",
+      value: getDateFilterValue(dateFilter, customStartDate, customEndDate),
+    });
+  }
+
   /* ---------------------------------------------------------------------- */
   /* Scope options                                                          */
   /* ---------------------------------------------------------------------- */
@@ -337,6 +464,29 @@ export default function InsightsPageClient({
   }[] =
     role === "ADMIN"
       ? [
+        {
+          value: "OWN",
+          label: "OWN",
+        },
+        {
+          value: "ALL",
+          label: "ALL",
+        },
+        {
+          value: "EMPLOYEES",
+          label: "EMPLOYEES",
+        },
+        {
+          value: "OTHER_ADMINS",
+          label: "OTHER ADMINS",
+        },
+        {
+          value: "HRS",
+          label: "HRs",
+        },
+      ]
+      : role === "HR"
+        ? [
           {
             value: "OWN",
             label: "OWN",
@@ -350,37 +500,14 @@ export default function InsightsPageClient({
             label: "EMPLOYEES",
           },
           {
-            value: "OTHER_ADMINS",
-            label: "OTHER ADMINS",
+            value: "OTHER_HRS",
+            label: "OTHER HRs",
           },
           {
-            value: "HRS",
-            label: "HRs",
+            value: "ADMINS",
+            label: "ADMINS",
           },
         ]
-      : role === "HR"
-        ? [
-            {
-              value: "OWN",
-              label: "OWN",
-            },
-            {
-              value: "ALL",
-              label: "ALL",
-            },
-            {
-              value: "EMPLOYEES",
-              label: "EMPLOYEES",
-            },
-            {
-              value: "OTHER_HRS",
-              label: "OTHER HRs",
-            },
-            {
-              value: "ADMINS",
-              label: "ADMINS",
-            },
-          ]
         : [];
 
   /* ---------------------------------------------------------------------- */
@@ -450,11 +577,10 @@ export default function InsightsPageClient({
           <button
             type="button"
             onClick={() => setActiveTab("analysis")}
-            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
-              activeTab === "analysis"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "analysis"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
           >
             Analysis
           </button>
@@ -462,11 +588,10 @@ export default function InsightsPageClient({
           <button
             type="button"
             onClick={() => setActiveTab("reports")}
-            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
-              activeTab === "reports"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "reports"
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
           >
             Reports
           </button>
@@ -477,6 +602,7 @@ export default function InsightsPageClient({
             expenses={filteredExpenses}
             selectedCurrency={selectedCurrency}
             defaultCurrency={defaultCurrency}
+            appliedFilters={appliedFilters}
           />
         )}
 
@@ -501,12 +627,14 @@ type InsightsAnalysisProps = {
   expenses: AnalyticsExpense[];
   selectedCurrency: string;
   defaultCurrency: string;
+  appliedFilters: AppliedFilter[];
 };
 
 function InsightsAnalysis({
   expenses,
   selectedCurrency,
   defaultCurrency,
+  appliedFilters,
 }: InsightsAnalysisProps) {
   const [activeTab, setActiveTab] = useState<
     "categories" | "monthly" | "yearly"
@@ -519,14 +647,29 @@ function InsightsAnalysis({
       <div className="rounded-lg border bg-white p-8 shadow">
         {activeTab === "categories" && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Category Breakdown
-            </h2>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Category Breakdown
+                </h2>
 
-            <p className="mt-2 text-gray-500">
-              See how your total expenses are distributed across categories.
-            </p>
+                <p className="mt-2 text-gray-500">
+                  See how your total expenses are distributed across categories.
+                </p>
+              </div>
 
+              <div className="flex max-w-xl flex-wrap items-center gap-2 sm:justify-end">
+                {appliedFilters.map((filter) => (
+                  <span
+                    key={filter.key}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-slate-700 "
+                  >
+                    <span className="text-slate-900">{filter.label}</span>
+                    <span className="text-slate-500">{filter.value}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
             <div className="mt-6">
               <CategoryPieChart
                 expenses={expenses}
