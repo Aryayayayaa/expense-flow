@@ -149,7 +149,7 @@ export default function YearlyCategoryChart({
           margin={{
             top: 10,
             right: 20,
-            left: 10,
+            left: 70,
             bottom: 10,
           }}
         >
@@ -158,6 +158,7 @@ export default function YearlyCategoryChart({
           <XAxis dataKey="year" />
 
           <YAxis
+            width={100}
             tickFormatter={(value) =>
               formatCurrency(Number(value), reportCurrency)
             }

@@ -605,7 +605,7 @@ function InsightsAnalysis({
               Track your total spending and category-wise spending across years.
             </p>
 
-            <div className="mt-8">
+            <div className="m-6">
               <h3 className="text-lg font-semibold text-gray-900">
                 Total Yearly Expenses
               </h3>

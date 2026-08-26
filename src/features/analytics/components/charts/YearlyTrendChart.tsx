@@ -83,12 +83,21 @@ export default function YearlyTrendChart({
   return (
     <div className="mt-6 h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={yearlyData}>
+      <BarChart
+        data={yearlyData}
+        margin={{
+          top: 10,
+          right: 20,
+          left: 70,
+          bottom: 10,
+        }}
+      >
           <CartesianGrid strokeDasharray="3 3" />
 
           <XAxis dataKey="year" />
 
           <YAxis
+            width={100}
             tickFormatter={(value) =>
               formatCurrency(Number(value), reportCurrency)
             }
