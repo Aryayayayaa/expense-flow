@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
-  serverExternalPackages: ["mindee"],
+  serverExternalPackages: ["mindee", "cloudinary"],
 };
 
 export default nextConfig;

@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
 
 import {
   DEFAULT_CURRENCY,
   SUPPORTED_CURRENCIES,
   type CurrencyCode,
 } from "@/constants/currencies";
+
+import { isSupportedReceiptMimeType } from "../lib/receipt-constants";
+import { uploadReceiptFile } from "../lib/upload-receipt-client";
 
 import {
   createExpenseAction,
@@ -252,30 +254,18 @@ export default function AddExpenseForm({
     file: File,
     rawText: string,
   ) {
-    const extensionMap: Record<string, string> = {
-      "image/jpeg": "jpg",
-      "image/png": "png",
-      "image/webp": "webp",
-      "application/pdf": "pdf",
-    };
+    if (!isSupportedReceiptMimeType(file.type)) {
+      throw new Error(
+        "Unsupported receipt format. Please upload JPG, PNG, WEBP, or PDF.",
+      );
+    }
 
-    const extension = extensionMap[file.type] ?? "bin";
-
-    const safePath = `expenses/${expenseId}/original-receipt-${Date.now()}.${extension}`;
-
-    const blob = await upload(safePath, file, {
-      access: "private",
-      handleUploadUrl: "/api/upload",
-      clientPayload: JSON.stringify({
-        expenseId,
-        type: "ocr-receipt",
-      }),
-    });
+    const uploaded = await uploadReceiptFile(expenseId, file);
 
     const saveResult = await saveOcrReceiptAction(
       expenseId,
-      blob.url,
-      blob.pathname,
+      uploaded.url,
+      uploaded.path,
       rawText,
     );
 

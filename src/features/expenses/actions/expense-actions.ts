@@ -1,9 +1,9 @@
 "use server";
 
-import { del } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteStoredReceipt } from "@/features/expenses/lib/receipt-storage";
 
 import {
   createExpense,
@@ -372,7 +372,7 @@ export async function saveOcrReceiptAction(
 
     if (previousReceiptPath && previousReceiptPath !== ocrReceiptPath) {
       try {
-        await del(previousReceiptPath);
+        await deleteStoredReceipt(previousReceiptPath);
       } catch (error) {
         console.error("Delete Previous OCR Receipt Error:", error);
       }
