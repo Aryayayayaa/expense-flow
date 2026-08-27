@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+import { Eye } from "lucide-react";
 
 import Button from "@/components/common/Button";
 
 import { saveOcrReceiptAction } from "../actions/expense-actions";
+import { isSupportedReceiptMimeType } from "../lib/receipt-constants";
+import { uploadReceiptFile } from "../lib/upload-receipt-client";
 import { SUPPORTED_CURRENCIES } from "@/constants/currencies";
 
 type EditExpense = {
@@ -72,13 +74,18 @@ export default function EditExpenseDialog({
   const [expenseDate, setExpenseDate] = useState("");
 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [selectedReceiptUrl, setSelectedReceiptUrl] = useState<string | null>(
+    null,
+  );
 
   const [saving, setSaving] = useState(false);
+  const [viewingReceipt, setViewingReceipt] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open || !expense) {
+      setReceiptFile(null);
       return;
     }
 
@@ -93,6 +100,20 @@ export default function EditExpenseDialog({
     setMessage("");
     setError("");
   }, [open, expense]);
+
+  useEffect(() => {
+    if (!receiptFile) {
+      setSelectedReceiptUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(receiptFile);
+    setSelectedReceiptUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [receiptFile]);
 
   if (!open || !expense) {
     return null;
@@ -110,6 +131,44 @@ export default function EditExpenseDialog({
     }
 
     onClose();
+  }
+
+  async function handleViewExistingReceipt() {
+    if (saving || viewingReceipt) {
+      return;
+    }
+
+    setViewingReceipt(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `/api/expenses/${currentExpense.id}/ocr-receipt`,
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        setError(data.error ?? "Unable to open receipt.");
+        return;
+      }
+
+      window.open(data.url, "_blank", "noopener,noreferrer");
+    } catch (viewError) {
+      console.error("View receipt error:", viewError);
+
+      setError("Unable to open receipt.");
+    } finally {
+      setViewingReceipt(false);
+    }
+  }
+
+  function handleViewSelectedReceipt() {
+    if (!selectedReceiptUrl) {
+      return;
+    }
+
+    window.open(selectedReceiptUrl, "_blank", "noopener,noreferrer");
   }
 
   async function handleSave() {
@@ -167,37 +226,22 @@ export default function EditExpenseDialog({
        * ---------------------------------------------------------
        */
       if (receiptFile) {
-        const extensionMap: Record<string, string> = {
-          "image/jpeg": "jpg",
-          "image/png": "png",
-          "image/webp": "webp",
-          "application/pdf": "pdf",
-        };
-
-        const extension = extensionMap[receiptFile.type];
-
-        if (!extension) {
+        if (!isSupportedReceiptMimeType(receiptFile.type)) {
           setError(
             "Unsupported receipt format. Please upload JPG, PNG, WEBP, or PDF.",
           );
           return;
         }
 
-        const safePath = `expenses/${currentExpense.id}/original-receipt-${Date.now()}.${extension}`;
-
-        const blob = await upload(safePath, receiptFile, {
-          access: "private",
-          handleUploadUrl: "/api/upload",
-          clientPayload: JSON.stringify({
-            expenseId: currentExpense.id,
-            type: "ocr-receipt",
-          }),
-        });
+        const uploaded = await uploadReceiptFile(
+          currentExpense.id,
+          receiptFile,
+        );
 
         const receiptResult = await saveOcrReceiptAction(
           currentExpense.id,
-          blob.url,
-          blob.pathname,
+          uploaded.url,
+          uploaded.path,
           "",
         );
 
@@ -329,10 +373,22 @@ export default function EditExpenseDialog({
             </label>
 
             {hasReceipt ? (
-              <p className="mb-3 text-sm text-slate-500">
-                A receipt is already attached. Select a new receipt below to
-                replace the existing one.
-              </p>
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-500">
+                  A receipt is already attached. Select a new receipt below to
+                  replace the existing one.
+                </p>
+
+                <button
+                  type="button"
+                  disabled={saving || viewingReceipt}
+                  onClick={handleViewExistingReceipt}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Eye size={16} />
+                  {viewingReceipt ? "Opening..." : "View Receipt"}
+                </button>
+              </div>
             ) : (
               <p className="mb-3 text-sm text-slate-500">
                 No receipt is attached yet. You can upload one now.
@@ -349,10 +405,36 @@ export default function EditExpenseDialog({
               className="block w-full text-sm disabled:cursor-not-allowed"
             />
 
-            {receiptFile && (
-              <p className="mt-2 text-sm text-blue-600">
-                Selected: {receiptFile.name}
-              </p>
+            {receiptFile && selectedReceiptUrl && (
+              <div className="mt-3 rounded-lg border border-blue-200 bg-white p-3">
+                <p className="text-sm text-blue-600">
+                  Selected: {receiptFile.name}
+                </p>
+
+                {receiptFile.type.startsWith("image/") && (
+                  <button
+                    type="button"
+                    onClick={handleViewSelectedReceipt}
+                    className="mt-3 block w-full overflow-hidden rounded-lg border border-slate-200"
+                  >
+                    <img
+                      src={selectedReceiptUrl}
+                      alt="Selected receipt preview"
+                      className="max-h-56 w-full object-contain bg-slate-50"
+                    />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={handleViewSelectedReceipt}
+                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Eye size={16} />
+                  View Selected Receipt
+                </button>
+              </div>
             )}
 
             <p className="mt-2 text-xs text-slate-500">
