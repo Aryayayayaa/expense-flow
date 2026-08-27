@@ -24,6 +24,9 @@ import ApprovalList from "@/features/approvals/components/ApprovalList";
 import ApprovalDeleteHistory from "@/features/approvals/components/ApprovalDeleteHistory";
 import ApprovalHistoryTable from "@/features/approvals/components/ApprovalHistoryTable";
 import MyExpenseStatusTable from "@/features/approvals/components/MyExpenseStatusTable";
+import ExportButtons from "@/features/approvals/components/ExportButtons";
+import { formatCurrency } from "@/utils/formatCurrency";
+import { formatDate } from "@/utils/formatDate";
 
 type ApprovalsPageProps = {
   searchParams: Promise<{
@@ -72,15 +75,15 @@ export default async function ApprovalsPage({
 
     const approvalStatus: ExpenseApprovalStatus =
       params.approvalStatus === "PENDING" ||
-      params.approvalStatus === "APPROVED" ||
-      params.approvalStatus === "REJECTED"
+        params.approvalStatus === "APPROVED" ||
+        params.approvalStatus === "REJECTED"
         ? params.approvalStatus
         : "ALL";
 
     const reimbursementStatus: ExpenseReimbursementStatus =
       params.reimbursementStatus === "PENDING" ||
-      params.reimbursementStatus === "REIMBURSED" ||
-      params.reimbursementStatus === "REJECTED"
+        params.reimbursementStatus === "REIMBURSED" ||
+        params.reimbursementStatus === "REJECTED"
         ? params.reimbursementStatus
         : "ALL";
 
@@ -94,9 +97,9 @@ export default async function ApprovalsPage({
      */
     const expenseScope: AdminExpenseScope =
       params.scope === "OWN" ||
-      params.scope === "EMPLOYEES" ||
-      params.scope === "HRS" ||
-      params.scope === "OTHER_ADMINS"
+        params.scope === "EMPLOYEES" ||
+        params.scope === "HRS" ||
+        params.scope === "OTHER_ADMINS"
         ? params.scope
         : "EMPLOYEES";
 
@@ -157,15 +160,46 @@ export default async function ApprovalsPage({
           {/* ---------------------------------------------------------------- */}
 
           <section>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                Pending Approvals
-              </h2>
+            <div className="mb-4 flex flex-row justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Pending Approvals
+                </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Previously approved and rejected expenses within the selected
-                expense scope.
-              </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Previously approved and rejected expenses within the selected
+                  expense scope.
+                </p>
+              </div>
+              <ExportButtons
+                filename={`pending-approvals-${expenseScope.toLowerCase()}`}
+                title={`Pending Approvals (${expenseScope})`}
+                columns={[
+                  { key: "employee", header: "Employee" },
+                  { key: "email", header: "Email" },
+                  { key: "expense", header: "Expense" },
+                  { key: "amount", header: "Amount" },
+                  { key: "category", header: "Category" },
+                  { key: "date", header: "Date" },
+                  { key: "evidence", header: "Evidence" },
+                  { key: "status", header: "Status" },
+                ]}
+                rows={serializedPendingExpenses.map((expense) => ({
+                  employee: expense.user?.name ?? "Unknown",
+                  email: expense.user?.email ?? "No email",
+                  expense: `${expense.title} (#${expense.id})`,
+                  amount: formatCurrency(
+                    expense.displayAmount ?? expense.amount,
+                    expense.currency,
+                  ),
+                  category: expense.category,
+                  date: expense.expenseDate
+                    ? formatDate(new Date(expense.expenseDate))
+                    : "—",
+                  evidence: expense.ocrReceiptPath ? "Receipt" : "No proof",
+                  status: "PENDING",
+                }))}
+              />
             </div>
 
             {/* Expense Scope */}
@@ -227,14 +261,44 @@ export default async function ApprovalsPage({
           {/* ---------------------------------------------------------------- */}
 
           <section className="mt-10">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                Approval History
-              </h2>
+            <div className="mb-4 flex flex-row justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  Approval History
+                </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Previously approved and rejected expenses.
-              </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Previously approved and rejected expenses.
+                </p>
+              </div>
+              <ExportButtons
+                filename={`approval-history-${expenseScope.toLowerCase()}`}
+                title={`Approval History (${expenseScope})`}
+                columns={[
+                  { key: "expense", header: "Expense" },
+                  { key: "employee", header: "Employee" },
+                  { key: "email", header: "Email" },
+                  { key: "amount", header: "Amount" },
+                  { key: "decision", header: "Decision" },
+                  { key: "decidedBy", header: "Decided By" },
+                  { key: "decisionDate", header: "Decision Date" },
+                  { key: "reason", header: "Reason" },
+                ]}
+                rows={history.expenses.map((expense) => ({
+                  expense: expense.title,
+                  employee: expense.user?.name ?? "Unknown",
+                  email: expense.user?.email ?? "—",
+                  amount: formatCurrency(expense.amount, expense.currency),
+                  decision: expense.status,
+                  decidedBy: expense.decidedBy?.name
+                    ? `${expense.decidedBy.name} (${expense.decidedBy.email})`
+                    : "Unknown",
+                  decisionDate: expense.decidedAt
+                    ? formatDate(new Date(expense.decidedAt))
+                    : "—",
+                  reason: expense.rejectionReason ?? "—",
+                }))}
+              />
             </div>
 
             {/* Approval history filters */}
@@ -259,15 +323,41 @@ export default async function ApprovalsPage({
 
             {/* Approval delete history */}
             <section className="mt-10">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                  Approval Delete History
-                </h2>
+              <div className="mb-4 flex flex-row justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                    Approval Delete History
+                  </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Expenses deleted by Admins are preserved here with their
-                  deletion reason and owner information for the selected scope.
-                </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Expenses deleted by Admins are preserved here with their
+                    deletion reason and owner information for the selected scope.
+                  </p>
+                </div>
+                <ExportButtons
+                  filename={`approval-delete-history-${expenseScope.toLowerCase()}`}
+                  title={`Approval Delete History (${expenseScope})`}
+                  columns={[
+                    { key: "employee", header: "Employee" },
+                    { key: "email", header: "Email" },
+                    { key: "expense", header: "Expense" },
+                    { key: "amount", header: "Amount" },
+                    { key: "category", header: "Category" },
+                    { key: "deletedBy", header: "Deleted By" },
+                    { key: "reason", header: "Reason" },
+                    { key: "deletedAt", header: "Deleted At" },
+                  ]}
+                  rows={deletionHistory.expenses.map((expense) => ({
+                    employee: expense.user.name,
+                    email: expense.user.email,
+                    expense: `${expense.title} (Original #${expense.originalExpenseId})`,
+                    amount: formatCurrency(expense.amount, expense.currency),
+                    category: expense.category,
+                    deletedBy: `${expense.deletedBy.name} (${expense.deletedBy.email})`,
+                    reason: expense.deletionReason,
+                    deletedAt: new Date(expense.deletedAt).toLocaleString(),
+                  }))}
+                />
               </div>
 
               <ApprovalDeleteHistory expenses={deletionHistory.expenses} />
@@ -299,15 +389,15 @@ export default async function ApprovalsPage({
 
   const approvalStatus: ExpenseApprovalStatus =
     params.approvalStatus === "PENDING" ||
-    params.approvalStatus === "APPROVED" ||
-    params.approvalStatus === "REJECTED"
+      params.approvalStatus === "APPROVED" ||
+      params.approvalStatus === "REJECTED"
       ? params.approvalStatus
       : "ALL";
 
   const reimbursementStatus: ExpenseReimbursementStatus =
     params.reimbursementStatus === "PENDING" ||
-    params.reimbursementStatus === "REIMBURSED" ||
-    params.reimbursementStatus === "REJECTED"
+      params.reimbursementStatus === "REIMBURSED" ||
+      params.reimbursementStatus === "REJECTED"
       ? params.reimbursementStatus
       : "ALL";
 
@@ -333,14 +423,48 @@ export default async function ApprovalsPage({
 
   return (
     <main className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
-          My Expense Status
-        </h1>
+      <div className="mb-6 flex flex-row justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
+            My Expense Status
+          </h1>
 
-        <p className="mt-1 text-sm text-slate-500">
-          Track the approval status of your submitted expenses.
-        </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Track the approval status of your submitted expenses.
+          </p>
+        </div>
+
+        <ExportButtons
+          filename="my-expense-status"
+          title="My Expense Status"
+          columns={[
+            { key: "expense", header: "Expense" },
+            { key: "amount", header: "Amount" },
+            { key: "category", header: "Category" },
+            { key: "date", header: "Date" },
+            { key: "approvalStatus", header: "Approval Status" },
+            { key: "reimbursementStatus", header: "Reimbursement Status" },
+            { key: "decisionDate", header: "Decision Date" },
+            { key: "reason", header: "Reason" },
+          ]}
+          rows={expenses.map((expense) => ({
+            expense: expense.title,
+            amount: formatCurrency(expense.amount, expense.currency),
+            category: expense.category,
+            date: expense.expenseDate
+              ? formatDate(new Date(expense.expenseDate))
+              : "—",
+            approvalStatus: expense.status,
+            reimbursementStatus:
+              expense.status === "REJECTED"
+                ? "—"
+                : expense.reimbursementStatus,
+            decisionDate: expense.decidedAt
+              ? formatDate(new Date(expense.decidedAt))
+              : "—",
+            reason: expense.rejectionReason ?? "—",
+          }))}
+        />
       </div>
 
       {/* Employee / HR filters */}
@@ -364,14 +488,37 @@ export default async function ApprovalsPage({
       <MyExpenseStatusTable expenses={expenses} />
 
       <section className="mt-10">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-            Deleted Expenses History
-          </h2>
+        <div className="mb-4 flex flex-row justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Deleted Expenses History
+            </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Expenses deleted by an Admin that originally belonged to you.
-          </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Expenses deleted by an Admin that originally belonged to you.
+            </p>
+          </div>
+
+          <ExportButtons
+            filename="deleted-expenses-history"
+            title="Deleted Expenses History"
+            columns={[
+              { key: "expense", header: "Expense" },
+              { key: "amount", header: "Amount" },
+              { key: "category", header: "Category" },
+              { key: "deletedBy", header: "Deleted By" },
+              { key: "reason", header: "Reason" },
+              { key: "deletedAt", header: "Deleted At" },
+            ]}
+            rows={deletedExpenses.map((expense) => ({
+              expense: `${expense.title} (Original #${expense.originalExpenseId})`,
+              amount: formatCurrency(expense.amount, expense.currency),
+              category: expense.category,
+              deletedBy: `${expense.deletedBy.name} (${expense.deletedBy.email})`,
+              reason: expense.deletionReason,
+              deletedAt: new Date(expense.deletedAt).toLocaleString(),
+            }))}
+          />
         </div>
 
         <ApprovalDeleteHistory
