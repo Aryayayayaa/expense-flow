@@ -71,8 +71,7 @@ function toPdfSafeText(value: string) {
     .replaceAll("–", "-");
 }
 
-export function downloadCsv(
-  filename: string,
+export function buildCsvContent(
   columns: ExportColumn[],
   rows: Record<string, string>[],
 ) {
@@ -86,16 +85,23 @@ export function downloadCsv(
     )
     .join("\r\n");
 
-  const csv = `\uFEFF${header}\r\n${body}`;
+  return `\uFEFF${header}\r\n${body}`;
+}
 
+export function downloadCsv(
+  filename: string,
+  columns: ExportColumn[],
+  rows: Record<string, string>[],
+) {
   triggerDownload(
-    new Blob([csv], { type: "text/csv;charset=utf-8;" }),
+    new Blob([buildCsvContent(columns, rows)], {
+      type: "text/csv;charset=utf-8;",
+    }),
     `${filename}.csv`,
   );
 }
 
-export async function downloadPdf(
-  filename: string,
+async function buildPdfDocument(
   title: string,
   columns: ExportColumn[],
   rows: Record<string, string>[],
@@ -165,5 +171,32 @@ export async function downloadPdf(
     margin: { left: 40, right: 40 },
   });
 
+  return doc;
+}
+
+export async function downloadPdf(
+  filename: string,
+  title: string,
+  columns: ExportColumn[],
+  rows: Record<string, string>[],
+) {
+  const doc = await buildPdfDocument(title, columns, rows);
+
   doc.save(`${filename}.pdf`);
+}
+
+export async function buildPdfBase64(
+  title: string,
+  columns: ExportColumn[],
+  rows: Record<string, string>[],
+) {
+  const doc = await buildPdfDocument(title, columns, rows);
+
+  return doc.output("datauristring").split(",")[1] ?? "";
+}
+
+export function utf8ToBase64(value: string) {
+  const bytes = new TextEncoder().encode(value);
+
+  return arrayBufferToBase64(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
 }
