@@ -75,15 +75,15 @@ export default async function ApprovalsPage({
 
     const approvalStatus: ExpenseApprovalStatus =
       params.approvalStatus === "PENDING" ||
-        params.approvalStatus === "APPROVED" ||
-        params.approvalStatus === "REJECTED"
+      params.approvalStatus === "APPROVED" ||
+      params.approvalStatus === "REJECTED"
         ? params.approvalStatus
         : "ALL";
 
     const reimbursementStatus: ExpenseReimbursementStatus =
       params.reimbursementStatus === "PENDING" ||
-        params.reimbursementStatus === "REIMBURSED" ||
-        params.reimbursementStatus === "REJECTED"
+      params.reimbursementStatus === "REIMBURSED" ||
+      params.reimbursementStatus === "REJECTED"
         ? params.reimbursementStatus
         : "ALL";
 
@@ -97,9 +97,9 @@ export default async function ApprovalsPage({
      */
     const expenseScope: AdminExpenseScope =
       params.scope === "OWN" ||
-        params.scope === "EMPLOYEES" ||
-        params.scope === "HRS" ||
-        params.scope === "OTHER_ADMINS"
+      params.scope === "EMPLOYEES" ||
+      params.scope === "HRS" ||
+      params.scope === "OTHER_ADMINS"
         ? params.scope
         : "EMPLOYEES";
 
@@ -296,7 +296,12 @@ export default async function ApprovalsPage({
                   decisionDate: expense.decidedAt
                     ? formatDate(new Date(expense.decidedAt))
                     : "—",
-                  reason: expense.rejectionReason ?? "—",
+                  reason:
+                    expense.status === "REJECTED"
+                      ? (expense.rejectionReason ?? "—")
+                      : expense.reimbursementStatus === "REJECTED"
+                        ? (expense.reimbursementReason ?? "—")
+                        : "—",
                 }))}
               />
             </div>
@@ -331,7 +336,8 @@ export default async function ApprovalsPage({
 
                   <p className="mt-1 text-sm text-slate-500">
                     Expenses deleted by Admins are preserved here with their
-                    deletion reason and owner information for the selected scope.
+                    deletion reason and owner information for the selected
+                    scope.
                   </p>
                 </div>
                 <ExportButtons
@@ -389,15 +395,15 @@ export default async function ApprovalsPage({
 
   const approvalStatus: ExpenseApprovalStatus =
     params.approvalStatus === "PENDING" ||
-      params.approvalStatus === "APPROVED" ||
-      params.approvalStatus === "REJECTED"
+    params.approvalStatus === "APPROVED" ||
+    params.approvalStatus === "REJECTED"
       ? params.approvalStatus
       : "ALL";
 
   const reimbursementStatus: ExpenseReimbursementStatus =
     params.reimbursementStatus === "PENDING" ||
-      params.reimbursementStatus === "REIMBURSED" ||
-      params.reimbursementStatus === "REJECTED"
+    params.reimbursementStatus === "REIMBURSED" ||
+    params.reimbursementStatus === "REJECTED"
       ? params.reimbursementStatus
       : "ALL";
 
@@ -456,9 +462,7 @@ export default async function ApprovalsPage({
               : "—",
             approvalStatus: expense.status,
             reimbursementStatus:
-              expense.status === "REJECTED"
-                ? "—"
-                : expense.reimbursementStatus,
+              expense.status === "REJECTED" ? "—" : expense.reimbursementStatus,
             decisionDate: expense.decidedAt
               ? formatDate(new Date(expense.decidedAt))
               : "—",
