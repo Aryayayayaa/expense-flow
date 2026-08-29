@@ -141,13 +141,13 @@ export default function ExportButtons({
   const formatLabel = format === "pdf" ? "PDF" : "CSV";
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="flex flex-row gap-2">
+    <div className="w-full min-[977px]:w-auto">
+      <div className="flex w-full flex-col gap-2 min-[977px]:w-auto min-[977px]:flex-row">
         <button
           type="button"
           disabled={disabled}
           onClick={() => openModal("csv")}
-          className="flex cursor-pointer flex-row items-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 min-[977px]:w-auto"
         >
           <DownloadIcon className="size-4" />
           Export as CSV
@@ -157,7 +157,7 @@ export default function ExportButtons({
           type="button"
           disabled={disabled}
           onClick={() => openModal("pdf")}
-          className="flex cursor-pointer flex-row items-center gap-2 rounded-lg bg-green-600 px-4 py-1 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 min-[977px]:w-auto"
         >
           <DownloadIcon className="size-4" />
           Export as PDF
