@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
+import { z } from "zod";
 import { signIn } from "@/auth";
 
 import { createUser, getUserByEmail } from "../lib/users";
@@ -17,13 +18,43 @@ export async function registerUserAction(
   prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  // Convert FormData to a normal object.
   const values = {
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
     defaultCurrency: formData.get("defaultCurrency"),
   };
+
+  /*
+   * Check whether the submitted email is already registered before
+   * validating the remaining registration fields.
+   */
+  const emailValue = values.email;
+
+  if (typeof emailValue === "string") {
+    const emailResult = z
+      .email("Please enter a valid email address.")
+      .safeParse(emailValue.trim().toLowerCase());
+
+    if (emailResult.success) {
+      const existingUser = await getUserByEmail(emailResult.data);
+
+      if (existingUser) {
+        return {
+          success: false,
+          errors: {
+            email: ["Email is already registered."],
+          },
+          message: "",
+          values: {
+            name: "",
+            email: "",
+          },
+        };
+      }
+    }
+  }
 
   // Validate the registration data on the server.
   const result = registerSchema.safeParse(values);
@@ -33,29 +64,21 @@ export async function registerUserAction(
       success: false,
       errors: result.error.flatten().fieldErrors,
       message: "",
-    };
-  }
-
-  // Check if email already exists.
-  const existingUser = await getUserByEmail(result.data.email);
-
-  if (existingUser) {
-    return {
-      success: false,
-      errors: {
-        email: ["Email is already registered."],
+      values: {
+        name: typeof values.name === "string" ? values.name : "",
+        email: typeof values.email === "string" ? values.email : "",
       },
     };
   }
 
-  // Hash password.
-  // 10 = 2^10 = 1024 rounds of hashing.
+  // Hash password = 10 = 2^10 = 1024 rounds of hashing.
   const hashedPassword = await bcrypt.hash(result.data.password, 10);
 
-  // Save user including their selected default currency.
   const newUser = await createUser({
-    ...result.data,
+    name: result.data.name,
+    email: result.data.email,
     password: hashedPassword,
+    defaultCurrency: result.data.defaultCurrency,
   });
 
   // Notify HR and Admin.
@@ -88,12 +111,6 @@ export async function registerUserAction(
   );
 
   redirect("/login");
-
-  return {
-    success: true,
-    errors: {},
-    message: "",
-  };
 }
 
 export async function loginUserAction(
@@ -111,6 +128,7 @@ export async function loginUserAction(
     return {
       success: false,
       errors: result.error.flatten().fieldErrors,
+      message: "",
     };
   }
 

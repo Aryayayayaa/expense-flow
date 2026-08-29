@@ -2,6 +2,10 @@ export interface AuthState {
   success: boolean;
   errors: Record<string, string[]>;
   message?: string;
+  values?: {
+    name?: string;
+    email?: string;
+  };
 }
 
 export interface CreateUserData {
