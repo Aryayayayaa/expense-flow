@@ -429,8 +429,8 @@ export default async function ApprovalsPage({
 
   return (
     <main className="p-6">
-      <div className="mb-6 flex flex-row justify-between gap-4">
-        <div>
+      <div className="mb-6 flex flex-col gap-4 min-[977px]:flex-row min-[977px]:items-start min-[977px]:justify-between">
+        <div className="min-w-0">
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
             My Expense Status
           </h1>

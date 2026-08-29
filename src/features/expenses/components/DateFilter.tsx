@@ -80,7 +80,7 @@ export default function DateFilter({
                 min={minDate}
                 max={maxDate}
                 onChange={(e) => onStartDateChange(e.target.value)}
-                className="h-12 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
             </div>
 
@@ -94,7 +94,7 @@ export default function DateFilter({
                 min={startDate || minDate}
                 max={maxDate}
                 onChange={(e) => onEndDateChange(e.target.value)}
-                className="h-12 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
             </div>
           </div>
