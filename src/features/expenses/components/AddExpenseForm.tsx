@@ -22,17 +22,29 @@ import Card from "@/components/common/Card";
 
 import { DEFAULT_CATEGORIES } from "@/constants/categories";
 
-import type { DisplayExpense } from "../types";
+//import type { DisplayExpense } from "../types";
 import type { OcrResult } from "../types/ocr";
 
 import ReceiptOcrUpload from "./ReceiptOcrUpload";
 
+export type EditableExpense = {
+  id: number;
+  title: string;
+  amount: number;
+  currency: string;
+  category: string;
+  expenseDate: Date | string | null;
+  createdAt: Date | string;
+};
+
 type AddExpenseFormProps = {
-  editingExpense: DisplayExpense | null;
+  editingExpense: EditableExpense | null;
   setEditingExpense: React.Dispatch<
-    React.SetStateAction<DisplayExpense | null>
+    React.SetStateAction<EditableExpense | null>
   >;
   defaultCurrency?: CurrencyCode;
+  onClose?: () => void;
+  onSuccess?: () => void;
 };
 
 const initialState = {
@@ -46,6 +58,8 @@ export default function AddExpenseForm({
   editingExpense,
   setEditingExpense,
   defaultCurrency = DEFAULT_CURRENCY,
+  onClose,
+  onSuccess,
 }: AddExpenseFormProps) {
   const router = useRouter();
 
@@ -66,6 +80,18 @@ export default function AddExpenseForm({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  /*
+   * Stores the original values when an existing expense is opened for editing.
+   * This lets us determine whether the user actually changed anything before allowing an update request.
+   */
+  const originalEditValuesRef = useRef<{
+    title: string;
+    amount: number;
+    currency: string;
+    category: string;
+    expenseDate: string;
+  } | null>(null);
 
   /*
    * ---------------------------------------------------------
@@ -118,6 +144,7 @@ export default function AddExpenseForm({
    * ---------------------------------------------------------
    */
   function resetForm() {
+    originalEditValuesRef.current = null;
     setTitle("");
     setAmount("");
     setSelectedCategory("");
@@ -135,6 +162,29 @@ export default function AddExpenseForm({
     setState(initialState);
 
     setCurrency(defaultCurrency);
+  }
+
+  /*
+   * Convert an expense date into the same browser-local
+   * datetime-local format used by the form.
+   *
+   * This prevents equivalent dates from being treated
+   * as different merely because one is an ISO string
+   * and the other is a datetime-local value.
+   */
+  function normalizeExpenseDate(
+    value: Date | string | null,
+    fallback: Date | string,
+  ): string {
+    const date = new Date(value ?? fallback);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
   }
 
   /*
@@ -187,15 +237,28 @@ export default function AddExpenseForm({
     /*
      * Restore the expense date/time.
      */
-    const date = new Date(
-      editingExpense.expenseDate ?? editingExpense.createdAt,
+    const normalizedExpenseDate = normalizeExpenseDate(
+      editingExpense.expenseDate,
+      editingExpense.createdAt,
     );
 
-    setExpenseDate(
-      new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16),
-    );
+    setExpenseDate(normalizedExpenseDate);
+
+    /*
+     * Capture the original values used to open the edit form.
+     *
+     * Important:
+     * - "Other" stores the actual custom category.
+     * - Amount is compared numerically, so 100 and 100.00
+     *   are treated as the same value.
+     */
+    originalEditValuesRef.current = {
+      title: editingExpense.title.trim(),
+      amount: Number(editingExpense.amount),
+      currency: editingExpense.currency,
+      category: editingExpense.category.trim(),
+      expenseDate: normalizedExpenseDate,
+    };
 
     /*
      * OCR receipt is not changed when editing.
@@ -210,7 +273,36 @@ export default function AddExpenseForm({
       behavior: "smooth",
       block: "start",
     });
-  }, [editingExpense, defaultCurrency, expenseDate]);
+  }, [editingExpense, defaultCurrency]);
+
+  /*
+   * Determine whether an existing expense has actually changed.
+   *
+   * No database/API update should happen when all editable
+   * values are still identical to the original values.
+   */
+  const hasChanges = editingExpense
+    ? (() => {
+        const original = originalEditValuesRef.current;
+
+        if (!original) {
+          return false;
+        }
+
+        const currentCategory =
+          selectedCategory === "Other"
+            ? customCategory.trim()
+            : selectedCategory.trim();
+
+        return (
+          title.trim() !== original.title ||
+          Number(amount) !== original.amount ||
+          currency !== original.currency ||
+          currentCategory !== original.category ||
+          expenseDate !== original.expenseDate
+        );
+      })()
+    : true;
 
   /*
    * ---------------------------------------------------------
@@ -274,31 +366,12 @@ export default function AddExpenseForm({
     }
   }
 
-  /*
-   * ---------------------------------------------------------
-   * HANDLE SUBMIT
-   * ---------------------------------------------------------
-   *
-   * IMPORTANT:
-   *
-   * CREATE:
-   *
-   *     POST /api/expenses
-   *
-   * UPDATE:
-   *
-   *     PATCH /api/expenses/:id
-   *
-   * We intentionally DO NOT call updateExpenseAction()
-   * directly from the client.
-   *
-   * Calling a Server Action directly results in Next.js
-   * making an internal POST request.
-   *
-   * Instead, the client calls our REST-style PATCH API route.
-   */
   async function handleSubmit(formData: FormData) {
     if (pending) {
+      return;
+    }
+
+    if (editingExpense && !hasChanges) {
       return;
     }
 
@@ -364,8 +437,10 @@ export default function AddExpenseForm({
          */
         setTimeout(() => {
           resetForm();
+          onSuccess?.();
+          onClose?.();
           router.refresh();
-        }, 1000);
+        }, 1200);
 
         return;
       }
@@ -418,8 +493,9 @@ export default function AddExpenseForm({
        * =========================================================
        */
       setState(result);
-
-      router.push("/expenses");
+      onSuccess?.();
+      onClose?.();
+      router.refresh();
     } catch (error) {
       console.error("Expense submission error:", error);
 
@@ -662,8 +738,12 @@ export default function AddExpenseForm({
 
         <Button
           type="submit"
-          disabled={pending}
-          className="w-full rounded bg-blue-600 px-4 py-2 text-white"
+          disabled={pending || (Boolean(editingExpense) && !hasChanges)}
+          className={`w-full rounded px-4 py-2 text-white transition ${
+            editingExpense && !hasChanges
+              ? "cursor-not-allowed bg-slate-300 text-slate-500"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
           {pending
             ? editingExpense
