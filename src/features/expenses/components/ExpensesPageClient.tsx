@@ -615,23 +615,21 @@ export default function ExpensesPageClient({
         />
       </div>
 
-      {/* Edit Expense */}
+      {/* Add/Edit Expense Dialog */}
 
-      {editingExpense && (
-        <EditExpenseDialog
-          open={expenseDialogOpen}
-          expense={editingExpense}
-          defaultCurrency={defaultCurrency}
-          onClose={() => {
-            setExpenseDialogOpen(false);
-            setEditingExpense(null);
-          }}
-          onSuccess={() => {
-            setExpenseDialogOpen(false);
-            setEditingExpense(null);
-          }}
-        />
-      )}
+      <EditExpenseDialog
+        open={expenseDialogOpen}
+        expense={editingExpense}
+        defaultCurrency={defaultCurrency}
+        onClose={() => {
+          setExpenseDialogOpen(false);
+          setEditingExpense(null);
+        }}
+        onSuccess={() => {
+          setExpenseDialogOpen(false);
+          setEditingExpense(null);
+        }}
+      />
 
       {/* Pagination */}
 
