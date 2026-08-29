@@ -413,6 +413,7 @@ export async function resetPasswordAction(
         select: {
           id: true,
           isActive: true,
+          password: true,
         },
       },
     },
@@ -423,6 +424,29 @@ export async function resetPasswordAction(
       success: false,
       message: "Invalid or expired password reset link.",
     };
+  }
+
+  /*
+   * Check whether the new password is the same as the user's
+   * existing password.
+   *
+   * The existing password hash was already retrieved as part
+   * of the reset-request query above, so this does NOT create
+   * another database call.
+   */
+  if (resetRequest.user.password) {
+    const isSamePassword = await bcrypt.compare(
+      result.data.password,
+      resetRequest.user.password,
+    );
+
+    if (isSamePassword) {
+      return {
+        success: false,
+        message:
+          "Enter a new password to reset password for the registered account.",
+      };
+    }
   }
 
   const hashedPassword = await bcrypt.hash(result.data.password, 10);

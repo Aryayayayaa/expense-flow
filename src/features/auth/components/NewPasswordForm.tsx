@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { resetPasswordAction } from "../actions/password-reset-actions";
 
@@ -20,8 +20,18 @@ export default function NewPasswordForm({ token }: Props) {
     initialState,
   );
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
-    <form action={formAction} className="w-full max-w-md space-y-5">
+    <form
+      action={formAction}
+      onSubmit={() => {
+        setShowPassword(false);
+        setShowConfirmPassword(false);
+      }}
+      className="w-full max-w-md space-y-5"
+    >
       <input type="hidden" name="token" value={token} />
 
       <div>
@@ -32,17 +42,28 @@ export default function NewPasswordForm({ token }: Props) {
           New Password
         </label>
 
-        <input
-          id="password"
-          type="password"
-          name="password"
-          required
-          minLength={8}
-          maxLength={100}
-          autoComplete="new-password"
-          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          placeholder="Enter new password"
-        />
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            required
+            minLength={8}
+            maxLength={100}
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 pr-16 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Enter new password"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-700"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         {state.errors?.password?.[0] && (
           <p className="mt-1 text-sm text-red-600">
@@ -63,17 +84,32 @@ export default function NewPasswordForm({ token }: Props) {
           Confirm Password
         </label>
 
-        <input
-          id="confirmPassword"
-          type="password"
-          name="confirmPassword"
-          required
-          minLength={8}
-          maxLength={100}
-          autoComplete="new-password"
-          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          placeholder="Confirm new password"
-        />
+        <div className="relative">
+          <input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            name="confirmPassword"
+            required
+            minLength={8}
+            maxLength={100}
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 pr-16 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Confirm new password"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((current) => !current)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-700"
+            aria-label={
+              showConfirmPassword
+                ? "Hide confirm password"
+                : "Show confirm password"
+            }
+          >
+            {showConfirmPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         {state.errors?.confirmPassword?.[0] && (
           <p className="mt-1 text-sm text-red-600">

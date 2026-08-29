@@ -3,7 +3,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { loginUserAction } from "../actions/auth-actions";
 import { AuthState } from "../types/auth";
@@ -20,8 +20,16 @@ export default function LoginForm() {
     initialState,
   );
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <form action={formAction} className="max-w-md space-y-4">
+    <form
+      action={formAction}
+      onSubmit={() => {
+        setShowPassword(false);
+      }}
+      className="max-w-md space-y-4"
+    >
       <div>
         <label
           htmlFor="email"
@@ -51,13 +59,24 @@ export default function LoginForm() {
           Password
         </label>
 
-        <input
-          id="password"
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          className="mt-1 w-full rounded-lg border border-slate-300 p-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-        />
+        <div className="relative mt-1">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            autoComplete="current-password"
+            className="w-full rounded-lg border border-slate-300 p-2 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-700"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         {state.errors?.password && (
           <p className="mt-1 text-sm text-red-500">
@@ -83,8 +102,14 @@ export default function LoginForm() {
         {pending ? "Logging in..." : "Login"}
       </button>
 
-      {state.success && (
-        <p className="text-sm text-green-600">Login successful!</p>
+      {state.message && (
+        <p
+          className={`text-sm ${
+            state.success ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {state.message}
+        </p>
       )}
     </form>
   );

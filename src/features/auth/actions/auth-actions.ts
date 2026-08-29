@@ -132,15 +132,61 @@ export async function loginUserAction(
     };
   }
 
+  const email = result.data.email;
+  const password = result.data.password;
+
   const user = await getUserByEmail(result.data.email);
+
+  const invalidCredentialsMessage =
+    "Invalid email or password. Please try again.";
 
   if (!user) {
     return {
       success: false,
-      errors: {
-        email: ["No account found with this email."],
-      },
+      errors: {},
+      message: invalidCredentialsMessage,
     };
+  }
+
+  /*
+   * Check whether this email is currently locked.
+   * The lockout is based only on the email/account, so changing
+   * the password during the five-minute period does not bypass it.
+   */
+  if (user.loginLockedUntil) {
+    const now = new Date();
+
+    if (user.loginLockedUntil > now) {
+      const remainingMs = user.loginLockedUntil.getTime() - now.getTime();
+      const remainingMinutes = Math.ceil(remainingMs / 60000);
+
+      return {
+        success: false,
+        errors: {},
+        message:
+          remainingMinutes === 1
+            ? "Too many failed login attempts. Please try again in 1 minute."
+            : `Too many failed login attempts. Please try again in ${remainingMinutes} minutes.`,
+      };
+    }
+
+    /*
+     * The five-minute lockout has expired.
+     * Reset the failed-attempt state before allowing another
+     * authentication attempt.
+     */
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        failedLoginAttempts: 0,
+        loginLockedUntil: null,
+      },
+    });
+
+    user.failedLoginAttempts = 0;
+    user.loginLockedUntil = null;
   }
 
   if (!user.isActive) {
@@ -159,7 +205,7 @@ export async function loginUserAction(
     return {
       success: false,
       errors: {},
-      message: "Invalid email or password.",
+      message: invalidCredentialsMessage,
     };
   }
 
@@ -169,13 +215,59 @@ export async function loginUserAction(
   );
 
   if (!passwordMatches) {
+    const failedAttempts = user.failedLoginAttempts + 1;
+
+    //The third failed attempt activates the five-minute lockout.
+
+    if (failedAttempts >= 3) {
+      const loginLockedUntil = new Date(Date.now() + 5 * 60 * 1000);
+
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          failedLoginAttempts: failedAttempts,
+          loginLockedUntil,
+        },
+      });
+
+      return {
+        success: false,
+        errors: {},
+        message:
+          "Too many failed login attempts. Please try again in 5 minutes.",
+      };
+    }
+
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        failedLoginAttempts: failedAttempts,
+      },
+    });
+
     return {
       success: false,
-      errors: {
-        password: ["Incorrect password."],
-      },
+      errors: {},
+      message: invalidCredentialsMessage,
     };
   }
+
+  /* Correct credentials:
+   * Reset the failed-attempt counter so a successful login gives
+   * the account a clean authentication state. */
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      failedLoginAttempts: 0,
+      loginLockedUntil: null,
+    },
+  });
 
   await signIn("credentials", {
     email: result.data.email,
