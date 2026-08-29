@@ -19,6 +19,10 @@ model User {
   updatedAt                     DateTime                      @updatedAt
   isActive                      Boolean                       @default(true)
   defaultCurrency               String                        @default("INR")
+
+  failedLoginAttempts Int       @default(0)
+  loginLockedUntil    DateTime?
+
   deletedByExpenses             DeletedExpense[]              @relation("DeletedExpenseAdmin")
   deletedExpenses               DeletedExpense[]              @relation("DeletedExpenseOwner")
   reviewedEmployeeVerifications EmployeeVerificationRequest[] @relation("EmployeeVerificationReviewer")
