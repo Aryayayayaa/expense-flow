@@ -102,7 +102,7 @@ export default function Filters({
   return (
     <div className="mt-8 rounded-xl border border-slate-200 bg-white p-5">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
 
@@ -120,7 +120,7 @@ export default function Filters({
           )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <CurrencyFilter
             value={selectedCurrency}
             onChange={onCurrencyChange}

@@ -16,7 +16,7 @@ export default function CurrencyFilter({
   onChange,
 }: CurrencyFilterProps) {
   return (
-    <div className="flex min-w-[180px] flex-col gap-1">
+    <div className="flex min-w-0 w-full flex-col gap-1">
       <select
         id="currency-filter"
         value={value}
