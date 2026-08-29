@@ -492,8 +492,8 @@ export default async function ApprovalsPage({
       <MyExpenseStatusTable expenses={expenses} />
 
       <section className="mt-10">
-        <div className="mb-4 flex flex-row justify-between gap-4">
-          <div>
+        <div className="mb-4 flex flex-col gap-4 min-[977px]:flex-row min-[977px]:items-start min-[977px]:justify-between">
+          <div className="min-w-0">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Deleted Expenses History
             </h2>

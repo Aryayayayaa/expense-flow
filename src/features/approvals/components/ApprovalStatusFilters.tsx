@@ -49,16 +49,6 @@ export default function ApprovalStatusFilters({
 
   return (
     <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
-      <div className="mb-4">
-        <h2 className="text-sm font-semibold text-slate-900">
-          Filter Approvals
-        </h2>
-
-        <p className="mt-1 text-xs text-slate-500">
-          Filter approval history and pending expenses by status.
-        </p>
-      </div>
-
       <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
         <ApprovalStatusFilter
           value={approvalStatus}
