@@ -587,37 +587,78 @@ export default function AddExpenseForm({
                       return;
                     }
 
-                    setReplacingReceipt(true);
-                    setReceiptMessage("");
+                    if (editingExpense) {
+                      setReplacingReceipt(true);
+                      setReceiptMessage("");
 
-                    try {
-                      const uploaded = await uploadReceiptFile(
-                        editingExpense.id,
-                        file,
-                      );
+                      try {
+                        const formData = new FormData();
+                        formData.set("file", file);
 
-                      // setReceiptMessage(saveResult.message);
+                        const response = await fetch(
+                          `/api/expenses/${editingExpense.id}/ocr-receipt`,
+                          {
+                            method: "PUT",
+                            body: formData,
+                          },
+                        );
 
-                      setPendingReceipt(uploaded);
-                      setReceiptFile(file);
-                      setReceiptChanged(true);
+                        const result = await response.json();
 
-                      setReceiptMessage(
-                        editingExpense.ocrReceiptPath
-                          ? "Receipt replacement uploaded. Click Update Expense to save the new receipt."
-                          : "Receipt uploaded. Click Update Expense to save the receipt.",
-                      );
-                    } catch (error) {
-                      console.error("Receipt replacement error:", error);
+                        if (!response.ok) {
+                          throw new Error(
+                            result.error ?? "Unable to compare the receipt.",
+                          );
+                        }
 
-                      setReceiptMessage(
-                        error instanceof Error
-                          ? error.message
-                          : "Unable to replace receipt.",
-                      );
-                    } finally {
-                      setReplacingReceipt(false);
-                      event.target.value = "";
+                        if (result.sameContent) {
+                          setReceiptFile(null);
+                          setPendingReceipt(null);
+                          setReceiptChanged(false);
+
+                          setReceiptMessage(
+                            "This receipt is identical to the existing receipt. No change was made.",
+                          );
+
+                          return;
+                        }
+
+                        // The receipt is different, so upload it as a pending replacement.
+                        const uploaded = await uploadReceiptFile(
+                          editingExpense.id,
+                          file,
+                        );
+
+                        setReceiptFile(file);
+                        setPendingReceipt(uploaded);
+                        setReceiptChanged(true);
+
+                        setReceiptMessage(
+                          editingExpense.ocrReceiptPath
+                            ? "New receipt uploaded. Click Update Expense to save the replacement."
+                            : "Receipt uploaded. Click Update Expense to save it.",
+                        );
+                      } catch (error) {
+                        console.error(
+                          "Receipt comparison/upload error:",
+                          error,
+                        );
+
+                        setReceiptFile(null);
+                        setPendingReceipt(null);
+                        setReceiptChanged(false);
+
+                        setReceiptMessage(
+                          error instanceof Error
+                            ? error.message
+                            : "Unable to upload receipt.",
+                        );
+                      } finally {
+                        setReplacingReceipt(false);
+                        event.target.value = "";
+                      }
+
+                      return;
                     }
                   }}
                 />

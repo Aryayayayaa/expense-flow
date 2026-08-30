@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { createHash } from "crypto";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -9,6 +10,7 @@ import {
 } from "@/features/expenses/lib/receipt-constants";
 import {
   getReceiptViewUrl,
+  getStoredReceiptBuffer,
   uploadReceiptToCloudinary,
 } from "@/features/expenses/lib/receipt-storage";
 
@@ -17,6 +19,10 @@ type RouteContext = {
     id: string;
   }>;
 };
+
+function getFileHash(buffer: Buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
 
 export async function GET(request: Request, { params }: RouteContext) {
   try {
@@ -82,6 +88,107 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(
       { error: "Unable to access original receipt." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(request: Request, { params }: RouteContext) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const expenseId = Number(id);
+
+    if (!Number.isInteger(expenseId)) {
+      return NextResponse.json(
+        { error: "Invalid expense ID." },
+        { status: 400 },
+      );
+    }
+
+    const userId = Number(session.user.id);
+    const role = session.user.role;
+
+    const expense = await prisma.expense.findUnique({
+      where: {
+        id: expenseId,
+      },
+      select: {
+        userId: true,
+        status: true,
+        ocrReceiptPath: true,
+      },
+    });
+
+    if (!expense) {
+      return NextResponse.json(
+        { error: "Expense not found." },
+        { status: 404 },
+      );
+    }
+
+    if (expense.status !== "PENDING") {
+      return NextResponse.json(
+        {
+          error: "Only pending expenses can have their receipt updated.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (role !== "ADMIN" && expense.userId !== userId) {
+      return NextResponse.json(
+        {
+          error: "You are not authorized to compare this expense receipt.",
+        },
+        { status: 403 },
+      );
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: "A receipt file is required." },
+        { status: 400 },
+      );
+    }
+
+    const newBuffer = Buffer.from(await file.arrayBuffer());
+    const newHash = getFileHash(newBuffer);
+
+    if (!expense.ocrReceiptPath) {
+      return NextResponse.json({
+        sameContent: false,
+      });
+    }
+
+    const existingBuffer = await getStoredReceiptBuffer(expense.ocrReceiptPath);
+
+    if (!existingBuffer) {
+      return NextResponse.json({
+        sameContent: false,
+      });
+    }
+
+    const existingHash = getFileHash(existingBuffer);
+
+    return NextResponse.json({
+      sameContent: existingHash === newHash,
+    });
+  } catch (error) {
+    console.error("Receipt comparison error:", error);
+
+    return NextResponse.json(
+      {
+        error: "Unable to compare the receipt.",
+      },
       { status: 500 },
     );
   }
