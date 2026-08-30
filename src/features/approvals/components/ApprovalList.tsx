@@ -271,6 +271,8 @@ export default function ApprovalList({
               category: selectedExpense.category,
               expenseDate: selectedExpense.expenseDate,
               createdAt: selectedExpense.createdAt,
+              ocrReceiptUrl: selectedExpense.ocrReceiptUrl,
+              ocrReceiptPath: selectedExpense.ocrReceiptPath,
             });
             setSelectedExpense(null);
           }}

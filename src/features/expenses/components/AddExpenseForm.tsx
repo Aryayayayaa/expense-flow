@@ -26,6 +26,7 @@ import { DEFAULT_CATEGORIES } from "@/constants/categories";
 import type { OcrResult } from "../types/ocr";
 
 import ReceiptOcrUpload from "./ReceiptOcrUpload";
+import ReceiptViewerButton from "./ReceiptViewerButton";
 
 export type EditableExpense = {
   id: number;
@@ -35,6 +36,8 @@ export type EditableExpense = {
   category: string;
   expenseDate: Date | string | null;
   createdAt: Date | string;
+  ocrReceiptUrl: string | null;
+  ocrReceiptPath: string | null;
 };
 
 type AddExpenseFormProps = {
@@ -78,6 +81,13 @@ export default function AddExpenseForm({
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
 
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [replacingReceipt, setReplacingReceipt] = useState(false);
+  const [receiptMessage, setReceiptMessage] = useState("");
+  const [receiptChanged, setReceiptChanged] = useState(false);
+  const [pendingReceipt, setPendingReceipt] = useState<{
+    url: string;
+    path: string;
+  } | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -152,6 +162,8 @@ export default function AddExpenseForm({
 
     setOcrResult(null);
     setReceiptFile(null);
+    setReplacingReceipt(false);
+    setReceiptMessage("");
 
     setExpenseDate(getCurrentDateTime());
 
@@ -225,18 +237,14 @@ export default function AddExpenseForm({
       setCustomCategory(editingExpense.category);
     }
 
-    /*
-     * Restore the original currency.
-     */
+    //Restore the original currency.
     setCurrency(
       SUPPORTED_CURRENCIES.some((item) => item.code === editingExpense.currency)
         ? (editingExpense.currency as CurrencyCode)
         : defaultCurrency,
     );
 
-    /*
-     * Restore the expense date/time.
-     */
+    //Restore the expense date/time.
     const normalizedExpenseDate = normalizeExpenseDate(
       editingExpense.expenseDate,
       editingExpense.createdAt,
@@ -244,14 +252,7 @@ export default function AddExpenseForm({
 
     setExpenseDate(normalizedExpenseDate);
 
-    /*
-     * Capture the original values used to open the edit form.
-     *
-     * Important:
-     * - "Other" stores the actual custom category.
-     * - Amount is compared numerically, so 100 and 100.00
-     *   are treated as the same value.
-     */
+    //Capture the original values used to open the edit form.
     originalEditValuesRef.current = {
       title: editingExpense.title.trim(),
       amount: Number(editingExpense.amount),
@@ -260,27 +261,24 @@ export default function AddExpenseForm({
       expenseDate: normalizedExpenseDate,
     };
 
-    /*
-     * OCR receipt is not changed when editing.
-     */
+    //OCR receipt is not changed when editing.
     setOcrResult(null);
     setReceiptFile(null);
+    setReceiptChanged(false);
+    setReceiptMessage("");
+    setPendingReceipt(null);
 
-    /*
-     * Scroll the edit form into view.
-     */
+    //Scroll the edit form into view.
+
     formRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
   }, [editingExpense, defaultCurrency]);
 
-  /*
-   * Determine whether an existing expense has actually changed.
-   *
+  /* Determine whether an existing expense has actually changed.
    * No database/API update should happen when all editable
-   * values are still identical to the original values.
-   */
+   * values are still identical to the original values.*/
   const hasChanges = editingExpense
     ? (() => {
         const original = originalEditValuesRef.current;
@@ -299,18 +297,16 @@ export default function AddExpenseForm({
           Number(amount) !== original.amount ||
           currency !== original.currency ||
           currentCategory !== original.category ||
-          expenseDate !== original.expenseDate
+          expenseDate !== original.expenseDate ||
+          receiptChanged
         );
       })()
     : true;
 
-  /*
-   * ---------------------------------------------------------
+  /* ---------------------------------------------------------
    * APPLY OCR RESULT
    * ---------------------------------------------------------
-   *
-   * When OCR completes, automatically populate:
-   *
+   * When OCR completes, automatically populate.
    * vendor      → title
    * amount      → amount
    * expenseDate → expense date
@@ -546,13 +542,94 @@ export default function AddExpenseForm({
             OCR RECEIPT
         ====================================================== */}
 
-        {!editingExpense && (
+        {!editingExpense ? (
           <ReceiptOcrUpload
             onOcrComplete={(result: OcrResult | null, file: File) => {
               setReceiptFile(file);
               setOcrResult(result);
             }}
           />
+        ) : (
+          <div className="space-y-3 rounded-lg border border-gray-200 p-4">
+            <div>
+              <p className="font-medium text-gray-800">📄 Supporting Receipt</p>
+
+              <p className="text-sm text-gray-500">
+                Review the existing receipt or upload a replacement.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {editingExpense.ocrReceiptPath && (
+                <ReceiptViewerButton expenseId={editingExpense.id} />
+              )}
+
+              <label
+                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-gray-50 ${
+                  replacingReceipt ? "cursor-not-allowed opacity-50" : ""
+                }`}
+              >
+                {replacingReceipt
+                  ? "Uploading..."
+                  : editingExpense.ocrReceiptPath
+                    ? "Replace Receipt"
+                    : "Add Receipt"}
+
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  disabled={pending || replacingReceipt}
+                  className="hidden"
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0];
+
+                    if (!file) {
+                      return;
+                    }
+
+                    setReplacingReceipt(true);
+                    setReceiptMessage("");
+
+                    try {
+                      const uploaded = await uploadReceiptFile(
+                        editingExpense.id,
+                        file,
+                      );
+
+                      // setReceiptMessage(saveResult.message);
+
+                      setPendingReceipt(uploaded);
+                      setReceiptFile(file);
+                      setReceiptChanged(true);
+
+                      setReceiptMessage(
+                        editingExpense.ocrReceiptPath
+                          ? "Receipt replacement uploaded. Click Update Expense to save the new receipt."
+                          : "Receipt uploaded. Click Update Expense to save the receipt.",
+                      );
+                    } catch (error) {
+                      console.error("Receipt replacement error:", error);
+
+                      setReceiptMessage(
+                        error instanceof Error
+                          ? error.message
+                          : "Unable to replace receipt.",
+                      );
+                    } finally {
+                      setReplacingReceipt(false);
+                      event.target.value = "";
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            {receiptMessage && (
+              <p className="rounded bg-slate-50 p-3 text-sm text-slate-600">
+                {receiptMessage}
+              </p>
+            )}
+          </div>
         )}
 
         {/* =====================================================

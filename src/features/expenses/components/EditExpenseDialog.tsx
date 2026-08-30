@@ -14,6 +14,8 @@ type EditExpense = {
   category: string;
   expenseDate: Date | string | null;
   createdAt: Date | string;
+  ocrReceiptUrl: string | null;
+  ocrReceiptPath: string | null;
 };
 
 type EditExpenseDialogProps = {
