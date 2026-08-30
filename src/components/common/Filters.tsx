@@ -100,11 +100,13 @@ export default function Filters({
   onClearFilters,
 }: FiltersProps) {
   return (
-    <div className="mt-8 rounded-xl border border-slate-200 bg-white p-5">
+    <div className="mt-8 rounded-xl border border-slate-200 bg-white p-5 dark:bg-slate-900 dark:text-white">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:bg-slate-900 dark:text-white">
+              {title}
+            </h2>
 
             <p className="mt-1 text-xs text-slate-500">{description}</p>
           </div>

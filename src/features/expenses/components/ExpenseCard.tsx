@@ -60,7 +60,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
       }}
       className="h-full cursor-pointer rounded-xl transition hover:-translate-y-1 hover:shadow-lg"
     >
-      <Card className="flex h-[650px] flex-col overflow-hidden text-black">
+      <Card className="flex h-full flex-col overflow-hidden text-black dark:text-white dark:bg-slate-900">
         {/* Expense information */}
         <div className="space-y-2">
           {/* Fixed title area */}
