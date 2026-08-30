@@ -386,28 +386,42 @@ export default function Sidebar({ userRole }: SidebarProps) {
               )}
             </>
           )}
-
-          {/* ------------------------------------------------------------------ */}
-          {/* Profile                                                            */}
-          {/* ------------------------------------------------------------------ */}
-
-          <SidebarLink
-            href="/profile"
-            label="Profile"
-            tooltip="View and update your profile settings"
-            icon={<ProfileIcon />}
-            active={pathname.startsWith("/profile")}
-          />
         </div>
       </nav>
 
-      {/* Theme + Logout */}
+      {/* Theme + Contact + Logout */}
       <div className="mt-auto shrink-0 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-2">
           <ThemeToggle />
         </div>
 
-        <LogoutButton />
+        {/* ------------------------------------------------------------------ */}
+        {/* Profile                                                            */}
+        {/* ------------------------------------------------------------------ */}
+
+        <SidebarLink
+          href="/profile"
+          label="Profile"
+          tooltip="View and update your profile settings"
+          icon={<ProfileIcon />}
+          active={pathname.startsWith("/profile")}
+        />
+
+        <SidebarLink
+          href="/contact"
+          label={userRole === "EMPLOYEE" ? "Contact Us" : "Contact Support"}
+          tooltip={
+            userRole === "EMPLOYEE"
+              ? "Contact support regarding an issue or question"
+              : "View and manage employee contact requests"
+          }
+          icon={<ContactIcon />}
+          active={pathname.startsWith("/contact")}
+        />
+
+        <div className="mt-2">
+          <LogoutButton />
+        </div>
       </div>
     </aside>
   );
@@ -526,24 +540,6 @@ function ExpenseIcon() {
   );
 }
 
-function PlusIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 5v14" />
-      <path d="M5 12h14" />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
     <svg
@@ -602,26 +598,6 @@ function AnalysisIcon() {
   );
 }
 
-function ReportIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 3h9l3 3v15H6z" />
-      <path d="M14 3v4h4" />
-      <path d="M9 12h6" />
-      <path d="M9 16h6" />
-    </svg>
-  );
-}
-
 function ProfileIcon() {
   return (
     <svg
@@ -658,43 +634,6 @@ function SettingsIcon() {
   );
 }
 
-function LogoutIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M10 17l5-5-5-5" />
-      <path d="M15 12H3" />
-      <path d="M21 19V5a2 2 0 0 0-2-2h-6" />
-    </svg>
-  );
-}
-
-function VerificationIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
 function RequestsIcon() {
   return (
     <svg
@@ -711,6 +650,24 @@ function RequestsIcon() {
       <path d="M9 7h6" />
       <path d="M9 11h6" />
       <path d="M9 15h4" />
+    </svg>
+  );
+}
+
+function ContactIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
     </svg>
   );
 }
