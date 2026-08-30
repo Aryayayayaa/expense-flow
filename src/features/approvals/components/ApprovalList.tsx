@@ -8,7 +8,9 @@ import {
   rejectExpenseAction,
 } from "@/features/expenses/actions/approval-actions";
 
-import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
+import AddExpenseForm, {
+  type EditableExpense,
+} from "@/features/expenses/components/AddExpenseForm";
 import AppDialog from "@/components/common/AppDialog";
 import ActionSpinner from "@/components/common/ActionSpinner";
 
@@ -58,7 +60,7 @@ export default function ApprovalList({
   const [selectedExpense, setSelectedExpense] =
     useState<ApprovalExpense | null>(null);
 
-  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+  const [editingExpense, setEditingExpense] = useState<EditableExpense | null>(
     null,
   );
 
@@ -261,7 +263,17 @@ export default function ApprovalList({
           expense={selectedExpense}
           onClose={() => setSelectedExpense(null)}
           onEdit={() => {
-            setEditingExpense(selectedExpense);
+            setEditingExpense({
+              id: selectedExpense.id,
+              title: selectedExpense.title,
+              amount: Number(selectedExpense.amount),
+              currency: selectedExpense.currency,
+              category: selectedExpense.category,
+              expenseDate: selectedExpense.expenseDate,
+              createdAt: selectedExpense.createdAt,
+              ocrReceiptUrl: selectedExpense.ocrReceiptUrl,
+              ocrReceiptPath: selectedExpense.ocrReceiptPath,
+            });
             setSelectedExpense(null);
           }}
         />

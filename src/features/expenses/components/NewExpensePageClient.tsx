@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 
-import AddExpenseForm from "./AddExpenseForm";
+import AddExpenseForm, { type EditableExpense } from "./AddExpenseForm";
 
-import type { DisplayExpense } from "../types";
 import type { CurrencyCode } from "@/constants/currencies";
 
 type NewExpensePageClientProps = {
@@ -14,7 +13,7 @@ type NewExpensePageClientProps = {
 export default function NewExpensePageClient({
   defaultCurrency,
 }: NewExpensePageClientProps) {
-  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+  const [editingExpense, setEditingExpense] = useState<EditableExpense | null>(
     null,
   );
 

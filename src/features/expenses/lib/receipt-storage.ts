@@ -88,6 +88,20 @@ function getCloudinaryReceiptViewUrl(path: string) {
   );
 }
 
+async function getCloudinaryReceiptBuffer(path: string): Promise<Buffer> {
+  const signedUrl = getCloudinaryReceiptViewUrl(path);
+
+  const response = await fetch(signedUrl);
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to read the existing receipt. Status: ${response.status}`,
+    );
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
 export async function uploadReceiptToCloudinary(input: {
   buffer: Buffer;
   mimeType: string;
@@ -142,6 +156,41 @@ export async function getReceiptViewUrl(
   }
 
   return getBlobReceiptViewUrl(ocrReceiptPath);
+}
+
+export async function getStoredReceiptBuffer(
+  receiptPath: string | null,
+): Promise<Buffer | null> {
+  if (!receiptPath) {
+    return null;
+  }
+
+  if (isCloudinaryPath(receiptPath)) {
+    return getCloudinaryReceiptBuffer(receiptPath);
+  }
+
+  const validUntil = Date.now() + RECEIPT_VIEW_TTL_MS;
+
+  const signedToken = await issueSignedToken({
+    pathname: receiptPath,
+    operations: ["get"],
+    validUntil,
+  });
+
+  const { presignedUrl } = await presignUrl(signedToken, {
+    pathname: receiptPath,
+    operation: "get",
+    access: "private",
+    validUntil,
+  });
+
+  const response = await fetch(presignedUrl);
+
+  if (!response.ok) {
+    throw new Error("Unable to read the existing receipt.");
+  }
+
+  return Buffer.from(await response.arrayBuffer());
 }
 
 export async function deleteStoredReceipt(path: string | null) {

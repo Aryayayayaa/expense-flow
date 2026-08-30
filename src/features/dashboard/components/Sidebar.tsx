@@ -78,13 +78,13 @@ export default function Sidebar({ userRole }: SidebarProps) {
             active={pathname === "/expenses"}
           />
 
-          <SidebarLink
+          {/* <SidebarLink
             href="/expenses/new"
             label="New Expense"
             tooltip="Create and submit a new expense"
             icon={<PlusIcon />}
             active={pathname === "/expenses/new"}
-          />
+          /> */}
 
           {/* ------------------------------------------------------------------ */}
           {/* Approvals                                                          */}
@@ -123,8 +123,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                     active={
                       pathname === "/reimbursements" &&
                       (!searchParams.get("reimbursementScope") ||
-                        searchParams.get("reimbursementScope") ===
-                          "EMPLOYEES")
+                        searchParams.get("reimbursementScope") === "EMPLOYEES")
                     }
                   />
 
@@ -149,8 +148,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                         icon={<span className="text-xs">•</span>}
                         active={
                           pathname === "/reimbursements" &&
-                          searchParams.get("reimbursementScope") ===
-                            "OTHER_HRS"
+                          searchParams.get("reimbursementScope") === "OTHER_HRS"
                         }
                       />
 
@@ -271,70 +269,68 @@ export default function Sidebar({ userRole }: SidebarProps) {
           {/* ------------------------------------------------------------------ */}
 
           {userRole === "ADMIN" && (
-  <>
-    {/* Main Administration Section */}
-    <SidebarLink
-      href="/admin"
-      label="Administration"
-      tooltip="Manage users, expenses, and administrative activities"
-      icon={<SettingsIcon />}
-      active={false}
-    />
+            <>
+              {/* Main Administration Section */}
+              <SidebarLink
+                href="/admin"
+                label="Administration"
+                tooltip="Manage users, expenses, and administrative activities"
+                icon={<SettingsIcon />}
+                active={false}
+              />
 
-    {/* Administration Submenus */}
-    {isAdminOpen && (
-      <div className="ml-6 mt-1 space-y-1">
-        {/* Default: Users */}
-        <SidebarLink
-          href="/admin?view=users"
-          label="Users"
-          tooltip="Manage users and their accounts"
-          icon={<span className="text-xs">•</span>}
-          active={
-            pathname === "/admin" &&
-            (
-              !searchParams.get("view") ||
-              searchParams.get("view") === "users"
-            )
-          }
-        />
+              {/* Administration Submenus */}
+              {isAdminOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  {/* Default: Users */}
+                  <SidebarLink
+                    href="/admin?view=users"
+                    label="Users"
+                    tooltip="Manage users and their accounts"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/admin" &&
+                      (!searchParams.get("view") ||
+                        searchParams.get("view") === "users")
+                    }
+                  />
 
-        <SidebarLink
-          href="/admin?view=employee-verification"
-          label="Employee Verification"
-          tooltip="Review employee verification requests"
-          icon={<span className="text-xs">•</span>}
-          active={
-            pathname === "/admin" &&
-            searchParams.get("view") === "employee-verification"
-          }
-        />
+                  <SidebarLink
+                    href="/admin?view=employee-verification"
+                    label="Employee Verification"
+                    tooltip="Review employee verification requests"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/admin" &&
+                      searchParams.get("view") === "employee-verification"
+                    }
+                  />
 
-        <SidebarLink
-          href="/admin?view=name-change"
-          label="Name Change Requests"
-          tooltip="Review name change requests"
-          icon={<span className="text-xs">•</span>}
-          active={
-            pathname === "/admin" &&
-            searchParams.get("view") === "name-change"
-          }
-        />
+                  <SidebarLink
+                    href="/admin?view=name-change"
+                    label="Name Change Requests"
+                    tooltip="Review name change requests"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/admin" &&
+                      searchParams.get("view") === "name-change"
+                    }
+                  />
 
-        <SidebarLink
-          href="/admin?view=role-verification"
-          label="Role Verification Requests"
-          tooltip="Review role verification requests"
-          icon={<span className="text-xs">•</span>}
-          active={
-            pathname === "/admin" &&
-            searchParams.get("view") === "role-verification"
-          }
-        />
-      </div>
-    )}
-  </>
-)}
+                  <SidebarLink
+                    href="/admin?view=role-verification"
+                    label="Role Verification Requests"
+                    tooltip="Review role verification requests"
+                    icon={<span className="text-xs">•</span>}
+                    active={
+                      pathname === "/admin" &&
+                      searchParams.get("view") === "role-verification"
+                    }
+                  />
+                </div>
+              )}
+            </>
+          )}
 
           {/* ------------------------------------------------------------------ */}
           {/* People Management                                                  */}
