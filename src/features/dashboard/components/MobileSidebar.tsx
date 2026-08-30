@@ -113,12 +113,12 @@ export default function MobileSidebar({
               icon={<ExpenseIcon />}
             />
 
-            <MobileNavLink
+            {/* <MobileNavLink
               href="/expenses/new"
               label="New Expense"
               onClick={closeMenu}
               icon={<PlusIcon />}
-            />
+            /> */}
 
             <MobileNavLink
               href="/approvals"
