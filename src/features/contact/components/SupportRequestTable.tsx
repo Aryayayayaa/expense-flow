@@ -52,33 +52,46 @@ export default function SupportRequestTable({
       : requests.filter((request) => request.status === statusFilter);
 
   return (
-    <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
-      <SupportRequestStatusFilter
-        value={statusFilter}
-        onChange={setStatusFilter}
-      />
+    <div className="w-full overflow-x-auto rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="m-2">
+        <SupportRequestStatusFilter
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+      </div>
 
       <table className="w-full min-w-[760px] text-left text-xs">
-        <thead className="border-b border-slate-200 bg-slate-50">
+        <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
           <tr>
-            <th className="px-4 py-3 font-semibold text-slate-700">Category</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              Category
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">Subject</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              Subject
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
               Created On
             </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">View</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              View
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              Status
+            </th>
           </tr>
         </thead>
 
         <tbody>
           {filteredRequests.length === 0 ? (
             <tr>
-              <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+              <td
+                colSpan={5}
+                className="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
+              >
                 No support requests found.
               </td>
             </tr>
@@ -86,24 +99,24 @@ export default function SupportRequestTable({
             filteredRequests.map((request) => (
               <tr
                 key={request.id}
-                className="border-b border-slate-100 last:border-b-0"
+                className="border-b border-slate-100 last:border-b-0 dark:border-slate-800"
               >
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
                   {formatCategory(request.category)}
                 </td>
 
-                <td className="px-4 py-3 font-medium text-slate-900">
+                <td className="px-4 py-3 font-medium text-slate-100">
                   {request.subject}
                 </td>
 
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                   {new Date(request.createdAt).toLocaleDateString()}
                 </td>
 
                 <td className="px-4 py-3">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                     onClick={() => setSelectedRequest(request)}
                   >
                     <Eye size={14} />
@@ -111,14 +124,14 @@ export default function SupportRequestTable({
                   </button>
                 </td>
 
-                <td className="px-4 py-3 font-medium text-slate-700">
+                <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">
                   {canUpdateStatus && mounted ? (
                     <SupportRequestStatusSelect
                       requestId={request.id}
                       currentStatus={request.status}
                     />
                   ) : (
-                    request.status.replaceAll("_", " ")
+                    formatCategory(request.status)
                   )}
                 </td>
               </tr>

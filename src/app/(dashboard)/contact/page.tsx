@@ -36,20 +36,20 @@ export default async function ContactSupportPage() {
       : [];
 
   return (
-    <div className="m-5 w-full">
+    <div className="m-3 w-full sm:m-5 sm:p-5 p-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white">
           Contact Support
         </h1>
 
-        <p className="mt-1 max-w-[650px] text-sm leading-5 text-slate-700">
+        <p className="mt-1 max-w-[650px] text-sm leading-5 text-slate-700 dark:text-slate-300">
           We're here to help. Reach out regarding issues with ExpenseFlow,
           billing inquiries, or general support.
         </p>
       </div>
 
-      <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_247px]">
-        <section className="rounded-md border border-[#d3d7e5] bg-white p-5">
+      <div className="mt-5 grid grid-cols-1 gap-5 sm:mt-7 lg:grid-cols-[minmax(0,1fr)_247px]">
+        <section className="rounded-md border border-[#d3d7e5] bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:p-5">
           <ContactPageClient
             role={role}
             requests={requests}

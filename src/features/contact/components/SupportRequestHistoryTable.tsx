@@ -108,41 +108,51 @@ export default function SupportRequestHistoryTable({
     useState<SupportRequestHistoryRow | null>(null);
 
   return (
-    <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
-      <DateFilter
-        value={dateFilter}
-        onChange={setDateFilter}
-        startDate={customStartDate}
-        endDate={customEndDate}
-        onStartDateChange={setCustomStartDate}
-        onEndDateChange={setCustomEndDate}
-        minDate={minDate}
-        maxDate={maxDate}
-      />
+    <div className="w-full overflow-x-auto rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="w-full p-4">
+        <DateFilter
+          value={dateFilter}
+          onChange={setDateFilter}
+          startDate={customStartDate}
+          endDate={customEndDate}
+          onStartDateChange={setCustomStartDate}
+          onEndDateChange={setCustomEndDate}
+          minDate={minDate}
+          maxDate={maxDate}
+        />
+      </div>
       <table className="w-full min-w-[1100px] text-left text-xs">
-        <thead className="border-b border-slate-200 bg-slate-50">
+        <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
           <tr>
-            <th className="px-4 py-3 font-semibold text-slate-700">Category</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              Category
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">Subject</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              Subject
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
               Created On
             </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">View</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              View
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+              Status
+            </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
               Resolved By
             </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
               Action Taken
             </th>
 
-            <th className="px-4 py-3 font-semibold text-slate-700">
+            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
               Closed On
             </th>
           </tr>
@@ -151,7 +161,10 @@ export default function SupportRequestHistoryTable({
         <tbody>
           {filteredRequests.length === 0 ? (
             <tr>
-              <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+              <td
+                colSpan={8}
+                className="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
+              >
                 No closed support requests found.
               </td>
             </tr>
@@ -159,15 +172,17 @@ export default function SupportRequestHistoryTable({
             filteredRequests.map((request) => (
               <tr
                 key={request.id}
-                className="border-b border-slate-100 last:border-b-0"
+                className="border-b border-slate-100 last:border-b-0 dark:border-slate-800"
               >
-                <td className="px-4 py-3 text-slate-700">{request.category}</td>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
+                  {request.category}
+                </td>
 
-                <td className="px-4 py-3 font-medium text-slate-900">
+                <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                   {request.subject}
                 </td>
 
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                   {new Date(request.createdAt).toLocaleDateString()}
                 </td>
 
@@ -175,24 +190,26 @@ export default function SupportRequestHistoryTable({
                   <button
                     type="button"
                     onClick={() => setSelectedRequest(request)}
-                    className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <Eye size={14} />
                     View
                   </button>
                 </td>
 
-                <td className="px-4 py-3 font-medium text-slate-700">Closed</td>
+                <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">
+                  Resolved
+                </td>
 
-                <td className="px-4 py-3 text-slate-700">
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
                   {request.resolvedByUser?.name ?? "—"}
                 </td>
 
-                <td className="max-w-[250px] px-4 py-3 text-slate-600">
+                <td className="max-w-[250px] px-4 py-3 text-slate-600 dark:text-slate-300">
                   {request.actionTaken ?? "—"}
                 </td>
 
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                   {request.resolvedAt
                     ? new Date(request.resolvedAt).toLocaleDateString()
                     : "—"}
@@ -205,14 +222,14 @@ export default function SupportRequestHistoryTable({
 
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                   Support Request
                 </h2>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Request #{selectedRequest.id}
                 </p>
               </div>
@@ -220,7 +237,7 @@ export default function SupportRequestHistoryTable({
               <button
                 type="button"
                 onClick={() => setSelectedRequest(null)}
-                className="text-sm font-medium text-slate-500 hover:text-slate-900"
+                className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
               >
                 Close
               </button>
@@ -228,18 +245,22 @@ export default function SupportRequestHistoryTable({
 
             <div className="mt-5 space-y-4 text-sm">
               <div>
-                <p className="text-xs font-medium text-slate-500">Employee</p>
-                <p className="mt-1 text-slate-900">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Employee
+                </p>
+                <p className="mt-1 text-slate-900 dark:text-slate-100">
                   {selectedRequest.user?.name ?? "—"}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {selectedRequest.user?.email ?? "—"}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-slate-500">Category</p>
-                <p className="mt-1 text-slate-900">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Category
+                </p>
+                <p className="mt-1 text-slate-900 dark:text-slate-100">
                   {selectedRequest.category
                     .replace(/[-_]+/g, " ")
                     .replace(/\b\w/g, (letter) => letter.toUpperCase())}
@@ -247,41 +268,47 @@ export default function SupportRequestHistoryTable({
               </div>
 
               <div>
-                <p className="text-xs font-medium text-slate-500">Subject</p>
-                <p className="mt-1 text-slate-900">{selectedRequest.subject}</p>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Subject
+                </p>
+                <p className="mt-1 text-slate-900 dark:text-slate-100">
+                  {selectedRequest.subject}
+                </p>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-slate-500">Message</p>
-                <div className="mt-1 max-h-40 overflow-y-auto rounded-md bg-slate-50 p-3 whitespace-pre-wrap text-slate-700">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Message
+                </p>
+                <div className="mt-1 max-h-40 overflow-y-auto rounded-md bg-slate-50 p-3 whitespace-pre-wrap text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   {selectedRequest.message}
                 </div>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Action Taken
                 </p>
-                <div className="mt-1 rounded-md bg-slate-50 p-3 whitespace-pre-wrap text-slate-700">
+                <div className="mt-1 rounded-md bg-slate-50 p-3 whitespace-pre-wrap text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   {selectedRequest.actionTaken ?? "—"}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-slate-500">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     Resolved By
                   </p>
-                  <p className="mt-1 text-slate-900">
+                  <p className="mt-1 text-slate-900 dark:text-slate-100">
                     {selectedRequest.resolvedByUser?.name ?? "—"}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-slate-500">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     Closed On
                   </p>
-                  <p className="mt-1 text-slate-900">
+                  <p className="mt-1 text-slate-900 dark:text-slate-100">
                     {selectedRequest.resolvedAt
                       ? new Date(selectedRequest.resolvedAt).toLocaleString()
                       : "—"}

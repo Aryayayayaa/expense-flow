@@ -35,7 +35,7 @@ export default function SupportRequestForm() {
       <div className="mt-5">
         <label
           htmlFor="category"
-          className="mb-2 block text-xs font-medium text-slate-900"
+          className="mb-2 block text-xs font-medium text-slate-900 dark:text-slate-100"
         >
           Category
         </label>
@@ -46,7 +46,7 @@ export default function SupportRequestForm() {
             name="category"
             defaultValue=""
             required
-            className="h-8 w-full appearance-none rounded-[3px] border border-[#d0d4e2] bg-white px-3 pr-9 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            className="h-8 w-full appearance-none rounded-[3px] border border-[#d0d4e2] bg-white px-3 pr-9 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
           >
             <option value="" disabled>
               Select a category...
@@ -59,7 +59,7 @@ export default function SupportRequestForm() {
             <option value="technical">Technical Issue</option>
             <option value="other">Other</option>
           </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600 dark:text-slate-300" />
         </div>
         {state.errors.category && (
           <p className="mt-1 text-xs text-red-600">
@@ -83,7 +83,7 @@ export default function SupportRequestForm() {
           type="text"
           placeholder="Brief summary of your inquiry"
           required
-          className="h-8 w-full rounded-[3px] border border-[#d0d4e2] bg-white px-3 text-xs text-slate-700 outline-none placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className="h-8 w-full rounded-[3px] border border-[#d0d4e2] bg-white px-3 text-xs text-slate-700 outline-none placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
         />
       </div>
 
@@ -106,7 +106,7 @@ export default function SupportRequestForm() {
           rows={5}
           placeholder="Describe your issue or question in detail..."
           required
-          className="w-full resize-none rounded-[3px] border border-[#d0d4e2] bg-white px-3 py-2 text-xs leading-5 text-slate-700 outline-none placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className="w-full resize-none rounded-[3px] border border-[#d0d4e2] bg-white px-3 py-2 text-xs leading-5 text-slate-700 outline-none placeholder:text-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
         />
         {state.errors.message && (
           <p className="mt-1 text-xs text-red-600">{state.errors.message[0]}</p>
@@ -118,8 +118,8 @@ export default function SupportRequestForm() {
         <div
           className={`mt-5 rounded-md p-3 text-xs ${
             state.success
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700"
+              ? "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"
+              : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
           }`}
         >
           {state.message}
@@ -129,7 +129,7 @@ export default function SupportRequestForm() {
       {/* Submit */}
       <button
         type="submit"
-        className="mt-7 inline-flex h-8 items-center justify-center rounded-[3px] bg-indigo-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        className="mt-7 inline-flex h-9 w-full items-center justify-center rounded-[3px] bg-indigo-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:h-8 sm:w-auto"
         disabled={pending}
       >
         {pending ? "Sending..." : "Send Message"}
