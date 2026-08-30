@@ -187,7 +187,7 @@ export default function MobileSidebar({
 
           <MobileNavLink
             href="/contact"
-            label={userRole === "EMPLOYEE" ? "Contact" : "Contact Requests"}
+            label={userRole === "EMPLOYEE" ? "Contact Us" : "Contact Support"}
             onClick={closeMenu}
             icon={<ContactIcon />}
           />

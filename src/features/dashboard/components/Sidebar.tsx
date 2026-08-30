@@ -409,7 +409,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
         <SidebarLink
           href="/contact"
-          label={userRole === "EMPLOYEE" ? "Contact" : "Contact Requests"}
+          label={userRole === "EMPLOYEE" ? "Contact Us" : "Contact Support"}
           tooltip={
             userRole === "EMPLOYEE"
               ? "Contact support regarding an issue or question"
