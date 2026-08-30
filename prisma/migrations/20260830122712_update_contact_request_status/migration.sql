@@ -6,7 +6,7 @@
 */
 -- AlterEnum
 BEGIN;
-CREATE TYPE "public"."ContactRequestStatus_new" AS ENUM ('NEW', 'IN_PROGRESS', 'AWAITING_INFO', 'RESOLVED', 'CLOSED');
+CREATE TYPE "public"."ContactRequestStatus_new" AS ENUM ('NEW', 'IN_PROGRESS', 'AWAITING_INFO', 'RESOLVED');
 ALTER TABLE "public"."ContactRequest" ALTER COLUMN "status" DROP DEFAULT;
 ALTER TABLE "public"."ContactRequest" ALTER COLUMN "status" TYPE "public"."ContactRequestStatus_new" USING ("status"::text::"public"."ContactRequestStatus_new");
 ALTER TYPE "public"."ContactRequestStatus" RENAME TO "ContactRequestStatus_old";
