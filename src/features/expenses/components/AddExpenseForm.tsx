@@ -453,7 +453,18 @@ export default function AddExpenseForm({
       result = await createExpenseAction(null, formData);
 
       if (!result.success) {
-        setState(result);
+        setState({
+          ...result,
+          success: false,
+          message:
+            "Failed to save the expense. Please try again in a few minutes. Redirecting you to the Expenses page.",
+        });
+
+        setTimeout(() => {
+          onClose?.();
+          router.push("/expenses");
+        }, 1500);
+
         return;
       }
 
@@ -476,22 +487,35 @@ export default function AddExpenseForm({
             ...result,
             success: false,
             message:
-              "Expense was created, but the original receipt could not be saved.",
+              "Failed to save the expense. Please try again in a few minutes. Redirecting you to the Expenses page.",
           });
+
+          setTimeout(() => {
+            onClose?.();
+            router.push("/expenses");
+          }, 1500);
 
           return;
         }
       }
 
-      /*
-       * =========================================================
+      /* =========================================================
        * CREATION SUCCESS
-       * =========================================================
-       */
-      setState(result);
-      onSuccess?.();
-      onClose?.();
-      router.refresh();
+       * ========================================================= */
+      setState({
+        ...result,
+        success: true,
+        message: "Expense created successfully.",
+      });
+
+      setTimeout(() => {
+        onSuccess?.();
+        onClose?.();
+
+        if (result.expenseId) {
+          router.push(`/expenses/${result.expenseId}`);
+        }
+      }, 1500);
     } catch (error) {
       console.error("Expense submission error:", error);
 
