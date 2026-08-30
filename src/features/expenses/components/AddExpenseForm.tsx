@@ -601,7 +601,12 @@ export default function AddExpenseForm({
 
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  accept="
+                    image/jpg,
+                    image/jpeg,
+                    image/png,
+                    image/webp,
+                    application/pdf"
                   disabled={pending || replacingReceipt}
                   className="hidden"
                   onChange={async (event) => {

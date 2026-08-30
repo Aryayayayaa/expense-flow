@@ -137,7 +137,7 @@ export default function ProfileImageEditor({ currentImage }: Props) {
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpg,image/jpeg,image/png,image/webp"
             onChange={handleImageChange}
             className="hidden"
           />

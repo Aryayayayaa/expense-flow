@@ -127,7 +127,7 @@ export default function ReceiptOcrUpload({
         accept="image/jpeg,image/png,image/webp,application/pdf"
         disabled={processing}
         onChange={handleFileChange}
-        className="block w-full text-sm"
+        className="block w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 transition hover:border-blue-400 hover:bg-blue-50 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
       />
 
       {processing && (

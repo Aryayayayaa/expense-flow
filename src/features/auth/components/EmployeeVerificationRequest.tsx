@@ -228,12 +228,17 @@ export default function EmployeeVerificationRequest({
 
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
+                accept="
+                  image/jpg,
+                  image/jpeg,
+                  image/png,
+                  image/webp,
+                  application/pdf"
                 disabled={submitting}
                 onChange={(event) => {
                   setFile(event.target.files?.[0] ?? null);
                 }}
-                className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-900"
+                className="mt-3 block w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 transition hover:border-blue-400 hover:bg-blue-50 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-slate-700"
               />
             </div>
 
