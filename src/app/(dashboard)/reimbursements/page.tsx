@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import Pagination from "@/components/common/Pagination";
 
 import ReimbursementHistoryTable from "@/features/expenses/components/ReimbursementHistoryTable";
-import ReimbursementScopeSelector from "@/features/expenses/components/ReimbursementScopeSelector";
+//import ReimbursementScopeSelector from "@/features/expenses/components/ReimbursementScopeSelector";
 import ReimbursementTable from "@/features/expenses/components/ReimbursementTable";
 
 import {
@@ -123,11 +123,6 @@ export default async function ReimbursementsPage({
         </div>
 
         {/* ---------------------------------------------------------------- */}
-        {/* Expense Scope                                                     */}
-        {/* ---------------------------------------------------------------- */}
-
-
-        {/* ---------------------------------------------------------------- */}
         {/* Pending Reimbursement Approvals                                  */}
         {/* ---------------------------------------------------------------- */}
 
@@ -137,7 +132,7 @@ export default async function ReimbursementsPage({
               Pending Reimbursement Approvals
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Review approved expenses that are waiting to be reimbursed. You
               can review the expense proof and approve or reject the
               reimbursement.
@@ -167,7 +162,7 @@ export default async function ReimbursementsPage({
               Reimbursement History
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Review reimbursements that have already been processed, including
               approval and processing details.
             </p>
