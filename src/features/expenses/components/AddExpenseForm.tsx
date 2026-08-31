@@ -88,6 +88,10 @@ export default function AddExpenseForm({
     url: string;
     path: string;
   } | null>(null);
+  const pendingReceiptRef = useRef<{
+    url: string;
+    path: string;
+  } | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -148,11 +152,62 @@ export default function AddExpenseForm({
     return date.toISOString();
   }
 
-  /*
-   * ---------------------------------------------------------
-   * RESET FORM
-   * ---------------------------------------------------------
-   */
+  async function discardPendingReceipt() {
+    const receiptToDelete = pendingReceiptRef.current;
+
+    if (!receiptToDelete || !editingExpense) {
+      return;
+    }
+
+    /*
+     * Clear client state immediately.
+     */
+    setPendingReceipt(null);
+    pendingReceiptRef.current = null;
+    setReceiptFile(null);
+    setReceiptChanged(false);
+
+    try {
+      await fetch(`/api/expenses/${editingExpense.id}/ocr-receipt`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          path: receiptToDelete.path,
+        }),
+      });
+    } catch (error) {
+      console.error("Unable to delete pending receipt:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (!editingExpense) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape" || pending) {
+        return;
+      }
+
+      void (async () => {
+        await discardPendingReceipt();
+
+        resetForm();
+        onClose?.();
+      })();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [editingExpense, pending, onClose]);
+
+  // RESET FORM
   function resetForm() {
     originalEditValuesRef.current = null;
     setTitle("");
@@ -174,6 +229,11 @@ export default function AddExpenseForm({
     setState(initialState);
 
     setCurrency(defaultCurrency);
+
+    setPendingReceipt(null);
+    pendingReceiptRef.current = null;
+
+    setReceiptChanged(false);
   }
 
   /*
@@ -267,6 +327,7 @@ export default function AddExpenseForm({
     setReceiptChanged(false);
     setReceiptMessage("");
     setPendingReceipt(null);
+    pendingReceiptRef.current = null;
 
     //Scroll the edit form into view.
 
@@ -387,23 +448,12 @@ export default function AddExpenseForm({
 
       let result;
 
-      /*
-       * =========================================================
-       * EDIT EXISTING EXPENSE
-       * =========================================================
-       *
-       * THIS IS THE IMPORTANT FIX.
-       *
-       * Before:
-       *
-       *     updateExpenseAction(...)
-       *
-       * which resulted in a POST.
-       *
-       * Now:
-       *
-       *     PATCH /api/expenses/:id
-       */
+      if (editingExpense && pendingReceipt) {
+        formData.set("ocrReceiptUrl", pendingReceipt.url);
+        formData.set("ocrReceiptPath", pendingReceipt.path);
+        formData.set("ocrRawText", ocrResult?.rawText ?? "");
+      }
+
       if (editingExpense) {
         const response = await fetch(`/api/expenses/${editingExpense.id}`, {
           method: "PATCH",
@@ -427,12 +477,18 @@ export default function AddExpenseForm({
 
         setState(result);
 
-        /*
-         * Give the user a short moment to see the
-         * successful update message.
-         */
+        //Give the user a short moment to see the successful update message.
+
         setTimeout(() => {
+          // The pending receipt has now been saved to the database.
+          // Clear only the client-side pending state.
+          setPendingReceipt(null);
+          pendingReceiptRef.current = null;
+          setReceiptFile(null);
+          setReceiptChanged(false);
+
           resetForm();
+
           onSuccess?.();
           onClose?.();
           router.refresh();
@@ -586,9 +642,18 @@ export default function AddExpenseForm({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {editingExpense.ocrReceiptPath && (
+              {pendingReceipt ? (
+                <a
+                  href={pendingReceipt.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  View Replacement
+                </a>
+              ) : editingExpense.ocrReceiptPath ? (
                 <ReceiptViewerButton expenseId={editingExpense.id} />
-              )}
+              ) : null}
 
               <label
                 className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-gray-50 ${
@@ -640,6 +705,7 @@ export default function AddExpenseForm({
                         if (result.sameContent) {
                           setReceiptFile(null);
                           setPendingReceipt(null);
+                          pendingReceiptRef.current = null;
                           setReceiptChanged(false);
 
                           setReceiptMessage(
@@ -657,6 +723,7 @@ export default function AddExpenseForm({
 
                         setReceiptFile(file);
                         setPendingReceipt(uploaded);
+                        pendingReceiptRef.current = uploaded;
                         setReceiptChanged(true);
 
                         setReceiptMessage(
@@ -672,6 +739,7 @@ export default function AddExpenseForm({
 
                         setReceiptFile(null);
                         setPendingReceipt(null);
+                        pendingReceiptRef.current = null;
                         setReceiptChanged(false);
 
                         setReceiptMessage(
@@ -908,7 +976,11 @@ export default function AddExpenseForm({
             type="button"
             variant="secondary"
             className="w-full"
-            onClick={resetForm}
+            onClick={async () => {
+              await discardPendingReceipt();
+              resetForm();
+              onClose?.();
+            }}
           >
             Cancel Editing
           </Button>

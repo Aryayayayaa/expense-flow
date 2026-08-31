@@ -225,6 +225,16 @@ export async function getExpenses(
     }),
   );
 
+  console.log(
+    "RECEIPT DATA:",
+    serializedExpenses.map((expense) => ({
+      id: expense.id,
+      title: expense.title,
+      ocrReceiptUrl: expense.ocrReceiptUrl,
+      ocrReceiptPath: expense.ocrReceiptPath,
+    })),
+  );
+
   return {
     expenses: serializedExpenses,
     total,

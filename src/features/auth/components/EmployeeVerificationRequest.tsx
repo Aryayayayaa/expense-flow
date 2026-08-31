@@ -37,6 +37,12 @@ export default function EmployeeVerificationRequest({
   const canSubmit =
     !hasReachedMaximumAttempts && status !== "APPROVED" && status !== "PENDING";
 
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0] ?? null;
+    setFile(selectedFile);
+    setMessage("");
+  }
+
   async function handleViewProof() {
     if (!requestId) {
       setMessage("Verification proof is not available.");
@@ -230,22 +236,29 @@ export default function EmployeeVerificationRequest({
                 Upload JPG, PNG, WEBP, or PDF. Maximum size: 10 MB.
               </p>
 
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                disabled={submitting}
-                onChange={(event) => {
-                  setFile(event.target.files?.[0] ?? null);
-                }}
-                className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-300dark:text-slate-400 dark:text-slate-300 dark:text-white"
-              />
-            </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <label
+                  htmlFor="employee-verification-file"
+                  className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
+                >
+                  Choose Verification File
+                </label>
 
-            {file && (
-              <p className="text-sm text-slate-500 dark:text-slate-300dark:text-slate-400 dark:text-slate-300 dark:text-white">
-                Selected: {file.name}
-              </p>
-            )}
+                <input
+                  id="employee-verification-file"
+                  type="file"
+                  accept="image/jpeg,image/jpg, image/png,image/webp,application/pdf, .docx, .doc"
+                  onChange={handleFileChange}
+                  className="sr-only"
+                />
+
+                {file && (
+                  <span className="max-w-full truncate text-sm text-slate-600 dark:text-slate-300">
+                    {file.name}
+                  </span>
+                )}
+              </div>
+            </div>
 
             <button
               type="button"
