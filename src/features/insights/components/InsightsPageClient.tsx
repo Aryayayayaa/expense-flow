@@ -464,29 +464,6 @@ export default function InsightsPageClient({
   }[] =
     role === "ADMIN"
       ? [
-        {
-          value: "OWN",
-          label: "OWN",
-        },
-        {
-          value: "ALL",
-          label: "ALL",
-        },
-        {
-          value: "EMPLOYEES",
-          label: "EMPLOYEES",
-        },
-        {
-          value: "OTHER_ADMINS",
-          label: "OTHER ADMINS",
-        },
-        {
-          value: "HRS",
-          label: "HRs",
-        },
-      ]
-      : role === "HR"
-        ? [
           {
             value: "OWN",
             label: "OWN",
@@ -500,14 +477,37 @@ export default function InsightsPageClient({
             label: "EMPLOYEES",
           },
           {
-            value: "OTHER_HRS",
-            label: "OTHER HRs",
+            value: "OTHER_ADMINS",
+            label: "OTHER ADMINS",
           },
           {
-            value: "ADMINS",
-            label: "ADMINS",
+            value: "HRS",
+            label: "HRs",
           },
         ]
+      : role === "HR"
+        ? [
+            {
+              value: "OWN",
+              label: "OWN",
+            },
+            {
+              value: "ALL",
+              label: "ALL",
+            },
+            {
+              value: "EMPLOYEES",
+              label: "EMPLOYEES",
+            },
+            {
+              value: "OTHER_HRS",
+              label: "OTHER HRs",
+            },
+            {
+              value: "ADMINS",
+              label: "ADMINS",
+            },
+          ]
         : [];
 
   /* ---------------------------------------------------------------------- */
@@ -520,7 +520,7 @@ export default function InsightsPageClient({
         <div className="mb-6 max-w-xs">
           <label
             htmlFor="insights-scope"
-            className="text-sm font-medium text-slate-600"
+            className="text-sm font-medium text-slate-600 dark:text-slate-300"
           >
             Expense Scope
           </label>
@@ -531,7 +531,7 @@ export default function InsightsPageClient({
             onChange={(event) => {
               router.push(`/insights?scope=${event.target.value}`);
             }}
-            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+            className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
           >
             {scopeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -573,14 +573,15 @@ export default function InsightsPageClient({
       />
 
       <div className="mt-6">
-        <div className="mb-6 flex items-center gap-2 border-b border-slate-200">
+        <div className="mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => setActiveTab("analysis")}
-            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "analysis"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
+              activeTab === "analysis"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
           >
             Analysis
           </button>
@@ -588,10 +589,11 @@ export default function InsightsPageClient({
           <button
             type="button"
             onClick={() => setActiveTab("reports")}
-            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "reports"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+            className={`border-b-2 px-4 py-3 text-sm font-medium transition ${
+              activeTab === "reports"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
           >
             Reports
           </button>
@@ -636,24 +638,24 @@ function InsightsAnalysis({
   defaultCurrency,
   appliedFilters,
 }: InsightsAnalysisProps) {
-  const [activeTab, setActiveTab] = useState<
-    "categories" | "monthly" | "yearly"
-  >("categories");
+  const [activeTab, setActiveTab] = useState<"categories" | "monthly-yearly">(
+    "categories",
+  );
 
   return (
     <div>
       <AnalyticsTabs activeTab={activeTab} onChange={setActiveTab} />
 
-      <div className="rounded-lg border bg-white p-8 shadow">
+      <div className="rounded-lg border border-slate-200 bg-white p-8 shadow dark:border-slate-700 dark:bg-slate-900">
         {activeTab === "categories" && (
           <div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                   Category Breakdown
                 </h2>
 
-                <p className="mt-2 text-gray-500">
+                <p className="mt-2 text-gray-500 dark:text-slate-400">
                   See how your total expenses are distributed across categories.
                 </p>
               </div>
@@ -662,10 +664,14 @@ function InsightsAnalysis({
                 {appliedFilters.map((filter) => (
                   <span
                     key={filter.key}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-slate-700 "
+                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-blue-950 dark:text-blue-200"
                   >
-                    <span className="text-slate-900">{filter.label}</span>
-                    <span className="text-slate-500">{filter.value}</span>
+                    <span className="text-slate-900 dark:text-blue-100">
+                      {filter.label}
+                    </span>
+                    <span className="text-slate-500 dark:text-blue-300">
+                      {filter.value}
+                    </span>
                   </span>
                 ))}
               </div>
@@ -678,10 +684,10 @@ function InsightsAnalysis({
               />
             </div>
 
-            <div className="mt-10 border-t pt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                 Category Comparison
-              </h3>
+              </h2>
 
               <p className="mt-2 text-sm text-gray-500">
                 Compare total spending across expense categories.
@@ -698,82 +704,81 @@ function InsightsAnalysis({
           </div>
         )}
 
-        {activeTab === "monthly" && (
+        {activeTab === "monthly-yearly" && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Monthly Trends
-            </h2>
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
+                Monthly and Yearly Graphs
+              </h2>
 
-            <p className="mt-2 text-gray-500">
-              Track your total spending and category-wise spending over time.
-            </p>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Total Monthly Expenses
-              </h3>
-
-              <MonthlyTrendChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            </div>
-
-            <div className="mt-10 border-t pt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Monthly Expenses by Category
-              </h3>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Compare how each expense category changes month by month.
+              <p className="mt-2 text-gray-500 dark:text-slate-400">
+                Track total spending and category-wise spending across months
+                and years.
               </p>
-
-              <MonthlyCategoryTrendChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "yearly" && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Yearly Trends
-            </h2>
-
-            <p className="mt-2 text-gray-500">
-              Track your total spending and category-wise spending across years.
-            </p>
-
-            <div className="m-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Total Yearly Expenses
-              </h3>
-
-              <YearlyTrendChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
             </div>
 
-            <div className="mt-10 border-t pt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Yearly Expenses by Category
-              </h3>
+            {/* Total Monthly / Total Yearly */}
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                  Total Monthly Expense
+                </h3>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Compare category-wise spending across different years.
-              </p>
+                <MonthlyTrendChart
+                  expenses={expenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
 
-              <YearlyCategoryChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                  Total Yearly Expenses
+                </h3>
+
+                <YearlyTrendChart
+                  expenses={expenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
+            </div>
+
+            {/* Monthly Category / Yearly Category */}
+            <div className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-700">
+              <div className="grid gap-8 lg:grid-cols-2">
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                    Monthly Expenses By Category
+                  </h3>
+
+                  <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                    Compare how each expense category changes month by month.
+                  </p>
+
+                  <MonthlyCategoryTrendChart
+                    expenses={expenses}
+                    selectedCurrency={selectedCurrency}
+                    defaultCurrency={defaultCurrency}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                    Yearly Expenses By Category
+                  </h3>
+
+                  <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                    Compare category-wise spending across different years.
+                  </p>
+
+                  <YearlyCategoryChart
+                    expenses={expenses}
+                    selectedCurrency={selectedCurrency}
+                    defaultCurrency={defaultCurrency}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}

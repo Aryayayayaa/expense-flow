@@ -113,12 +113,12 @@ export default function MobileSidebar({
               icon={<ExpenseIcon />}
             />
 
-            <MobileNavLink
+            {/* <MobileNavLink
               href="/expenses/new"
               label="New Expense"
               onClick={closeMenu}
               icon={<PlusIcon />}
-            />
+            /> */}
 
             <MobileNavLink
               href="/approvals"
@@ -169,23 +169,32 @@ export default function MobileSidebar({
                 icon={<SettingsIcon />}
               />
             )}
-
-            <MobileNavLink
-              href="/profile"
-              label="Profile"
-              onClick={closeMenu}
-              icon={<ProfileIcon />}
-            />
           </div>
         </nav>
 
-        {/* Theme + Logout */}
+        {/* Theme + Contact + Logout */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-slate-200 p-4 dark:border-slate-800">
           <div className="mb-2">
             <ThemeToggle />
           </div>
 
-          <LogoutButton />
+          <MobileNavLink
+            href="/profile"
+            label="Profile"
+            onClick={closeMenu}
+            icon={<ProfileIcon />}
+          />
+
+          <MobileNavLink
+            href="/contact"
+            label={userRole === "EMPLOYEE" ? "Contact Us" : "Contact Support"}
+            onClick={closeMenu}
+            icon={<ContactIcon />}
+          />
+
+          <div className="mt-2">
+            <LogoutButton />
+          </div>
         </div>
       </aside>
     </>
@@ -480,6 +489,24 @@ function RequestsIcon() {
       <path d="M9 7h6" />
       <path d="M9 11h6" />
       <path d="M9 15h4" />
+    </svg>
+  );
+}
+
+function ContactIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
     </svg>
   );
 }

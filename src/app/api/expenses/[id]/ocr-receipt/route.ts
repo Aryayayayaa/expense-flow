@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { createHash } from "crypto";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -8,7 +9,9 @@ import {
   isSupportedReceiptMimeType,
 } from "@/features/expenses/lib/receipt-constants";
 import {
+  deleteStoredReceipt,
   getReceiptViewUrl,
+  getStoredReceiptBuffer,
   uploadReceiptToCloudinary,
 } from "@/features/expenses/lib/receipt-storage";
 
@@ -17,6 +20,10 @@ type RouteContext = {
     id: string;
   }>;
 };
+
+function getFileHash(buffer: Buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
 
 export async function GET(request: Request, { params }: RouteContext) {
   try {
@@ -82,6 +89,107 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     return NextResponse.json(
       { error: "Unable to access original receipt." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(request: Request, { params }: RouteContext) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const expenseId = Number(id);
+
+    if (!Number.isInteger(expenseId)) {
+      return NextResponse.json(
+        { error: "Invalid expense ID." },
+        { status: 400 },
+      );
+    }
+
+    const userId = Number(session.user.id);
+    const role = session.user.role;
+
+    const expense = await prisma.expense.findUnique({
+      where: {
+        id: expenseId,
+      },
+      select: {
+        userId: true,
+        status: true,
+        ocrReceiptPath: true,
+      },
+    });
+
+    if (!expense) {
+      return NextResponse.json(
+        { error: "Expense not found." },
+        { status: 404 },
+      );
+    }
+
+    if (expense.status !== "PENDING") {
+      return NextResponse.json(
+        {
+          error: "Only pending expenses can have their receipt updated.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (role !== "ADMIN" && expense.userId !== userId) {
+      return NextResponse.json(
+        {
+          error: "You are not authorized to compare this expense receipt.",
+        },
+        { status: 403 },
+      );
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: "A receipt file is required." },
+        { status: 400 },
+      );
+    }
+
+    const newBuffer = Buffer.from(await file.arrayBuffer());
+    const newHash = getFileHash(newBuffer);
+
+    if (!expense.ocrReceiptPath) {
+      return NextResponse.json({
+        sameContent: false,
+      });
+    }
+
+    const existingBuffer = await getStoredReceiptBuffer(expense.ocrReceiptPath);
+
+    if (!existingBuffer) {
+      return NextResponse.json({
+        sameContent: false,
+      });
+    }
+
+    const existingHash = getFileHash(existingBuffer);
+
+    return NextResponse.json({
+      sameContent: existingHash === newHash,
+    });
+  } catch (error) {
+    console.error("Receipt comparison error:", error);
+
+    return NextResponse.json(
+      {
+        error: "Unable to compare the receipt.",
+      },
       { status: 500 },
     );
   }
@@ -188,6 +296,106 @@ export async function POST(request: Request, { params }: RouteContext) {
           error instanceof Error
             ? error.message
             : "Unable to upload original receipt.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: RouteContext) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const expenseId = Number(id);
+
+    if (!Number.isInteger(expenseId)) {
+      return NextResponse.json(
+        { error: "Invalid expense ID." },
+        { status: 400 },
+      );
+    }
+
+    const userId = Number(session.user.id);
+    const role = session.user.role;
+
+    const expense = await prisma.expense.findUnique({
+      where: {
+        id: expenseId,
+      },
+      select: {
+        userId: true,
+        status: true,
+        ocrReceiptPath: true,
+      },
+    });
+
+    if (!expense) {
+      return NextResponse.json(
+        { error: "Expense not found." },
+        { status: 404 },
+      );
+    }
+
+    if (expense.status !== "PENDING") {
+      return NextResponse.json(
+        { error: "Only pending expenses can have their receipt updated." },
+        { status: 400 },
+      );
+    }
+
+    if (role !== "ADMIN" && expense.userId !== userId) {
+      return NextResponse.json(
+        { error: "You are not authorized to modify this receipt." },
+        { status: 403 },
+      );
+    }
+
+    const body = await request.json();
+
+    const path = typeof body.path === "string" ? body.path : "";
+
+    if (!path) {
+      return NextResponse.json(
+        { error: "Receipt path is required." },
+        { status: 400 },
+      );
+    }
+
+    /*
+     * IMPORTANT:
+     *
+     * Never delete the receipt currently stored in the database.
+     *
+     * This endpoint is only for cleaning up a newly uploaded
+     * replacement that has NOT yet been saved.
+     */
+    if (path === expense.ocrReceiptPath) {
+      return NextResponse.json({
+        success: true,
+        deleted: false,
+      });
+    }
+
+    await deleteStoredReceipt(path);
+
+    return NextResponse.json({
+      success: true,
+      deleted: true,
+    });
+  } catch (error) {
+    console.error("Pending receipt deletion error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to delete pending receipt.",
       },
       { status: 500 },
     );

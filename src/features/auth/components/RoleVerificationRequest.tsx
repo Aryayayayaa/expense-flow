@@ -21,6 +21,12 @@ export default function RoleVerificationRequest({
     return null;
   }
 
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0] ?? null;
+    setFile(selectedFile);
+    setMessage("");
+  }
+
   async function handleSubmit() {
     if (!file) {
       setMessage("Please upload proof before submitting.");
@@ -73,20 +79,20 @@ export default function RoleVerificationRequest({
   }
 
   return (
-    <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="text-xl font-semibold text-slate-900 dark:text-white">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
           Request Role Verification
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Submit proof if you need ADMIN or HR privileges.
         </p>
       </div>
 
       <div className="mt-6 space-y-5">
         <div>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Requested Role
           </label>
 
@@ -96,7 +102,7 @@ export default function RoleVerificationRequest({
               setRequestedRole(event.target.value as "ADMIN" | "HR")
             }
             disabled={submitting}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="HR">HR</option>
@@ -104,28 +110,37 @@ export default function RoleVerificationRequest({
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Verification Proof
           </label>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Upload a JPG, PNG, WEBP image, or PDF document.
           </p>
 
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            disabled={submitting}
-            onChange={(event) => {
-              setFile(event.target.files?.[0] ?? null);
-            }}
-            className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-900"
-          />
-        </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <label
+              htmlFor="role-verification-file"
+              className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
+            >
+              Choose Verification File
+            </label>
 
-        {file && (
-          <p className="text-sm text-slate-600">Selected: {file.name}</p>
-        )}
+            <input
+              id="role-verification-file"
+              type="file"
+              accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf,.docx,.doc"
+              onChange={handleFileChange}
+              className="sr-only"
+            />
+
+            {file && (
+              <span className="max-w-full truncate text-sm text-slate-600 dark:text-slate-300">
+                {file.name}
+              </span>
+            )}
+          </div>
+        </div>
 
         <button
           type="button"
@@ -136,7 +151,11 @@ export default function RoleVerificationRequest({
           {submitting ? "Submitting..." : "Submit Verification Request"}
         </button>
 
-        {message && <p className="text-sm text-slate-600">{message}</p>}
+        {message && (
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );

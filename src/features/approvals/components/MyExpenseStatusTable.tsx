@@ -26,7 +26,7 @@ export default function MyExpenseStatusTable({
 
   if (expenses.length === 0) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 shadow-sm">
         <div className="p-8 text-center text-sm text-slate-500">
           You have not submitted any expenses yet.
         </div>
@@ -76,44 +76,46 @@ export default function MyExpenseStatusTable({
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
               <tr>
-                <th className="px-5 py-4 font-semibold text-slate-700">
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Expense
                 </th>
 
-                <th className="px-5 py-4 font-semibold text-slate-700">
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Amount
                 </th>
 
-                <th className="px-5 py-4 font-semibold text-slate-700">
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Category
                 </th>
 
-                <th className="px-5 py-4 font-semibold text-slate-700">Date</th>
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
+                  Date
+                </th>
 
-                <th className="px-5 py-4 font-semibold text-slate-700">
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Approval Status
                 </th>
 
-                <th className="px-5 py-4 font-semibold text-slate-700">
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Reimbursement Status
                 </th>
 
-                <th className="px-5 py-4 font-semibold text-slate-700">
+                <th className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Decision Date
                 </th>
 
-                <th className="px-5 py-4 text-right font-semibold text-slate-700">
+                <th className="px-5 py-4 text-right font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-200">
                   Action
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {expenses.map((expense) => (
                 <tr
                   key={expense.id}
@@ -126,24 +128,24 @@ export default function MyExpenseStatusTable({
                   }}
                   tabIndex={0}
                   role="link"
-                  className="cursor-pointer transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                  className="cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                   aria-label={`View expense ${expense.title}`}
                 >
                   <td className="px-5 py-4">
-                    <span className="font-medium text-slate-900">
+                    <span className="font-medium text-slate-900 dark:text-slate-100">
                       {expense.title}
                     </span>
                   </td>
 
-                  <td className="px-5 py-4 text-slate-700">
+                  <td className="px-5 py-4 text-slate-700 dark:text-slate-300 dark:text-slate-200">
                     {formatCurrency(expense.amount, expense.currency)}
                   </td>
 
-                  <td className="px-5 py-4 text-slate-600">
+                  <td className="px-5 py-4 text-slate-600 dark:text-white">
                     {expense.category}
                   </td>
 
-                  <td className="px-5 py-4 text-slate-600">
+                  <td className="px-5 py-4 text-slate-600 dark:text-white">
                     {expense.expenseDate
                       ? expense.expenseDate.toLocaleDateString("en-GB")
                       : "—"}
@@ -153,10 +155,10 @@ export default function MyExpenseStatusTable({
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                         expense.status === "APPROVED"
-                          ? "bg-green-100 text-green-700"
+                          ? "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300"
                           : expense.status === "REJECTED"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
+                            ? "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300"
+                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300"
                       }`}
                     >
                       {expense.status}
@@ -164,7 +166,7 @@ export default function MyExpenseStatusTable({
 
                     {expense.status === "REJECTED" &&
                       expense.rejectionReason && (
-                        <p className="mt-1 max-w-xs text-xs text-red-600">
+                        <p className="mt-1 max-w-xs text-xs text-red-600 dark:text-red-400">
                           {expense.rejectionReason}
                         </p>
                       )}
@@ -178,10 +180,10 @@ export default function MyExpenseStatusTable({
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                             expense.reimbursementStatus === "REIMBURSED"
-                              ? "bg-green-100 text-green-700"
+                              ? "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300"
                               : expense.reimbursementStatus === "REJECTED"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
+                                ? "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300"
+                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300"
                           }`}
                         >
                           {expense.reimbursementStatus}
@@ -189,7 +191,7 @@ export default function MyExpenseStatusTable({
 
                         {expense.reimbursementStatus === "REJECTED" &&
                           expense.reimbursementReason && (
-                            <p className="mt-1 max-w-xs text-xs text-red-600">
+                            <p className="mt-1 max-w-xs text-xs text-red-600 dark:text-red-400">
                               {expense.reimbursementReason}
                             </p>
                           )}
@@ -197,7 +199,7 @@ export default function MyExpenseStatusTable({
                     )}
                   </td>
 
-                  <td className="px-5 py-4 text-slate-600">
+                  <td className="px-5 py-4 text-slate-600 dark:text-white">
                     {expense.decidedAt
                       ? expense.decidedAt.toLocaleDateString("en-GB")
                       : "—"}
@@ -218,12 +220,12 @@ export default function MyExpenseStatusTable({
                           setMessage("");
                           setDeleteExpenseId(expense.id);
                         }}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 "
                       >
                         {deleting && deleteExpenseId === expense.id ? (
                           <>
                             <span
-                              className="h-4 w-4 animate-spin rounded-full border-2 border-red-200 border-t-red-600"
+                              className="h-4 w-4 animate-spin rounded-full border-2 border-red-200 border-t-red-600 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950/40"
                               aria-hidden="true"
                             />
                             Deleting...

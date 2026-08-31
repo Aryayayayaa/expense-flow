@@ -3,12 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import NameChangeRequest from "./NameChangeRequest";
-import RoleVerificationRequest from "./RoleVerificationRequest";
-import EmployeeVerificationRequest from "./EmployeeVerificationRequest";
-
 import NameChangeRequestTable from "./NameChangeRequestTable";
 import NameChangeRequestHistoryTable from "./NameChangeRequestHistoryTable";
+
+import RoleVerificationRequest from "./RoleVerificationRequest";
 import RoleVerificationTable from "./RoleVerificationTable";
+
+import EmployeeVerificationRequest from "./EmployeeVerificationRequest";
 import EmployeeVerificationTable from "./EmployeeVerificationTable";
 import EmployeeVerificationHistoryTable from "./EmployeeVerificationHistoryTable";
 
@@ -144,12 +145,12 @@ export default function RequestsPageClient({
   return (
     <main className="p-6 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 border-b border-slate-300 pb-8 dark:border-slate-800">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+        <div className="mb-8 border-b border-slate-300 pb-8 dark:border-slate-700">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 dark:text-white">
             Claims
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
             Submit, review, and track account-related requests.
           </p>
         </div>
@@ -157,7 +158,6 @@ export default function RequestsPageClient({
         {/* ---------------------------------------------------------------- */}
         {/* Request Type Selector                                             */}
         {/* ---------------------------------------------------------------- */}
-
 
         {/* ---------------------------------------------------------------- */}
         {/* Employee                                                         */}
@@ -221,11 +221,11 @@ function EmployeeRequests({
 
           <section>
             <div className="mb-5">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 dark:text-white">
                 My Name Change History
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                 Track your previously submitted name change requests.
               </p>
             </div>
@@ -245,11 +245,11 @@ function EmployeeRequests({
 
           <section>
             <div className="mb-5">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 dark:text-white">
                 My Role Verification History
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                 Track your previously submitted role verification requests.
               </p>
             </div>
@@ -273,11 +273,11 @@ function EmployeeRequests({
 
           <section>
             <div className="mb-5">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 dark:text-white">
                 My Identity Verification History
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                 Track your previously submitted identity verification requests.
               </p>
             </div>
@@ -418,11 +418,13 @@ function ManagementSectionHeader({
 }) {
   return (
     <div className="mb-5">
-      <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 dark:text-white">
         {title}
       </h2>
 
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
+        {description}
+      </p>
     </div>
   );
 }
@@ -438,8 +440,8 @@ function RoleVerificationHistoryTable({
 }) {
   if (requests.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-500">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
           No role verification history available.
         </p>
       </div>
@@ -447,38 +449,38 @@ function RoleVerificationHistoryTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1000px] text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
             <tr>
-              <th className="px-5 py-4 font-medium text-slate-500">Employee</th>
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">Employee</th>
 
-              <th className="px-5 py-4 font-medium text-slate-500">
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                 Requested Role
               </th>
 
-              <th className="px-5 py-4 font-medium text-slate-500">
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                 Submitted
               </th>
 
-              <th className="px-5 py-4 font-medium text-slate-500">Status</th>
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">Status</th>
 
-              <th className="px-5 py-4 font-medium text-slate-500">
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                 Reviewed By
               </th>
 
-              <th className="px-5 py-4 font-medium text-slate-500">
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                 Reviewed On
               </th>
 
-              <th className="px-5 py-4 font-medium text-slate-500">
+              <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                 Rejection Reason
               </th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {requests.map((request) => {
               const statusClass =
                 request.status === "APPROVED"
@@ -490,17 +492,17 @@ function RoleVerificationHistoryTable({
               return (
                 <tr key={request.id}>
                   <td className="px-5 py-4">
-                    <p className="font-medium text-slate-900">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">
                       {request.user.name}
                     </p>
 
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {request.user.email}
                     </p>
                   </td>
 
                   <td className="px-5 py-4">
-                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
                       {request.requestedRole}
                     </span>
                   </td>

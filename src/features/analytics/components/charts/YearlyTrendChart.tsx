@@ -81,26 +81,36 @@ export default function YearlyTrendChart({
   }
 
   return (
-    <div className="mt-6 h-80 w-full">
+    <div className="mt-6 h-80 w-full min-w-0 text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={yearlyData}
-        margin={{
-          top: 10,
-          right: 20,
-          left: 70,
-          bottom: 10,
-        }}
-      >
-          <CartesianGrid strokeDasharray="3 3" />
+        <BarChart
+          data={yearlyData}
+          margin={{
+            top: 10,
+            right: 10,
+            left: 20,
+            bottom: 10,
+          }}
+        >
+          <CartesianGrid
+            stroke="#94a3b8"
+            strokeDasharray="3 3"
+            opacity={0.25}
+          />
 
-          <XAxis dataKey="year" />
+          <XAxis
+            dataKey="year"
+            stroke="#64748b"
+            tick={{ fill: "#64748b", fontSize: 12 }}
+          />
 
           <YAxis
             width={100}
             tickFormatter={(value) =>
               formatCurrency(Number(value), reportCurrency)
             }
+            stroke="#64748b"
+            tick={{ fill: "#64748b", fontSize: 12 }}
           />
 
           <Tooltip

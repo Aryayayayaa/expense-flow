@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
 import { registerUserAction } from "../actions/auth-actions";
 import { AuthState } from "../types/auth";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
   DEFAULT_CURRENCY,
   SUPPORTED_CURRENCIES,
-  type CurrencyCode,
+  //type CurrencyCode,
 } from "@/constants/currencies";
 
 const initialState: AuthState = {
@@ -17,17 +17,39 @@ const initialState: AuthState = {
 };
 
 export default function RegisterForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [state, formAction, pending] = useActionState(
     registerUserAction,
     initialState,
   );
 
   return (
-    <form action={formAction} className="max-w-md space-y-4">
+    <form
+      action={formAction}
+      onSubmit={() => {
+        setShowPassword(false);
+        setShowConfirmPassword(false);
+      }}
+      className="max-w-md space-y-4"
+    >
       <div>
-        <label>Name</label>
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-slate-700"
+        >
+          Name
+        </label>
 
-        <input type="text" name="name" className="w-full rounded border p-2" />
+        <input
+          id="name"
+          type="text"
+          name="name"
+          autoComplete="name"
+          defaultValue={state.values?.name ?? ""}
+          className="mt-1 w-full rounded-lg border border-slate-300 p-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        />
 
         {state.errors?.name && (
           <p className="text-sm text-red-500">{state.errors.name[0]}</p>
@@ -38,8 +60,10 @@ export default function RegisterForm() {
         <label>Email</label>
 
         <input
+          id="email"
           type="email"
           name="email"
+          defaultValue={state.values?.email ?? ""}
           className="w-full rounded border p-2"
         />
 
@@ -49,16 +73,74 @@ export default function RegisterForm() {
       </div>
 
       <div>
-        <label>Password</label>
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-slate-700"
+        >
+          Password
+        </label>
 
-        <input
-          type="password"
-          name="password"
-          className="w-full rounded border p-2"
-        />
+        <div className="relative mt-1">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-slate-300 p-2 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-700"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         {state.errors?.password && (
-          <p className="text-sm text-red-500">{state.errors.password[0]}</p>
+          <p className="mt-1 text-sm text-red-500">
+            {state.errors.password[0]}
+          </p>
+        )}
+      </div>
+
+      <div>
+        <label
+          htmlFor="confirmPassword"
+          className="block text-sm font-medium text-slate-700"
+        >
+          Confirm Password
+        </label>
+
+        <div className="relative mt-1">
+          <input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            name="confirmPassword"
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-slate-300 p-2 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((current) => !current)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-slate-700"
+            aria-label={
+              showConfirmPassword
+                ? "Hide confirm password"
+                : "Show confirm password"
+            }
+          >
+            {showConfirmPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        {state.errors?.confirmPassword && (
+          <p className="mt-1 text-sm text-red-500">
+            {state.errors.confirmPassword[0]}
+          </p>
         )}
       </div>
 

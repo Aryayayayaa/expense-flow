@@ -60,7 +60,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
       }}
       className="h-full cursor-pointer rounded-xl transition hover:-translate-y-1 hover:shadow-lg"
     >
-      <Card className="flex h-[650px] flex-col overflow-hidden text-black">
+      <Card className="flex h-full flex-col overflow-hidden text-black dark:text-white dark:bg-slate-900">
         {/* Expense information */}
         <div className="space-y-2">
           {/* Fixed title area */}
@@ -107,7 +107,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
 
         {/* Admin Modification Notice */}
         {hasAdminModification && expense.adminModification && (
-          <div className="mt-4 max-h-[180px] overflow-hidden rounded-lg border border-purple-200 bg-purple-50 p-4">
+          <div className="mt-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
             <div className="flex items-start gap-3">
               <ShieldAlert
                 size={19}
@@ -139,7 +139,7 @@ export default function ExpenseCard({ expense }: ExpenseCardProps) {
                   Changes made
                 </p>
 
-                <div className="max-h-[80px] space-y-2 overflow-hidden">
+                <div className="space-y-2">
                   {Object.entries(expense.adminModification.changes).map(
                     ([field, change]) => (
                       <div

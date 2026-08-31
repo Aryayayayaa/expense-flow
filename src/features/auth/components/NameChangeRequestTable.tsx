@@ -145,8 +145,8 @@ export default function NameChangeRequestTable({ requests }: Props) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-500">
+      <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:bg-slate-900 p-6 shadow-sm">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           No pending name change requests.
         </p>
       </div>
@@ -155,58 +155,58 @@ export default function NameChangeRequestTable({ requests }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:bg-slate-900 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
               <tr>
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                   Employee
                 </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                   Current Name
                 </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">
                   Requested Name
                 </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Reason</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">Reason</th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Proof</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-400">Proof</th>
 
-                <th className="px-5 py-4 text-right font-medium text-slate-500">
+                <th className="px-5 py-4 text-right font-medium text-slate-500 dark:text-slate-400">
                   Actions
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {items.map((request) => {
                 const processing = processingId === request.id;
 
                 return (
                   <tr key={request.id}>
                     <td className="px-5 py-4">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-slate-900 dark:text-slate-100">
                         {request.user.name}
                       </div>
 
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {request.user.email}
                       </div>
                     </td>
 
-                    <td className="px-5 py-4 text-slate-600">
+                    <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
                       {request.currentName}
                     </td>
 
-                    <td className="px-5 py-4 font-medium text-slate-900">
+                    <td className="px-5 py-4 font-medium text-slate-900 dark:text-slate-100">
                       {request.requestedName}
                     </td>
 
-                    <td className="max-w-xs px-5 py-4 text-slate-600">
+                    <td className="max-w-xs px-5 py-4 text-slate-600 dark:text-slate-300">
                       {request.reason}
                     </td>
 
@@ -250,7 +250,7 @@ export default function NameChangeRequestTable({ requests }: Props) {
                               });
                             }
                           }}
-                          className="font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                          className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50"
                         >
                           View proof
                         </button>

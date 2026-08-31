@@ -39,7 +39,7 @@ export default function TopCategories({
 
   if (categories.length === 0) {
     return (
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-slate-400">
         No expense data available for the selected filters.
       </p>
     );
@@ -62,12 +62,12 @@ export default function TopCategories({
     selectedCurrency === ALL_CURRENCIES ? defaultCurrency : selectedCurrency;
 
   return (
-    <div className="rounded-lg border bg-white p-6">
-      <h3 className="text-lg font-semibold text-gray-900">
+    <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
         Top Spending Categories
       </h3>
 
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
         Categories ranked by total spending.
       </p>
 
@@ -79,16 +79,16 @@ export default function TopCategories({
           return (
             <div key={item.category}>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
                   {item.category}
                 </span>
 
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">
                   {formatCurrency(item.amount, displayCurrency)}
                 </span>
               </div>
 
-              <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+              <div className="h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-slate-700">
                 <div
                   className="h-full rounded-full bg-blue-600 transition-all"
                   style={{ width: `${percentage}%` }}

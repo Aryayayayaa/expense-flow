@@ -8,7 +8,9 @@ import {
   rejectExpenseAction,
 } from "@/features/expenses/actions/approval-actions";
 
-import AddExpenseForm from "@/features/expenses/components/AddExpenseForm";
+import AddExpenseForm, {
+  type EditableExpense,
+} from "@/features/expenses/components/AddExpenseForm";
 import AppDialog from "@/components/common/AppDialog";
 import ActionSpinner from "@/components/common/ActionSpinner";
 
@@ -58,7 +60,7 @@ export default function ApprovalList({
   const [selectedExpense, setSelectedExpense] =
     useState<ApprovalExpense | null>(null);
 
-  const [editingExpense, setEditingExpense] = useState<DisplayExpense | null>(
+  const [editingExpense, setEditingExpense] = useState<EditableExpense | null>(
     null,
   );
 
@@ -76,12 +78,12 @@ export default function ApprovalList({
 
   if (expenses.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-        <h2 className="text-lg font-semibold text-slate-800">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
           No expenses found
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-300">
           There are no pending expenses for this scope.
         </p>
       </div>
@@ -96,46 +98,46 @@ export default function ApprovalList({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
               <tr>
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Employee
                 </th>
 
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Expense
                 </th>
 
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Amount
                 </th>
 
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Category
                 </th>
 
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Date
                 </th>
 
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Evidence
                 </th>
 
-                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Status
                 </th>
 
-                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Action
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {expenses.map((expense) => {
                 const isOwnExpense = expense.user?.id === currentUserId;
                 const isClickable = canNavigateToExpenseDetails && isOwnExpense;
@@ -162,8 +164,8 @@ export default function ApprovalList({
                     role={isClickable ? "link" : undefined}
                     className={`transition ${
                       isClickable
-                        ? "cursor-pointer hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-                        : "hover:bg-slate-50"
+                        ? "cursor-pointer hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800 focus:bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                        : "hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800"
                     }`}
                   >
                     <td className="px-5 py-4">
@@ -172,7 +174,7 @@ export default function ApprovalList({
                           {expense.user?.name ?? "Unknown"}
                         </p>
 
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {expense.user?.email ?? "No email"}
                         </p>
                       </div>
@@ -186,7 +188,7 @@ export default function ApprovalList({
                       <p className="text-xs text-slate-400">#{expense.id}</p>
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4 font-semibold text-green-600">
+                    <td className="whitespace-nowrap px-5 py-4 font-semibold text-green-600 dark:text-green-400">
                       {formatCurrency(
                         expense.displayAmount ?? expense.amount,
                         expense.currency,
@@ -194,7 +196,7 @@ export default function ApprovalList({
                     </td>
 
                     <td className="px-5 py-4">
-                      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                      <span className="inline-flex rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 px-3 py-1 text-xs font-medium text-blue-700">
                         {expense.category}
                       </span>
                     </td>
@@ -210,7 +212,7 @@ export default function ApprovalList({
                     </td>
 
                     <td className="px-5 py-4">
-                      <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                      <span className="inline-flex rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300px-3 py-1 text-xs font-semibold text-amber-700">
                         PENDING
                       </span>
                     </td>
@@ -229,7 +231,7 @@ export default function ApprovalList({
                                 event.stopPropagation();
                                 setSelectedExpense(expense);
                               }}
-                              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                             >
                               Review
                             </button>
@@ -240,7 +242,7 @@ export default function ApprovalList({
                                 event.stopPropagation();
                                 setSelectedExpense(expense);
                               }}
-                              className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+                              className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950/40 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950/40"
                             >
                               Delete
                             </button>
@@ -261,7 +263,17 @@ export default function ApprovalList({
           expense={selectedExpense}
           onClose={() => setSelectedExpense(null)}
           onEdit={() => {
-            setEditingExpense(selectedExpense);
+            setEditingExpense({
+              id: selectedExpense.id,
+              title: selectedExpense.title,
+              amount: Number(selectedExpense.amount),
+              currency: selectedExpense.currency,
+              category: selectedExpense.category,
+              expenseDate: selectedExpense.expenseDate,
+              createdAt: selectedExpense.createdAt,
+              ocrReceiptUrl: selectedExpense.ocrReceiptUrl,
+              ocrReceiptPath: selectedExpense.ocrReceiptPath,
+            });
             setSelectedExpense(null);
           }}
         />
@@ -274,7 +286,7 @@ export default function ApprovalList({
               <button
                 type="button"
                 onClick={() => setEditingExpense(null)}
-                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300shadow-sm transition hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800 hover:text-slate-900"
               >
                 Close
               </button>
@@ -300,7 +312,7 @@ function EvidenceIndicator({ expense }: { expense: ApprovalExpense }) {
 
   return (
     <div className="flex flex-wrap gap-1">
-      <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+      <span className="rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 px-2 py-1 text-xs font-medium text-blue-700">
         Receipt
       </span>
     </div>
@@ -483,10 +495,10 @@ function ReviewExpenseModal({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-        <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-          <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+        <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-slate-900">
+          <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-700 px-6 py-5">
             <div>
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Expense #{expense.id}
               </p>
 
@@ -499,7 +511,7 @@ function ReviewExpenseModal({
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="rounded-lg px-3 py-2 text-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg px-3 py-2 text-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Close review"
             >
               ×
@@ -508,11 +520,11 @@ function ReviewExpenseModal({
 
           <div className="space-y-6 p-6">
             <section>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Expense Details
               </h3>
 
-              <div className="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2">
+              <div className="grid gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 sm:grid-cols-2 text-slate-400 dark:text-slate-500">
                 <Detail
                   label="Employee"
                   value={expense.user?.name ?? "Unknown"}
@@ -544,7 +556,7 @@ function ReviewExpenseModal({
             </section>
 
             <section>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/70">
                 Supporting Documents
               </h3>
 
@@ -559,7 +571,7 @@ function ReviewExpenseModal({
                         "Unable to open original receipt.",
                       )
                     }
-                    className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                   >
                     View Original Receipt
                   </button>
@@ -575,11 +587,11 @@ function ReviewExpenseModal({
 
             {expense.ocrRawText && (
               <section>
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   OCR Extracted Information
                 </h3>
 
-                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-700">
                   {expense.ocrRawText}
                 </div>
               </section>
@@ -601,7 +613,7 @@ function ReviewExpenseModal({
                   disabled={processing}
                   rows={4}
                   placeholder="Explain why this expense is being rejected..."
-                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-50"
+                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 dark:text-slate-100  outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-50 dark:bg-slate-800"
                 />
 
                 <button
@@ -617,7 +629,7 @@ function ReviewExpenseModal({
                       type: "approve",
                     });
                   }}
-                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-800 dark:text-slate-300"
                 >
                   {processingAction === "reject" && <ActionSpinner size="sm" />}
 
@@ -649,7 +661,7 @@ function ReviewExpenseModal({
                   disabled={processing}
                   rows={4}
                   placeholder="Explain why this expense is being deleted..."
-                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-50"
+                  className="mt-2 w-full rounded-lg border border-red-200 bg-white p-3 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:bg-slate-50 dark:bg-slate-800"
                 />
 
                 <button
@@ -683,12 +695,12 @@ function ReviewExpenseModal({
             )}
           </div>
 
-          <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+          <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 px-6 py-4">
             <button
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               Close
             </button>
@@ -726,7 +738,7 @@ function ReviewExpenseModal({
                   setMessage("");
                 }}
                 disabled={processing}
-                className="rounded-lg border border-red-300 bg-white px-5 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-red-300 bg-white px-5 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950/40"
               >
                 Delete
               </button>
@@ -805,11 +817,13 @@ function ReviewExpenseModal({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+      <p className="text-xs font-medium uppercase tracking-wide  text-slate-800  dark:text-slate-100">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-medium text-slate-800">{value}</p>
+      <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+        {value}
+      </p>
     </div>
   );
 }

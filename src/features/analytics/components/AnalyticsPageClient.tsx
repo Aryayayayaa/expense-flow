@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import AnalyticsTabs from "./AnalyticsTabs";
+import AnalyticsTabs, { type AnalyticsTab } from "./AnalyticsTabs";
 import Filters from "@/components/common/Filters";
 
 import { ALL_CURRENCIES, type CurrencyFilter } from "@/constants/currencies";
@@ -31,7 +31,7 @@ type AnalyticsPageClientProps = {
   defaultCurrency: string;
 };
 
-type AnalyticsTab = "categories" | "monthly" | "yearly";
+//type AnalyticsTab = "categories" | "monthly" | "yearly";
 
 export default function AnalyticsPageClient({
   expenses,
@@ -424,82 +424,85 @@ export default function AnalyticsPageClient({
           </div>
         )}
 
-        {activeTab === "monthly" && (
+        {activeTab === "monthly-yearly" && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Monthly Trends
-            </h2>
+            {/* Monthly */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Monthly Trends
+              </h2>
 
-            <p className="mt-2 text-gray-500">
-              Track your total spending and category-wise spending over time.
-            </p>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Total Monthly Expenses
-              </h3>
-
-              <MonthlyTrendChart
-                expenses={filteredExpenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            </div>
-
-            <div className="mt-10 border-t pt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Monthly Expenses by Category
-              </h3>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Compare how each expense category changes month by month.
+              <p className="mt-2 text-gray-500 dark:text-slate-400">
+                Track your total spending and category-wise spending over time.
               </p>
 
-              <MonthlyCategoryTrendChart
-                expenses={filteredExpenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            </div>
-          </div>
-        )}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Total Monthly Expenses
+                </h3>
 
-        {activeTab === "yearly" && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Yearly Trends
-            </h2>
+                <MonthlyTrendChart
+                  expenses={filteredExpenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
 
-            <p className="mt-2 text-gray-500">
-              Track your total spending and category-wise spending across years.
-            </p>
+              <div className="mt-10 border-t border-gray-200 pt-8 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Monthly Expenses by Category
+                </h3>
 
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Total Yearly Expenses
-              </h3>
+                <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                  Compare how each expense category changes month by month.
+                </p>
 
-              <YearlyTrendChart
-                expenses={filteredExpenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
+                <MonthlyCategoryTrendChart
+                  expenses={filteredExpenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
             </div>
 
-            <div className="mt-10 border-t pt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Yearly Expenses by Category
-              </h3>
+            {/* Yearly */}
+            <div className="mt-12 border-t border-gray-200 pt-10 dark:border-slate-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Yearly Trends
+              </h2>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Compare category-wise spending across different years.
+              <p className="mt-2 text-gray-500 dark:text-slate-400">
+                Track your total spending and category-wise spending across
+                years.
               </p>
 
-              <YearlyCategoryChart
-                expenses={filteredExpenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Total Yearly Expenses
+                </h3>
+
+                <YearlyTrendChart
+                  expenses={filteredExpenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
+
+              <div className="mt-10 border-t border-gray-200 pt-8 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Yearly Expenses by Category
+                </h3>
+
+                <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                  Compare category-wise spending across different years.
+                </p>
+
+                <YearlyCategoryChart
+                  expenses={filteredExpenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
             </div>
           </div>
         )}

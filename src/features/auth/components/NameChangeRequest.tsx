@@ -55,10 +55,10 @@ export default function NameChangeRequest({ currentName }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
     >
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
           Request Name Change
         </h2>
 
@@ -73,7 +73,7 @@ export default function NameChangeRequest({ currentName }: Props) {
         <div>
           <label
             htmlFor="requested-name"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Requested Name
           </label>
@@ -85,16 +85,16 @@ export default function NameChangeRequest({ currentName }: Props) {
             onChange={(event) => setRequestedName(event.target.value)}
             required
             minLength={2}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
         </div>
 
         <div>
           <label
             htmlFor="name-change-reason"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Reason <span className="text-red-600">*</span>
+            Reason <span className="text-red-600 dark:text-red-400">*</span>
           </label>
 
           <textarea
@@ -104,10 +104,10 @@ export default function NameChangeRequest({ currentName }: Props) {
             required
             rows={4}
             placeholder="Explain why you need to change your name."
-            className="mt-2 w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             A reason is required. Supporting proof is optional.
           </p>
         </div>
@@ -115,10 +115,12 @@ export default function NameChangeRequest({ currentName }: Props) {
         <div>
           <label
             htmlFor="name-change-proof-url"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Supporting Proof URL{" "}
-            <span className="text-slate-400">(optional)</span>
+            <span className="text-slate-400 dark:text-slate-500">
+              (optional)
+            </span>
           </label>
 
           <input
@@ -127,17 +129,19 @@ export default function NameChangeRequest({ currentName }: Props) {
             value={proofUrl}
             onChange={(event) => setProofUrl(event.target.value)}
             placeholder="https://..."
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
         </div>
 
         <div>
           <label
             htmlFor="name-change-proof-path"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Supporting Proof Path{" "}
-            <span className="text-slate-400">(optional)</span>
+            <span className="text-slate-400 dark:text-slate-500">
+              (optional)
+            </span>
           </label>
 
           <input
@@ -146,17 +150,17 @@ export default function NameChangeRequest({ currentName }: Props) {
             value={proofPath}
             onChange={(event) => setProofPath(event.target.value)}
             placeholder="Optional proof storage path"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
         </div>
       </div>
 
       {error && (
-        <p className="mt-4 text-sm font-medium text-red-600">{error}</p>
+        <p className="mt-4 text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
       )}
 
       {message && (
-        <p className="mt-4 text-sm font-medium text-green-600">{message}</p>
+        <p className="mt-4 text-sm font-medium text-green-600 dark:text-green-400">{message}</p>
       )}
 
       <button

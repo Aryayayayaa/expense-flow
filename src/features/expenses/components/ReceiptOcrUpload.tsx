@@ -99,7 +99,7 @@ export default function ReceiptOcrUpload({
         );
       }
     } catch (error) {
-      console.error("OCR upload error:", error);
+      //console.error("OCR upload error:", error);
 
       onOcrComplete(null, file);
 
@@ -114,7 +114,9 @@ export default function ReceiptOcrUpload({
   return (
     <div className="rounded-lg border border-dashed border-gray-300 p-4">
       <div className="mb-2">
-        <p className="font-medium text-gray-800">📄 Original Receipt</p>
+        <p className="font-medium text-gray-800 dark:text-white">
+          📄 Original Receipt
+        </p>
 
         <p className="text-sm text-gray-500">
           Upload the original receipt to automatically extract expense details.
@@ -122,12 +124,20 @@ export default function ReceiptOcrUpload({
         </p>
       </div>
 
+      <label
+        htmlFor="file-upload"
+        className="inline-flex cursor-pointer items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+      >
+        Upload File
+      </label>
+
       <input
+        id="file-upload"
         type="file"
-        accept="image/jpeg,image/png,image/webp,application/pdf"
+        accept="image/jpeg,image/png,image/webp,application/pdf,.csv,.doc,.docx"
         disabled={processing}
         onChange={handleFileChange}
-        className="block w-full text-sm"
+        className="hidden"
       />
 
       {processing && (

@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+//import Link from "next/link";
 import { Wallet, Calendar, Folder, Plus } from "lucide-react";
 
 import Pagination from "@/components/common/Pagination";
 import Filters from "@/components/common/Filters";
 
 import ExpenseList from "./ExpenseList";
-import AddExpenseForm from "./AddExpenseForm";
+//import AddExpenseForm from "./AddExpenseForm";
+import EditExpenseDialog from "./EditExpenseDialog";
 import SummaryCard from "./SummaryCard";
 
 import {
@@ -71,9 +72,10 @@ export default function ExpensesPageClient({
     null,
   );
 
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+
   /*
    * Pagination is intentionally local to this page.
-   *
    * Filtering happens BEFORE pagination.
    */
   const [currentPage, setCurrentPage] = useState(Math.max(1, initialPage));
@@ -587,45 +589,47 @@ export default function ExpensesPageClient({
       />
 
       {/* Add expense */}
-
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          href="/expenses/new"
+        <button
+          type="button"
+          onClick={() => {
+            setEditingExpense(null);
+            setExpenseDialogOpen(true);
+          }}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
         >
           <Plus size={18} />
           Add New Expense
-        </Link>
+        </button>
       </div>
 
       {/* Expense cards */}
 
       <div className="mt-4">
-        <ExpenseList expenses={paginatedExpenses} onEdit={setEditingExpense} />
+        <ExpenseList
+          expenses={paginatedExpenses}
+          onEdit={(expense) => {
+            setEditingExpense(expense);
+            setExpenseDialogOpen(true);
+          }}
+        />
       </div>
 
-      {/* Edit Expense */}
+      {/* Add/Edit Expense Dialog */}
 
-      {editingExpense && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
-            <div className="mb-3 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setEditingExpense(null)}
-                className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-              >
-                Close
-              </button>
-            </div>
-
-            <AddExpenseForm
-              editingExpense={editingExpense}
-              setEditingExpense={setEditingExpense}
-            />
-          </div>
-        </div>
-      )}
+      <EditExpenseDialog
+        open={expenseDialogOpen}
+        expense={editingExpense}
+        defaultCurrency={defaultCurrency}
+        onClose={() => {
+          setExpenseDialogOpen(false);
+          setEditingExpense(null);
+        }}
+        onSuccess={() => {
+          setExpenseDialogOpen(false);
+          setEditingExpense(null);
+        }}
+      />
 
       {/* Pagination */}
 

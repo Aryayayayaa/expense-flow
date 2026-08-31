@@ -8,17 +8,21 @@ datasource db {
 }
 
 model User {
-  id                            Int                           @id @default(autoincrement())
-  name                          String
-  email                         String                        @unique
-  password                      String?
-  role                          Role                          @default(EMPLOYEE)
-  createdAt                     DateTime                      @default(now())
-  emailVerified                 DateTime?
-  image                         String?
-  updatedAt                     DateTime                      @updatedAt
-  isActive                      Boolean                       @default(true)
-  defaultCurrency               String                        @default("INR")
+  id              Int       @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  password        String?
+  role            Role      @default(EMPLOYEE)
+  createdAt       DateTime  @default(now())
+  emailVerified   DateTime?
+  image           String?
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
+  defaultCurrency String    @default("INR")
+
+  failedLoginAttempts Int       @default(0)
+  loginLockedUntil    DateTime?
+
   deletedByExpenses             DeletedExpense[]              @relation("DeletedExpenseAdmin")
   deletedExpenses               DeletedExpense[]              @relation("DeletedExpenseOwner")
   reviewedEmployeeVerifications EmployeeVerificationRequest[] @relation("EmployeeVerificationReviewer")
@@ -27,24 +31,30 @@ model User {
   reimbursementExpenses         Expense[]                     @relation("ExpenseReimbursementProcessor")
   expenses                      Expense[]
   expenseAuditLogs              ExpenseAuditLog[]             @relation("ExpenseAuditActor")
-  reviewedNameChanges           NameChangeRequest[]           @relation("NameChangeReviewer")
-  nameChangeRequests            NameChangeRequest[]           @relation("NameChangeRequester")
-  notifications                 Notification[]
-  passwordResetTokens           PasswordResetToken[]
-  reviewedRoleRequests          RoleVerificationRequest[]     @relation("RoleRequestReviewer")
-  roleRequests                  RoleVerificationRequest[]
+
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
+
+  reviewedNameChanges NameChangeRequest[] @relation("NameChangeReviewer")
+  nameChangeRequests  NameChangeRequest[] @relation("NameChangeRequester")
+
+  reviewedRoleRequests RoleVerificationRequest[] @relation("RoleRequestReviewer")
+  roleRequests         RoleVerificationRequest[]
+  
+  contactRequests      ContactRequest[]
+  resolvedContactRequests ContactRequest[] @relation("ContactRequestResolver")
 }
 
 model Expense {
-  id                  Int                 @id @default(autoincrement())
-  title               String
-  amount              Decimal             @db.Decimal(12, 2)
-  category            String
-  createdAt           DateTime            @default(now())
-  userId              Int?
-  expenseDate         DateTime?
-  updatedAt           DateTime            @updatedAt
- 
+  id          Int       @id @default(autoincrement())
+  title       String
+  amount      Decimal   @db.Decimal(12, 2)
+  category    String
+  createdAt   DateTime  @default(now())
+  userId      Int?
+  expenseDate DateTime?
+  updatedAt   DateTime  @updatedAt
+
   vendor              String?
   decidedAt           DateTime?
   decidedById         Int?
@@ -136,6 +146,32 @@ model ExpenseAuditLog {
   expense   Expense?           @relation(fields: [expenseId], references: [id])
 }
 
+model ContactRequest {
+  id Int @id @default(autoincrement())
+
+  subject  String
+  category String
+  message  String
+
+  status ContactRequestStatus @default(NEW)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resolvedAt DateTime?
+  resolvedById Int?
+  actionTaken String?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resolvedByUser User? @relation("ContactRequestResolver", fields: [resolvedById], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([resolvedById])
+}
+
 model DeletedExpense {
   id                Int       @id @default(autoincrement())
   originalExpenseId Int
@@ -146,14 +182,14 @@ model DeletedExpense {
   ocrReceiptUrl     String?
   ocrReceiptPath    String?
   ocrRawText        String?
- 
-  deletionReason    String
-  deletedAt         DateTime  @default(now())
-  deletedById       Int
-  userId            Int
-  currency          String    @default("INR")
-  deletedBy         User      @relation("DeletedExpenseAdmin", fields: [deletedById], references: [id])
-  user              User      @relation("DeletedExpenseOwner", fields: [userId], references: [id])
+
+  deletionReason String
+  deletedAt      DateTime @default(now())
+  deletedById    Int
+  userId         Int
+  currency       String   @default("INR")
+  deletedBy      User     @relation("DeletedExpenseAdmin", fields: [deletedById], references: [id])
+  user           User     @relation("DeletedExpenseOwner", fields: [userId], references: [id])
 }
 
 model Notification {
@@ -244,6 +280,7 @@ enum NotificationType {
   EMPLOYEE_ACCOUNT_CREATED
   EMPLOYEE_ACCOUNT_DEACTIVATED
   EMPLOYEE_ACCOUNT_UPDATED
+  EMPLOYEE_ACCOUNT_ACTIVATED
   ROLE_UPGRADED
   ROLE_DOWNGRADED
   ROLE_CHANGED
@@ -255,11 +292,19 @@ enum NotificationType {
   EMPLOYEE_VERIFICATION_REJECTED
   ADMIN_ACTION
   SYSTEM
-  EMPLOYEE_ACCOUNT_ACTIVATED
+  CONTACT_REQUEST_SUBMITTED
+  CONTACT_REQUEST_UPDATED
 }
 
 enum NameChangeRequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum ContactRequestStatus {
+  NEW
+  IN_PROGRESS
+  AWAITING_INFO
+  RESOLVED
 }

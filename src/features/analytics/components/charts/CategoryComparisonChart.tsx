@@ -85,14 +85,14 @@ export default function CategoryComparisonChart({
 
   if (chartData.length === 0) {
     return (
-      <p className="text-center text-gray-500">
+      <p className="text-center text-gray-500 dark:text-slate-400">
         No expense data available for the selected filters.
       </p>
     );
   }
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[360px] w-full text-slate-500 dark:text-slate-400 sm:h-[380px] lg:h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
@@ -104,7 +104,11 @@ export default function CategoryComparisonChart({
             bottom: 10,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid
+            stroke="#94a3b8"
+            strokeDasharray="3 3"
+            opacity={0.25}
+          />
 
           <XAxis
             type="number"
@@ -115,9 +119,17 @@ export default function CategoryComparisonChart({
                 maximumFractionDigits: 0,
               }).format(Number(value))
             }
+            stroke="#64748b"
+            tick={{ fill: "#64748b", fontSize: 12 }}
           />
 
-          <YAxis type="category" dataKey="category" width={100} />
+          <YAxis
+            type="category"
+            dataKey="category"
+            width={90}
+            stroke="#64748b"
+            tick={{ fill: "#64748b", fontSize: 12 }}
+          />
 
           <Tooltip
             content={

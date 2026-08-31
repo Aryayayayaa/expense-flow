@@ -55,12 +55,19 @@ export default function ReportSummary({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5">
       {summary.map((item) => (
-        <div key={item.label} className="rounded-lg border bg-gray-50 p-5">
-          <p className="text-sm font-medium text-gray-500">{item.label}</p>
+        <div
+          key={item.label}
+          className="rounded-lg border border-slate-200 bg-gray-50 p-5 dark:border-slate-700 dark:bg-slate-900"
+        >
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            {item.label}
+          </p>
 
-          <p className="mt-2 text-2xl font-bold text-gray-900">{item.value}</p>
+          <p className="mt-2 min-w-0 break-words text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-2xl lg:text-2xl 2xl:text-3xl">
+            {item.value}
+          </p>
         </div>
       ))}
     </div>

@@ -28,7 +28,7 @@ export default function DateFilter({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 text-gray-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 text-gray-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900"
       >
         <option value="all">All Time</option>
 
@@ -64,14 +64,14 @@ export default function DateFilter({
       </select>
 
       {value === "custom" && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-800 shadow-sm h-40">
-          <p className="mb-3 text-sm font-medium text-gray-700">
+        <div className="h-auto min-h-40 rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-800 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+          <p className="mb-3 text-sm font-medium text-gray-700 dark:text-slate-200">
             Custom Date Range
           </p>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-600 dark:text-slate-300">
                 Start Date
               </label>
               <input
@@ -80,12 +80,12 @@ export default function DateFilter({
                 min={minDate}
                 max={maxDate}
                 onChange={(e) => onStartDateChange(e.target.value)}
-                className="h-12 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-600 dark:text-slate-300">
                 End Date
               </label>
               <input
@@ -94,7 +94,7 @@ export default function DateFilter({
                 min={startDate || minDate}
                 max={maxDate}
                 onChange={(e) => onEndDateChange(e.target.value)}
-                className="h-12 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                className="h-12 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900"
               />
             </div>
           </div>
