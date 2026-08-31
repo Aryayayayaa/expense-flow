@@ -1,6 +1,6 @@
 "use client";
 
-type AnalyticsTab = "categories" | "monthly-yearly";
+export type AnalyticsTab = "categories" | "monthly-yearly";
 
 type AnalyticsTabsProps = {
   activeTab: AnalyticsTab;
