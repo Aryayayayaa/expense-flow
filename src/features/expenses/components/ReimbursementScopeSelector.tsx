@@ -73,10 +73,10 @@ export default function ReimbursementScopeSelector({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
       <label
         htmlFor="reimbursement-scope"
-        className="block text-sm font-medium text-slate-700"
+        className="block text-sm font-medium text-slate-700 dark:text-slate-300"
       >
         Expense Scope
       </label>
@@ -87,7 +87,7 @@ export default function ReimbursementScopeSelector({
         onChange={(event) =>
           handleChange(event.target.value as ReimbursementExpenseScope)
         }
-        className="mt-2 h-11 w-full max-w-md rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+        className="mt-2 h-11 w-full max-w-md rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

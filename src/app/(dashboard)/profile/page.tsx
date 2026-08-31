@@ -47,7 +47,7 @@ export default async function ProfilePage() {
         <ProfileImageEditor currentImage={user.image} />
 
         {/* Profile Details */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Profile Details

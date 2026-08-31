@@ -124,10 +124,10 @@ export default function CurrencyTooltip({
     );
 
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-        <p className="mb-2 text-sm font-semibold text-slate-900">{heading}</p>
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <p className="mb-2 text-sm font-semibold text-slate-100">{heading}</p>
 
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-slate-700 dark:text-slate-300">
           {selectedCurrency}: {formatCurrency(total, selectedCurrency)}
         </p>
       </div>
@@ -187,8 +187,8 @@ export default function CurrencyTooltip({
   );
 
   return (
-    <div className="max-w-xs rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-      <p className="mb-3 text-sm font-semibold text-slate-900">{heading}</p>
+    <div className="max-w-xs rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+      <p className="mb-3 text-sm font-semibold text-slate-100">{heading}</p>
 
       <div className="space-y-1.5">
         {[...currencyBreakdown.entries()].map(([currency, breakdown]) => {
@@ -222,8 +222,8 @@ export default function CurrencyTooltip({
         })}
       </div>
 
-      <div className="mt-3 border-t border-slate-200 pt-2">
-        <p className="text-sm font-semibold text-slate-900">
+      <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
+        <p className="text-sm font-semibold text-slate-100">
           Total: {formatCurrency(total, defaultCurrency)}
         </p>
       </div>

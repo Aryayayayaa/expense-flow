@@ -165,12 +165,12 @@ export default function RoleVerificationTable({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:bg-slate-900">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           No role verification requests
         </h2>
 
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
           There are currently no role verification requests.
         </p>
       </div>
@@ -179,40 +179,40 @@ export default function RoleVerificationTable({
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
               <tr>
-                <th className="px-6 py-4 font-semibold text-slate-700">
+                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
                   Employee
                 </th>
 
-                <th className="px-6 py-4 font-semibold text-slate-700">
+                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
                   Requested Role
                 </th>
 
-                <th className="px-6 py-4 font-semibold text-slate-700">
+                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
                   Status
                 </th>
 
-                <th className="px-6 py-4 font-semibold text-slate-700">
+                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
                   Submitted
                 </th>
 
-                <th className="px-6 py-4 font-semibold text-slate-700">
+                <th className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
                   Proof
                 </th>
 
                 {canReview && (
-                  <th className="px-6 py-4 text-right font-semibold text-slate-700">
+                  <th className="px-6 py-4 text-right font-semibold text-slate-700 dark:text-slate-300">
                     Actions
                   </th>
                 )}
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {items.map((request) => {
                 const isProcessing = processingId === request.id;
                 const isPending = request.status === "PENDING";
@@ -220,17 +220,17 @@ export default function RoleVerificationTable({
                 return (
                   <tr key={request.id} className="transition hover:bg-slate-50">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-slate-900 dark:text-slate-100">
                         {request.user.name}
                       </div>
 
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-slate-400">
                         {request.user.email}
                       </div>
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                      <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
                         {request.requestedRole}
                       </span>
                     </td>
@@ -239,7 +239,7 @@ export default function RoleVerificationTable({
                       <StatusBadge status={request.status} />
                     </td>
 
-                    <td className="px-6 py-4 text-slate-600">
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                       {new Date(request.createdAt).toLocaleDateString("en-GB", {
                         day: "2-digit",
                         month: "short",
@@ -284,12 +284,14 @@ export default function RoleVerificationTable({
                               });
                             }
                           }}
-                          className="font-medium text-blue-600 hover:text-blue-800"
+                          className="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                         >
                           View Proof
                         </button>
                       ) : (
-                        <span className="text-sm text-slate-400">No proof</span>
+                        <span className="text-sm text-slate-400 dark:text-slate-500">
+                          No proof
+                        </span>
                       )}
                     </td>
 
@@ -328,7 +330,7 @@ export default function RoleVerificationTable({
                             </button>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-slate-400 dark:text-slate-500">
                             Reviewed
                           </span>
                         )}

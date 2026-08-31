@@ -107,7 +107,7 @@ export default function CategoryPieChart({
 
   if (data.length === 0) {
     return (
-      <p className="text-center text-gray-500">
+      <p className="text-center text-gray-500 dark:text-slate-400">
         No expense data available for the selected filters.
       </p>
     );
@@ -124,7 +124,7 @@ export default function CategoryPieChart({
   }
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[400px] w-full text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -170,7 +170,7 @@ export default function CategoryPieChart({
             y="42%"
             textAnchor="middle"
             dominantBaseline="middle"
-            className="fill-gray-500 text-sm"
+            className="fill-slate-500 text-sm dark:fill-slate-400"
           >
             Total Expenses
           </text>
@@ -180,7 +180,7 @@ export default function CategoryPieChart({
             y="50%"
             textAnchor="middle"
             dominantBaseline="middle"
-            className="fill-gray-900 text-lg font-semibold"
+            className="fill-slate-900 text-lg font-semibold dark:fill-slate-100"
           >
             {new Intl.NumberFormat("en-IN", {
               style: "currency",

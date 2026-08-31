@@ -81,36 +81,50 @@ export default function UserManagementTable({ users }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800">
               <tr>
-                <th className="px-5 py-4 font-medium text-slate-500">Name</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Name
+                </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Email</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Email
+                </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Role</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Role
+                </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Status</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Status
+                </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Joined</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Joined
+                </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Action</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Action
+                </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {users.map((user) => {
                 const isProcessing = processingId === user.id;
 
                 return (
                   <tr key={user.id}>
-                    <td className="px-5 py-4 font-medium text-slate-900">
+                    <td className="px-5 py-4 font-medium text-slate-900 dark:text-white">
                       {user.name}
                     </td>
 
-                    <td className="px-5 py-4 text-slate-600">{user.email}</td>
+                    <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
+                      {user.email}
+                    </td>
 
                     <td className="px-5 py-4">
                       <RoleBadge role={user.role} />
@@ -120,7 +134,7 @@ export default function UserManagementTable({ users }: Props) {
                       <StatusBadge isActive={user.isActive} />
                     </td>
 
-                    <td className="px-5 py-4 text-slate-600">
+                    <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
                       {user.createdAt.toLocaleDateString("en-GB", {
                         day: "2-digit",
                         month: "short",
@@ -130,7 +144,7 @@ export default function UserManagementTable({ users }: Props) {
 
                     <td className="px-5 py-4">
                       {user.role === "ADMIN" ? (
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-slate-400 dark:text-slate-500">
                           Protected
                         </span>
                       ) : (
@@ -165,7 +179,7 @@ export default function UserManagementTable({ users }: Props) {
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-5 py-8 text-center text-slate-500"
+                    className="px-5 py-8 text-center text-slate-500 dark:text-slate-400"
                   >
                     No users found.
                   </td>
@@ -231,7 +245,7 @@ export default function UserManagementTable({ users }: Props) {
 
 function RoleBadge({ role }: { role: "ADMIN" | "HR" | "EMPLOYEE" }) {
   return (
-    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
       {role}
     </span>
   );
@@ -241,7 +255,9 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-        isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+        isActive
+          ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+          : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
       }`}
     >
       {isActive ? "Active" : "Inactive"}

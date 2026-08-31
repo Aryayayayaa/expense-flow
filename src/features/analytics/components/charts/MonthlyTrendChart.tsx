@@ -108,14 +108,14 @@ export default function MonthlyTrendChart({
 
   if (chartData.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-gray-500">
+      <div className="flex h-64 items-center justify-center text-gray-500 dark:text-slate-400">
         No expense data available for the selected filters.
       </div>
     );
   }
 
   return (
-    <div className="mt-6 h-80 w-full">
+    <div className="mt-6 h-80 w-full text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={chartData}
@@ -126,15 +126,25 @@ export default function MonthlyTrendChart({
             bottom: 10,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid
+            stroke="#94a3b8"
+            strokeDasharray="3 3"
+            opacity={0.25}
+          />
 
-          <XAxis dataKey="month" />
+          <XAxis
+            dataKey="month"
+            stroke="#64748b"
+            tick={{ fill: "#64748b", fontSize: 12 }}
+          />
 
           <YAxis
             width={100}
             tickFormatter={(value) =>
               formatCurrency(Number(value), reportCurrency)
             }
+            stroke="#64748b"
+            tick={{ fill: "#64748b", fontSize: 12 }}
           />
 
           <Tooltip

@@ -73,20 +73,20 @@ export default function RoleVerificationRequest({
   }
 
   return (
-    <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="text-xl font-semibold text-slate-900 dark:text-white">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
           Request Role Verification
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Submit proof if you need ADMIN or HR privileges.
         </p>
       </div>
 
       <div className="mt-6 space-y-5">
         <div>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Requested Role
           </label>
 
@@ -96,7 +96,7 @@ export default function RoleVerificationRequest({
               setRequestedRole(event.target.value as "ADMIN" | "HR")
             }
             disabled={submitting}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="HR">HR</option>
@@ -104,11 +104,11 @@ export default function RoleVerificationRequest({
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Verification Proof
           </label>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Upload a JPG, PNG, WEBP image, or PDF document.
           </p>
 
@@ -119,12 +119,14 @@ export default function RoleVerificationRequest({
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
             }}
-            className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-900"
+            className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-300"
           />
         </div>
 
         {file && (
-          <p className="text-sm text-slate-600">Selected: {file.name}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Selected: {file.name}
+          </p>
         )}
 
         <button
@@ -136,7 +138,11 @@ export default function RoleVerificationRequest({
           {submitting ? "Submitting..." : "Submit Verification Request"}
         </button>
 
-        {message && <p className="text-sm text-slate-600">{message}</p>}
+        {message && (
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );

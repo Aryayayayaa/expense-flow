@@ -283,12 +283,12 @@ export default function ReimbursementTable({
     return (
       <div>
         {message && (
-          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
             {message}
           </div>
         )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <p className="text-sm text-slate-500">
             No approved expenses are waiting for reimbursement.
           </p>
@@ -317,41 +317,43 @@ export default function ReimbursementTable({
   return (
     <div>
       {message && (
-        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
           {message}
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+            <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800">
               <tr>
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
                   Employee
                 </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
                   Expense
                 </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">Amount</th>
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
+                  Amount
+                </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
                   Approved By
                 </th>
 
-                <th className="px-5 py-4 font-medium text-slate-500">
+                <th className="px-5 py-4 font-medium text-slate-500 dark:text-slate-300">
                   Approved On
                 </th>
 
-                <th className="px-5 py-4 text-right font-medium text-slate-500">
+                <th className="px-5 py-4 text-right font-medium text-slate-500 dark:text-slate-300">
                   Action
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {items.map((expense) => {
                 const processing = processingId === expense.id;
 
@@ -359,9 +361,12 @@ export default function ReimbursementTable({
                   isApprovedByCurrentAdmin(expense);
 
                 return (
-                  <tr key={expense.id} className="transition hover:bg-slate-50">
+                  <tr
+                    key={expense.id}
+                    className="transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
                     <td className="px-5 py-4">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
                         {expense.user?.name ?? "Unknown employee"}
                       </p>
 
@@ -371,7 +376,7 @@ export default function ReimbursementTable({
                     </td>
 
                     <td className="px-5 py-4">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
                         {expense.title}
                       </p>
 
@@ -380,7 +385,7 @@ export default function ReimbursementTable({
                       </p>
                     </td>
 
-                    <td className="px-5 py-4 font-semibold text-slate-900">
+                    <td className="px-5 py-4 font-semibold text-slate-900 dark:text-slate-100">
                       {formatCurrency(Number(expense.amount), expense.currency)}
                     </td>
 
@@ -389,7 +394,7 @@ export default function ReimbursementTable({
                         className={
                           approvedByCurrentAdmin
                             ? "font-medium text-blue-700"
-                            : "text-slate-600"
+                            : "text-slate-600 dark:text-slate-300"
                         }
                       >
                         {approvedByCurrentAdmin
@@ -404,7 +409,7 @@ export default function ReimbursementTable({
                       )}
                     </td>
 
-                    <td className="px-5 py-4 text-slate-600">
+                    <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
                       {expense.decidedAt
                         ? new Date(expense.decidedAt).toLocaleDateString(
                             "en-GB",
@@ -426,7 +431,7 @@ export default function ReimbursementTable({
                           setRejectionReason("");
                           setMessage("");
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                       >
                         <Eye size={15} />
                         Review
@@ -442,14 +447,14 @@ export default function ReimbursementTable({
 
       {selectedExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-800">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                   Review Reimbursement
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Review the expense details and supporting receipt before
                   making a reimbursement decision.
                 </p>
@@ -459,77 +464,83 @@ export default function ReimbursementTable({
                 type="button"
                 disabled={processingId === selectedExpense.id}
                 onClick={closeReview}
-                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg p-2 text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <X size={20} />
               </button>
             </div>
 
             <div className="space-y-6 p-6">
-              <section className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <section className="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50">
                 <div className="mb-4 flex items-center gap-2">
-                  <User size={18} className="text-slate-600" />
+                  <User
+                    size={18}
+                    className="text-slate-600 dark:text-slate-300"
+                  />
 
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                     Employee Information
                   </h3>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Name
                     </p>
 
-                    <p className="mt-1 text-sm font-medium text-slate-900">
+                    <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
                       {selectedExpense.user?.name ?? "Unknown"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Email
                     </p>
 
-                    <p className="mt-1 text-sm text-slate-700">
+                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                       {selectedExpense.user?.email ?? "-"}
                     </p>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-xl border border-slate-200 bg-white p-5">
+              <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                 <div className="mb-4 flex items-center gap-2">
-                  <ReceiptText size={18} className="text-slate-600" />
+                  <ReceiptText
+                    size={18}
+                    className="text-slate-600 dark:text-slate-300"
+                  />
 
-                  <h3 className="font-semibold text-slate-900">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                     Expense Details
                   </h3>
                 </div>
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Expense
                     </p>
 
-                    <p className="mt-1 text-sm font-medium text-slate-900">
+                    <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
                       {selectedExpense.title}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Category
                     </p>
 
-                    <p className="mt-1 text-sm text-slate-700">
+                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                       {selectedExpense.category}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Amount
                     </p>
 
@@ -542,11 +553,11 @@ export default function ReimbursementTable({
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Expense Date
                     </p>
 
-                    <p className="mt-1 text-sm text-slate-700">
+                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                       {selectedExpense.expenseDate
                         ? new Date(
                             selectedExpense.expenseDate,
@@ -561,11 +572,11 @@ export default function ReimbursementTable({
 
                   {selectedExpense.vendor && (
                     <div className="sm:col-span-2">
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Vendor
                       </p>
 
-                      <p className="mt-1 text-sm text-slate-700">
+                      <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
                         {selectedExpense.vendor}
                       </p>
                     </div>
@@ -705,23 +716,23 @@ export default function ReimbursementTable({
                   onChange={(event) => setRejectionReason(event.target.value)}
                   placeholder="Enter the reason for rejecting this reimbursement..."
                   rows={4}
-                  className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+                  className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-50 dark:border-red-900/60 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-800"
                   disabled={processingId === selectedExpense.id}
                 />
               </section>
 
               {message && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
                   {message}
                 </div>
               )}
 
-              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   disabled={processingId !== null}
                   onClick={closeReview}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 >
                   Cancel
                 </button>

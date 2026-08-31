@@ -134,13 +134,13 @@ export default function EmployeeVerificationRequest({
   }
 
   return (
-    <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
           Identity Verification
         </h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-300dark:text-slate-400">
           Verify your employee identity by submitting an approved identity or
           employment document.
         </p>
@@ -148,10 +148,12 @@ export default function EmployeeVerificationRequest({
 
       <div className="mt-6">
         {status === "PENDING" && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <p className="font-medium text-amber-800">Verification pending</p>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30 p-4">
+            <p className="font-medium text-amber-800 dark:text-amber-300">
+              Verification pending
+            </p>
 
-            <p className="mt-1 text-sm text-amber-700">
+            <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
               HR or Admin is currently reviewing your submitted document.
             </p>
           </div>
@@ -161,7 +163,7 @@ export default function EmployeeVerificationRequest({
           <div className="rounded-lg border border-green-200 bg-green-50 p-4">
             <p className="font-medium text-green-800">Identity verified</p>
 
-            <p className="mt-1 text-sm text-green-700">
+            <p className="mt-1 text-sm text-green-700 dark:text-green-400">
               Your employee identity has been verified. No further identity
               verification is required.
             </p>
@@ -169,20 +171,22 @@ export default function EmployeeVerificationRequest({
         )}
 
         {status === "REJECTED" && !hasReachedMaximumAttempts && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="font-medium text-red-800">Verification rejected</p>
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30 p-4">
+            <p className="font-medium text-red-800 dark:text-red-300">
+              Verification rejected
+            </p>
 
             {rejectionReason && (
-              <p className="mt-1 text-sm text-red-700">
+              <p className="mt-1 text-sm text-red-700 dark:text-red-400">
                 Reason: {rejectionReason}
               </p>
             )}
 
-            <p className="mt-3 text-sm text-red-700">
+            <p className="mt-3 text-sm text-red-700 dark:text-red-400">
               You may submit another document.
             </p>
 
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
               {attemptsRemaining} verification attempt
               {attemptsRemaining === 1 ? "" : "s"} remaining.
             </p>
@@ -190,12 +194,12 @@ export default function EmployeeVerificationRequest({
         )}
 
         {hasReachedMaximumAttempts && status !== "APPROVED" && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="font-medium text-red-800">
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30 p-4">
+            <p className="font-medium text-red-800 dark:text-red-300">
               Maximum verification attempts reached
             </p>
 
-            <p className="mt-1 text-sm text-red-700">
+            <p className="mt-1 text-sm text-red-700 dark:text-red-400">
               You have used all {MAX_VERIFICATION_ATTEMPTS} identity
               verification attempts.
             </p>
@@ -208,7 +212,7 @@ export default function EmployeeVerificationRequest({
               type="button"
               onClick={handleViewProof}
               disabled={viewingProof}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {viewingProof ? "Opening proof..." : "View submitted proof"}
             </button>
@@ -222,7 +226,7 @@ export default function EmployeeVerificationRequest({
                 Identity / Employment Proof
               </label>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-300dark:text-slate-400">
                 Upload JPG, PNG, WEBP, or PDF. Maximum size: 10 MB.
               </p>
 
@@ -233,12 +237,12 @@ export default function EmployeeVerificationRequest({
                 onChange={(event) => {
                   setFile(event.target.files?.[0] ?? null);
                 }}
-                className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-900"
+                className="mt-3 block w-full text-sm text-slate-500 dark:text-slate-300dark:text-slate-400 dark:text-slate-300 dark:text-white"
               />
             </div>
 
             {file && (
-              <p className="text-sm text-slate-500 dark:text-slate-900">
+              <p className="text-sm text-slate-500 dark:text-slate-300dark:text-slate-400 dark:text-slate-300 dark:text-white">
                 Selected: {file.name}
               </p>
             )}
@@ -252,7 +256,7 @@ export default function EmployeeVerificationRequest({
               {submitting ? "Submitting..." : "Submit Verification"}
             </button>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-300dark:text-slate-400">
               {attemptsRemaining} verification attempt
               {attemptsRemaining === 1 ? "" : "s"} remaining.
             </p>
