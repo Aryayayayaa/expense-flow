@@ -685,9 +685,9 @@ function InsightsAnalysis({
             </div>
 
             <div className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                 Category Comparison
-              </h3>
+              </h2>
 
               <p className="mt-2 text-sm text-gray-500">
                 Compare total spending across expense categories.

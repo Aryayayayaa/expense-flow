@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 
+import CategoryPieChart from "@/features/analytics/components/charts/CategoryPieChart";
+import CategoryComparisonChart from "@/features/analytics/components/charts/CategoryComparisonChart";
+
+import { getAnalyticsData } from "@/features/analytics/lib/getAnalyticsData";
 import { getDashboardData } from "@/features/dashboard/lib/getDashboardData";
 
 import {
@@ -17,6 +21,7 @@ export default async function DashboardPage() {
   }
 
   const data = await getDashboardData();
+  const analyticsExpenses = await getAnalyticsData("OWN");
 
   const [notifications, unreadNotificationCount] = await Promise.all([
     getNotifications(data.user.id, 20),
@@ -77,6 +82,51 @@ export default async function DashboardPage() {
             icon={<ExpenseIcon />}
           />
         </div>
+
+        {/* Category Insights */}
+        <section className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          {/* Category Breakdown */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                Expense Categories
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                See how your expenses are distributed across categories.
+              </p>
+            </div>
+
+            <div className="min-w-0">
+              <CategoryPieChart
+                expenses={analyticsExpenses}
+                selectedCurrency="ALL"
+                defaultCurrency={data.defaultCurrency}
+              />
+            </div>
+          </div>
+
+          {/* Category Comparison */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                Spending by Category
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Compare your total spending across expense categories.
+              </p>
+            </div>
+
+            <div className="min-w-0">
+              <CategoryComparisonChart
+                expenses={analyticsExpenses}
+                selectedCurrency="ALL"
+                defaultCurrency={data.defaultCurrency}
+              />
+            </div>
+          </div>
+        </section>
 
         {/* Recent Expenses */}
         <div className="mt-8 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
