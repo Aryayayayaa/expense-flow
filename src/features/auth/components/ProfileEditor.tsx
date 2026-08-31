@@ -89,12 +89,12 @@ export default function ProfileEditor({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
     >
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-slate-900">Edit Profile</h2>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Edit Profile</h2>
 
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Update your account information.
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function ProfileEditor({
         <div>
           <label
             htmlFor="profile-name"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Name
           </label>
@@ -114,11 +114,11 @@ export default function ProfileEditor({
             value={name}
             onChange={(event) => setName(event.target.value)}
             disabled={role === "EMPLOYEE" || role === "ADMIN"}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
 
           {(role === "EMPLOYEE" || role === "ADMIN") && (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               Name changes must be requested through HR.
             </p>
           )}
@@ -127,7 +127,7 @@ export default function ProfileEditor({
         <div>
           <label
             htmlFor="profile-email"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Email
           </label>
@@ -137,14 +137,14 @@ export default function ProfileEditor({
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
         </div>
 
         <div>
           <label
             htmlFor="profile-default-currency"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             Default Currency
           </label>
@@ -156,7 +156,7 @@ export default function ProfileEditor({
               setDefaultCurrency(event.target.value as CurrencyCode)
             }
             disabled={saving}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           >
             {SUPPORTED_CURRENCIES.map((currency) => (
               <option key={currency.code} value={currency.code}>
@@ -165,7 +165,7 @@ export default function ProfileEditor({
             ))}
           </select>
 
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             This currency is used as your preferred currency throughout the
             application.
           </p>
@@ -174,7 +174,7 @@ export default function ProfileEditor({
         <div>
           <label
             htmlFor="profile-password"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-700 dark:text-slate-300"
           >
             New Password
           </label>
@@ -185,17 +185,17 @@ export default function ProfileEditor({
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Leave blank to keep current password"
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 outline-none focus:border-blue-500 dark:text-slate-900"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400"
           />
         </div>
       </div>
 
       {error && (
-        <p className="mt-4 text-sm font-medium text-red-600">{error}</p>
+        <p className="mt-4 text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
       )}
 
       {message && (
-        <p className="mt-4 text-sm font-medium text-green-600">{message}</p>
+        <p className="mt-4 text-sm font-medium text-green-600 dark:text-green-400">{message}</p>
       )}
 
       <button
