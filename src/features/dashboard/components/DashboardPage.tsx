@@ -40,7 +40,7 @@ export default async function DashboardPage() {
           </div>
 
           <Link
-            href="/expenses/new"
+            href="/expenses"
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
           >
             <PlusIcon />
@@ -231,24 +231,24 @@ export default async function DashboardPage() {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <QuickAction
-              href="/expenses/new"
+              href="/expenses"
               title="Submit an Expense"
               description="Add a new expense and upload your receipt."
               icon={<PlusIcon />}
             />
 
             <QuickAction
-              href="/expenses"
-              title="View My Expenses"
-              description="Review your expenses and their current details."
-              icon={<ExpenseIcon />}
+              href="/approvals"
+              title="Track Expenses"
+              description="View and check your submitted expense statuses."
+              icon={<WalletIcon />}
             />
 
             <QuickAction
-              href="/expenses"
-              title="Track Expenses"
-              description="View and manage your submitted expenses."
-              icon={<WalletIcon />}
+              href="/insights"
+              title="View Expenses Graphically"
+              description="Track your expenses graphically."
+              icon={<ExpenseIcon />}
             />
           </div>
         </div>

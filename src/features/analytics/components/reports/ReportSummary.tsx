@@ -55,7 +55,7 @@ export default function ReportSummary({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5">
       {summary.map((item) => (
         <div
           key={item.label}
@@ -65,7 +65,7 @@ export default function ReportSummary({
             {item.label}
           </p>
 
-          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <p className="mt-2 min-w-0 break-words text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-2xl lg:text-2xl 2xl:text-3xl">
             {item.value}
           </p>
         </div>

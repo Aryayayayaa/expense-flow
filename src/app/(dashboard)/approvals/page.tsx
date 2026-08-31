@@ -201,7 +201,7 @@ export default async function ApprovalsPage({
                 }))}
               />
             </div>
-            // Expense Scope
+
             <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">

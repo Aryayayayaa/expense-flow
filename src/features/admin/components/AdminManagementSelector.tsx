@@ -295,7 +295,7 @@ export default function AdminManagementSelector({
       {view === "employee-verification" && (
         <>
           <section>
-            <div className="mb-5">
+            {/* <div className="mb-5">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Identity Verification
               </h2>
@@ -304,7 +304,7 @@ export default function AdminManagementSelector({
                 Submit your own identity verification request. Another HR or
                 Admin account must review it.
               </p>
-            </div>
+            </div> */}
 
             <EmployeeVerificationRequest
               requestId={latestOwnIdentityRequest?.id}
@@ -370,7 +370,7 @@ export default function AdminManagementSelector({
       {view === "name-change" && (
         <>
           <section>
-            <div className="mb-5">
+            {/* <div className="mb-5">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Request Name Change
               </h2>
@@ -379,7 +379,7 @@ export default function AdminManagementSelector({
                 Submit your own name change request. Another HR or Admin account
                 must review it.
               </p>
-            </div>
+            </div> */}
 
             <NameChangeRequest currentName={userName} />
           </section>

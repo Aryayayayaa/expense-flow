@@ -426,7 +426,7 @@ export default function AnalyticsPageClient({
 
         {activeTab === "monthly" && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Monthly Trends
             </h2>
 
@@ -434,7 +434,7 @@ export default function AnalyticsPageClient({
               Track your total spending and category-wise spending over time.
             </p>
 
-            <div className="mt-8">
+            <div className="mt-8 dark:text-white">
               <h3 className="text-lg font-semibold text-gray-900">
                 Total Monthly Expenses
               </h3>

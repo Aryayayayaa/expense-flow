@@ -81,14 +81,14 @@ export default function YearlyTrendChart({
   }
 
   return (
-    <div className="mt-6 h-80 w-full text-slate-500 dark:text-slate-400">
+    <div className="mt-6 h-80 w-full min-w-0 text-slate-500 dark:text-slate-400">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={yearlyData}
           margin={{
             top: 10,
-            right: 20,
-            left: 70,
+            right: 10,
+            left: 20,
             bottom: 10,
           }}
         >
