@@ -670,7 +670,7 @@ export default function NotificationBell({
         aria-label="Notifications"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+        className="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
       >
         <Bell size={22} />
 
@@ -683,20 +683,20 @@ export default function NotificationBell({
 
       {open && dropdownPosition && (
         <div
-          className="fixed z-[100] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+          className="fixed z-[100] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
           style={{
             top: dropdownPosition.top,
             left: dropdownPosition.left,
             width: dropdownPosition.width,
           }}
         >
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-semibold text-slate-100">
                 Notifications
               </h2>
 
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-400">
                 {count === 0
                   ? "You're all caught up."
                   : `${count} unread notification${count === 1 ? "" : "s"}`}
@@ -707,7 +707,7 @@ export default function NotificationBell({
               <button
                 type="button"
                 onClick={handleMarkAllAsRead}
-                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-400"
               >
                 <CheckCheck size={14} />
                 Mark all read
@@ -718,13 +718,16 @@ export default function NotificationBell({
           <div className="max-h-[min(420px,calc(100vh-7rem))] overflow-y-auto">
             {items.length === 0 ? (
               <div className="px-5 py-10 text-center">
-                <Bell size={28} className="mx-auto text-slate-300" />
+                <Bell
+                  size={28}
+                  className="mx-auto text-slate-600 dark:text-slate-500"
+                />
 
-                <p className="mt-3 text-sm font-medium text-slate-700">
+                <p className="mt-3 text-sm font-medium text-slate-200">
                   No notifications
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-400">
                   New activity will appear here.
                 </p>
               </div>
@@ -755,14 +758,19 @@ export default function NotificationBell({
                     key={notification.id}
                     type="button"
                     onClick={() => handleNotificationClick(notification)}
-                    className={`w-full border-b border-slate-100 px-4 py-4 text-left transition last:border-b-0 hover:bg-slate-50 ${
-                      notification.isRead ? "bg-white" : "bg-blue-50/50"
+                    className={`w-full border-b border-slate-100 px-4 py-4 text-left transition last:border-b-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 ${
+                      notification.isRead
+                        ? "bg-white dark:bg-slate-900"
+                        : "bg-blue-50/50 dark:bg-blue-950/30"
                     }`}
                   >
                     <div className="flex gap-3">
                       <div className="mt-1 shrink-0">
                         {notification.isRead ? (
-                          <Check size={16} className="text-slate-300" />
+                          <Check
+                            size={16}
+                            className="text-slate-300 dark:text-slate-600"
+                          />
                         ) : (
                           <span className="block h-2.5 w-2.5 rounded-full bg-blue-600" />
                         )}
@@ -773,24 +781,24 @@ export default function NotificationBell({
                           <p
                             className={`text-sm ${
                               notification.isRead
-                                ? "font-medium text-slate-700"
-                                : "font-semibold text-slate-900"
+                                ? "font-medium text-slate-400"
+                                : "font-semibold text-slate-100"
                             }`}
                           >
                             {content.title}
                           </p>
 
-                          <span className="shrink-0 text-[10px] text-slate-400">
+                          <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
                             {formatNotificationTime(notification.createdAt)}
                           </span>
                         </div>
 
-                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
                           {content.message}
                         </p>
 
                         {navigable && navigationLabel && (
-                          <p className="mt-2 text-[11px] font-medium text-blue-600">
+                          <p className="mt-2 text-[11px] font-medium text-blue-500 dark:text-blue-400">
                             {navigationLabel}
                           </p>
                         )}
