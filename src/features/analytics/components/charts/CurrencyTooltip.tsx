@@ -43,7 +43,6 @@ export default function CurrencyTooltip({
   }
 
   const tooltipEntry = payload[0];
-
   const chartItem = tooltipEntry?.payload;
 
   if (!chartItem) {
@@ -52,19 +51,6 @@ export default function CurrencyTooltip({
 
   const allExpenses = chartItem.expenses ?? [];
 
-  /*
-   * Recharts provides the currently hovered series through
-   * payload[0].name / payload[0].dataKey.
-   *
-   * For category charts this will be something like:
-   *
-   *   "Maintenance & Repairs"
-   *   "Bills"
-   *   "Travel & Meals"
-   *
-   * Therefore, when the tooltip belongs to a category series,
-   * only expenses belonging to that category should be used.
-   */
   const activeSeriesName =
     tooltipEntry.name ?? tooltipEntry.dataKey ?? chartItem.category;
 
@@ -81,12 +67,6 @@ export default function CurrencyTooltip({
   }
 
   const isAllCurrencies = selectedCurrency === "ALL";
-
-  /*
-   * ------------------------------------------------------------------------
-   * Tooltip heading
-   * ------------------------------------------------------------------------
-   */
 
   const periodLabel =
     chartItem.month ??
@@ -105,11 +85,6 @@ export default function CurrencyTooltip({
    * ------------------------------------------------------------------------
    * Specific currency
    * ------------------------------------------------------------------------
-   *
-   * The expenses have already been filtered to the selected
-   * original currency.
-   *
-   * Therefore the original transaction amount is used directly.
    */
 
   if (!isAllCurrencies) {
@@ -124,12 +99,20 @@ export default function CurrencyTooltip({
     );
 
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-        <p className="mb-2 text-sm font-semibold text-slate-100">{heading}</p>
-
-        <p className="text-sm text-slate-700 dark:text-slate-300">
-          {selectedCurrency}: {formatCurrency(total, selectedCurrency)}
+      <div className="min-w-[190px] rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-600 dark:bg-slate-900">
+        <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
+          {heading}
         </p>
+
+        <div className="border-t border-slate-200 pt-2 dark:border-slate-700">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            {selectedCurrency}
+          </p>
+
+          <p className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+            {formatCurrency(total, selectedCurrency)}
+          </p>
+        </div>
       </div>
     );
   }
@@ -138,18 +121,6 @@ export default function CurrencyTooltip({
    * ------------------------------------------------------------------------
    * ALL CURRENCIES
    * ------------------------------------------------------------------------
-   *
-   * Group ONLY the expenses belonging to the currently hovered
-   * chart series.
-   *
-   * Example when hovering Maintenance & Repairs:
-   *
-   * EUR: €56.00 = ₹6,261.92
-   * USD: $100.00 = ₹9,567.00
-   *
-   * Total: ₹15,828.92
-   *
-   * Expenses belonging to Bills, Utilities, etc. are NOT included.
    */
 
   const currencyBreakdown = new Map<
@@ -187,10 +158,12 @@ export default function CurrencyTooltip({
   );
 
   return (
-    <div className="max-w-xs rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-      <p className="mb-3 text-sm font-semibold text-slate-100">{heading}</p>
+    <div className="min-w-[230px] max-w-xs rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-600 dark:bg-slate-900">
+      <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
+        {heading}
+      </p>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-700">
         {[...currencyBreakdown.entries()].map(([currency, breakdown]) => {
           const convertedText = formatCurrency(
             breakdown.convertedAmount,
@@ -202,30 +175,53 @@ export default function CurrencyTooltip({
             currency,
           );
 
-          /*
-           * When the original currency is already the user's
-           * default currency, no conversion explanation is necessary.
-           */
           if (currency === defaultCurrency) {
             return (
-              <p key={currency} className="text-sm text-slate-700">
-                {currency}: {originalText}
-              </p>
+              <div
+                key={currency}
+                className="flex items-center justify-between gap-4 text-sm"
+              >
+                <span className="font-medium text-slate-600 dark:text-slate-400">
+                  {currency}
+                </span>
+
+                <span className="font-semibold text-slate-900 dark:text-white">
+                  {originalText}
+                </span>
+              </div>
             );
           }
 
           return (
-            <p key={currency} className="text-sm text-slate-700">
-              {currency}: {originalText} = {convertedText}
-            </p>
+            <div key={currency} className="text-sm">
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-medium text-slate-600 dark:text-slate-400">
+                  {currency}
+                </span>
+
+                <span className="font-semibold text-slate-900 dark:text-white">
+                  {originalText}
+                </span>
+              </div>
+
+              <p className="mt-0.5 text-right text-xs text-slate-500 dark:text-slate-400">
+                ≈ {convertedText}
+              </p>
+            </div>
           );
         })}
       </div>
 
-      <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-700">
-        <p className="text-sm font-semibold text-slate-100">
-          Total: {formatCurrency(total, defaultCurrency)}
-        </p>
+      <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Total
+          </span>
+
+          <span className="text-base font-bold text-slate-900 dark:text-white">
+            {formatCurrency(total, defaultCurrency)}
+          </span>
+        </div>
       </div>
     </div>
   );

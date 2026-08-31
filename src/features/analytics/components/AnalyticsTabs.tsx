@@ -1,6 +1,6 @@
 "use client";
 
-type AnalyticsTab = "categories" | "monthly" | "yearly";
+export type AnalyticsTab = "categories" | "monthly-yearly";
 
 type AnalyticsTabsProps = {
   activeTab: AnalyticsTab;
@@ -13,12 +13,8 @@ const tabs: { value: AnalyticsTab; label: string }[] = [
     label: "Categories",
   },
   {
-    value: "monthly",
-    label: "Monthly",
-  },
-  {
-    value: "yearly",
-    label: "Yearly",
+    value: "monthly-yearly",
+    label: "Monthly & Yearly Graphs",
   },
 ];
 

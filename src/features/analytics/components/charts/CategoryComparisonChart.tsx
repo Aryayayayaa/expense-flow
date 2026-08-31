@@ -92,7 +92,7 @@ export default function CategoryComparisonChart({
   }
 
   return (
-    <div className="h-[400px] w-full text-slate-500 dark:text-slate-400">
+    <div className="h-[360px] w-full text-slate-500 dark:text-slate-400 sm:h-[380px] lg:h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={chartData}
@@ -126,7 +126,7 @@ export default function CategoryComparisonChart({
           <YAxis
             type="category"
             dataKey="category"
-            width={100}
+            width={90}
             stroke="#64748b"
             tick={{ fill: "#64748b", fontSize: 12 }}
           />

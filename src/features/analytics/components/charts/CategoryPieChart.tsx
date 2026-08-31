@@ -124,71 +124,63 @@ export default function CategoryPieChart({
   }
 
   return (
-    <div className="h-[400px] w-full text-slate-500 dark:text-slate-400">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="45%"
-            innerRadius={90}
-            outerRadius={140}
-            paddingAngle={2}
-            labelLine={false}
-          >
-            {data.map((entry, index) => (
-              <Cell
-                key={entry.name}
-                fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                opacity={
-                  selectedCategory && selectedCategory !== entry.name ? 0.35 : 1
-                }
-              />
-            ))}
-          </Pie>
-
-          <Tooltip
-            content={
-              <CurrencyTooltip
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            }
-          />
-
-          <Legend
-            onClick={handleLegendClick}
-            wrapperStyle={{
-              cursor: "pointer",
-            }}
-          />
-
-          <text
-            x="50%"
-            y="42%"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-slate-500 text-sm dark:fill-slate-400"
-          >
-            Total Expenses
-          </text>
-
-          <text
-            x="50%"
-            y="50%"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            className="fill-slate-900 text-lg font-semibold dark:fill-slate-100"
-          >
+    <>
+      <div className="relative h-[360px] w-full text-slate-500 dark:text-slate-400 sm:h-[380px] lg:h-[400px]">
+        {/* Centre text */}
+        <div className="text-center">
+          <p className="text-sm text-slate-500 dark:text-white sm:text-xl">
+            Total Expenses:
+            <span className="mt-1 whitespace-nowrap font-semibold text-slate-900 dark:text-white sm:text-xl" />
             {new Intl.NumberFormat("en-IN", {
               style: "currency",
               currency: reportCurrency,
             }).format(totalExpenses)}
-          </text>
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+          </p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="42%"
+              innerRadius="50%"
+              outerRadius="70%"
+              paddingAngle={2}
+              labelLine={false}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={entry.name}
+                  fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                  opacity={
+                    selectedCategory && selectedCategory !== entry.name
+                      ? 0.35
+                      : 1
+                  }
+                />
+              ))}
+            </Pie>
+
+            <Tooltip
+              content={
+                <CurrencyTooltip
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              }
+            />
+
+            <Legend
+              onClick={handleLegendClick}
+              wrapperStyle={{
+                cursor: "pointer",
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </>
   );
 }

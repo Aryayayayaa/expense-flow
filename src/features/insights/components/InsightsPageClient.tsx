@@ -638,9 +638,9 @@ function InsightsAnalysis({
   defaultCurrency,
   appliedFilters,
 }: InsightsAnalysisProps) {
-  const [activeTab, setActiveTab] = useState<
-    "categories" | "monthly" | "yearly"
-  >("categories");
+  const [activeTab, setActiveTab] = useState<"categories" | "monthly-yearly">(
+    "categories",
+  );
 
   return (
     <div>
@@ -666,8 +666,12 @@ function InsightsAnalysis({
                     key={filter.key}
                     className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-blue-950 dark:text-blue-200"
                   >
-                    <span className="text-slate-900 dark:text-blue-100">{filter.label}</span>
-                    <span className="text-slate-500 dark:text-blue-300">{filter.value}</span>
+                    <span className="text-slate-900 dark:text-blue-100">
+                      {filter.label}
+                    </span>
+                    <span className="text-slate-500 dark:text-blue-300">
+                      {filter.value}
+                    </span>
                   </span>
                 ))}
               </div>
@@ -681,9 +685,9 @@ function InsightsAnalysis({
             </div>
 
             <div className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                 Category Comparison
-              </h3>
+              </h2>
 
               <p className="mt-2 text-sm text-gray-500">
                 Compare total spending across expense categories.
@@ -700,82 +704,81 @@ function InsightsAnalysis({
           </div>
         )}
 
-        {activeTab === "monthly" && (
+        {activeTab === "monthly-yearly" && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
-              Monthly Trends
-            </h2>
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
+                Monthly and Yearly Graphs
+              </h2>
 
-            <p className="mt-2 text-gray-500 dark:text-slate-400">
-              Track your total spending and category-wise spending over time.
-            </p>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Total Monthly Expenses
-              </h3>
-
-              <MonthlyTrendChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            </div>
-
-            <div className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Monthly Expenses by Category
-              </h3>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Compare how each expense category changes month by month.
+              <p className="mt-2 text-gray-500 dark:text-slate-400">
+                Track total spending and category-wise spending across months
+                and years.
               </p>
-
-              <MonthlyCategoryTrendChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "yearly" && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
-              Yearly Trends
-            </h2>
-
-            <p className="mt-2 text-gray-500 dark:text-slate-400">
-              Track your total spending and category-wise spending across years.
-            </p>
-
-            <div className="m-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Total Yearly Expenses
-              </h3>
-
-              <YearlyTrendChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
             </div>
 
+            {/* Total Monthly / Total Yearly */}
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                  Total Monthly Expense
+                </h3>
+
+                <MonthlyTrendChart
+                  expenses={expenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
+
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                  Total Yearly Expenses
+                </h3>
+
+                <YearlyTrendChart
+                  expenses={expenses}
+                  selectedCurrency={selectedCurrency}
+                  defaultCurrency={defaultCurrency}
+                />
+              </div>
+            </div>
+
+            {/* Monthly Category / Yearly Category */}
             <div className="mt-10 border-t border-slate-200 pt-8 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Yearly Expenses by Category
-              </h3>
+              <div className="grid gap-8 lg:grid-cols-2">
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                    Monthly Expenses By Category
+                  </h3>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Compare category-wise spending across different years.
-              </p>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                    Compare how each expense category changes month by month.
+                  </p>
 
-              <YearlyCategoryChart
-                expenses={expenses}
-                selectedCurrency={selectedCurrency}
-                defaultCurrency={defaultCurrency}
-              />
+                  <MonthlyCategoryTrendChart
+                    expenses={expenses}
+                    selectedCurrency={selectedCurrency}
+                    defaultCurrency={defaultCurrency}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                    Yearly Expenses By Category
+                  </h3>
+
+                  <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                    Compare category-wise spending across different years.
+                  </p>
+
+                  <YearlyCategoryChart
+                    expenses={expenses}
+                    selectedCurrency={selectedCurrency}
+                    defaultCurrency={defaultCurrency}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
