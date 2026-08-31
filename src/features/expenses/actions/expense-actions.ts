@@ -505,6 +505,16 @@ export async function updateExpenseAction(
 
     const changes: Record<string, ExpenseChange> = {};
 
+    const pendingReceiptUrl = String(
+      formData.get("ocrReceiptUrl") ?? "",
+    ).trim();
+
+    const pendingReceiptPath = String(
+      formData.get("ocrReceiptPath") ?? "",
+    ).trim();
+
+    const pendingReceiptRawText = String(formData.get("ocrRawText") ?? "");
+
     if (existingExpense.title !== result.data.title) {
       changes.title = {
         from: existingExpense.title,
@@ -559,6 +569,24 @@ export async function updateExpenseAction(
             ...result.data,
             ...currencyData,
           });
+
+    if (pendingReceiptUrl && pendingReceiptPath) {
+      const receiptResult = await saveOcrReceiptAction(
+        id,
+        pendingReceiptUrl,
+        pendingReceiptPath,
+        pendingReceiptRawText,
+      );
+
+      if (!receiptResult.success) {
+        return {
+          success: false,
+          errors: {},
+          message: receiptResult.message,
+          expenseId: undefined,
+        };
+      }
+    }
 
     /*
      * Admin modifications are audited inside updateExpenseAsAdmin()
