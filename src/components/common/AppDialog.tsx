@@ -137,7 +137,7 @@ export default function AppDialog({
         aria-modal="true"
         aria-labelledby="app-dialog-title"
         aria-describedby={description ? "app-dialog-description" : undefined}
-        className="w-full max-w-md rounded-2xl bg-white shadow-2xl"
+        className="w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-slate-900 dark:text-white"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start gap-4 p-6">
@@ -154,14 +154,14 @@ export default function AppDialog({
           <div className="min-w-0 flex-1">
             <h2
               id="app-dialog-title"
-              className="text-lg font-semibold text-slate-900"
+              className="text-lg font-semibold text-slate-900 dark:text-white"
             >
               {loading ? loadingLabel : title}
             </h2>
 
             {loading ? (
               <div
-                className="mt-2 flex items-center gap-2 text-sm leading-6 text-slate-600"
+                className="mt-2 flex items-center gap-2 text-sm leading-6 text-slate-600 dark:text-slate-300"
                 role="status"
                 aria-live="polite"
               >
@@ -175,7 +175,7 @@ export default function AppDialog({
               description && (
                 <p
                   id="app-dialog-description"
-                  className="mt-2 text-sm leading-6 text-slate-600"
+                  className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300"
                 >
                   {description}
                 </p>
@@ -188,7 +188,7 @@ export default function AppDialog({
             onClick={onCancel}
             disabled={loading}
             aria-label="Close dialog"
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 dark:text-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X size={18} />
           </button>
@@ -210,7 +210,7 @@ export default function AppDialog({
               placeholder={reasonPlaceholder}
               rows={4}
               disabled={loading}
-              className="w-full resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+              className="w-full resize-none rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed isabled:bg-slate-50 dark:disabled:bg-slate-700"
             />
 
             {!reason.trim() && (
@@ -219,14 +219,14 @@ export default function AppDialog({
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 p-6 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 dark:border-slate-700 p-6 sm:flex-row sm:justify-end">
           {showCancel && (
             <button
               ref={cancelButtonRef}
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               {cancelLabel}
             </button>

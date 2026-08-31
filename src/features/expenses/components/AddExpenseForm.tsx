@@ -544,7 +544,7 @@ export default function AddExpenseForm({
 
           void handleSubmit(new FormData(event.currentTarget));
         }}
-        className="space-y-5 text-black"
+        className="space-y-5 text-slate-900 dark:text-slate-100"
       >
         {/* =====================================================
             HEADER
@@ -576,7 +576,9 @@ export default function AddExpenseForm({
         ) : (
           <div className="space-y-3 rounded-lg border border-gray-200 p-4">
             <div>
-              <p className="font-medium text-gray-800">📄 Supporting Receipt</p>
+              <p className="font-medium text-gray-800 dark:text-white">
+                📄 Supporting Receipt
+              </p>
 
               <p className="text-sm text-gray-500">
                 Review the existing receipt or upload a replacement.
@@ -589,9 +591,9 @@ export default function AddExpenseForm({
               )}
 
               <label
-                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-gray-50 ${
+                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-gray-50 ${
                   replacingReceipt ? "cursor-not-allowed opacity-50" : ""
-                }`}
+                } dark:bg-white`}
               >
                 {replacingReceipt
                   ? "Uploading..."

@@ -154,13 +154,13 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
     defaultCurrency.trim().toUpperCase();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-800 px-4 py-6 sm:px-6 sm:py-8 dark:bg-slate-900">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-6">
           <Link
             href="/expenses"
-            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
+            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 transition hover:text-slate-900 dark:text-white"
           >
             <ArrowLeft size={17} />
             Back to Expenses
@@ -168,11 +168,13 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="mt-1 break-words text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-1 break-words text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl dark:text-white">
                 {expense.title}
               </h1>
 
-              <p className="mt-2 text-sm text-slate-500">Expense Details</p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Expense Details
+              </p>
             </div>
 
             {isPending && (
@@ -198,8 +200,8 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
           {/* Main content */}
           <div className="space-y-6 lg:col-span-2">
             {/* Amount and basic details */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Expense Amount
               </p>
 
@@ -211,9 +213,9 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
 
                 {/* Original entered amount when currencies differ */}
                 {hasDifferentDisplayCurrency && (
-                  <p className="mt-2 text-sm text-slate-500">
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                     Originally entered:{" "}
-                    <span className="font-medium text-slate-700">
+                    <span className="font-medium text-slate-700 dark:text-slate-200">
                       {formatCurrency(Number(expense.amount), expense.currency)}
                     </span>
                   </p>
@@ -248,13 +250,13 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
             </section>
 
             {/* Expense status */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
               <div className="mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                   Expense Status
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Current approval and reimbursement status.
                 </p>
               </div>
@@ -395,18 +397,18 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
             </section>
 
             {/* Receipt */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="rounded-lg bg-blue-50 p-2">
                   <ReceiptText size={20} className="text-blue-600" />
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                     Receipt
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Receipt associated with this expense.
                   </p>
                 </div>
@@ -429,14 +431,14 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
                   </div>
                 </div>
               ) : (
-                <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center">
+                <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 dark:bg-slate-800 p-5 text-center">
                   <ReceiptText size={28} className="mx-auto text-slate-400" />
 
-                  <p className="mt-3 font-medium text-slate-700">
+                  <p className="mt-3 font-medium text-slate-700 dark:text-slate-200">
                     No receipt attached
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     A receipt has not been attached to this expense.
                   </p>
                 </div>
@@ -448,25 +450,32 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
           <aside className="space-y-6">
             {/* Employee */}
             {expense.user && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-slate-100 p-2">
-                    <User size={20} className="text-slate-600" />
+                    <User
+                      size={20}
+                      className="text-slate-600 dark:text-slate-300"
+                    />
                   </div>
 
                   <div>
-                    <h2 className="font-semibold text-slate-900">Employee</h2>
+                    <h2 className="font-semibold text-slate-900 dark:text-white">
+                      Employee
+                    </h2>
 
-                    <p className="text-sm text-slate-500">Expense owner</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Expense owner
+                    </p>
                   </div>
                 </div>
 
                 <div className="mt-5">
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-slate-900 dark:text-white">
                     {expense.user.name}
                   </p>
 
-                  <p className="mt-1 break-all text-sm text-slate-500">
+                  <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">
                     {expense.user.email}
                   </p>
                 </div>
@@ -475,27 +484,29 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
 
             {/* Reimbursement */}
             {(isApproved || isReimbursed || isReimbursementRejected) && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-blue-50 p-2">
                     <Banknote size={20} className="text-blue-600" />
                   </div>
 
                   <div>
-                    <h2 className="font-semibold text-slate-900">
+                    <h2 className="font-semibold text-slate-900 dark:text-white">
                       Reimbursement
                     </h2>
 
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       Reimbursement information
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-5">
-                  <p className="text-sm font-medium text-slate-500">Status</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Status
+                  </p>
 
-                  <p className="mt-1 font-semibold text-slate-900">
+                  <p className="mt-1 font-semibold text-slate-900 dark:text-white">
                     {isReimbursed
                       ? "Reimbursed"
                       : isReimbursementRejected
@@ -504,7 +515,7 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
                   </p>
 
                   {isReimbursed && expense.reimbursementBy && (
-                    <div className="mt-4 border-t border-slate-200 pt-4 text-sm text-slate-600">
+                    <div className="mt-4 border-t border-slate-200 dark:border-slate-700 pt-4 text-sm text-slate-600">
                       <p>
                         <span className="font-medium">Reimbursed by:</span>{" "}
                         {expense.reimbursementBy.name}
@@ -523,8 +534,10 @@ export default async function ExpensePage({ params }: ExpensePageProps) {
             )}
 
             {/* Summary */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="font-semibold text-slate-900">Expense Summary</h2>
+            <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 p-6 shadow-sm">
+              <h2 className="font-semibold text-slate-900 dark:text-white dark:text-white">
+                Expense Summary
+              </h2>
 
               <div className="mt-4 space-y-3 text-sm">
                 <SummaryRow label="Category" value={expense.category} />
@@ -554,15 +567,15 @@ function InfoItem({
   value: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <div className="mt-0.5 text-slate-500">{icon}</div>
+    <div className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4">
+      <div className="mt-0.5 text-slate-500 dark:text-slate-400">{icon}</div>
 
       <div className="min-w-0">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
           {label}
         </p>
 
-        <p className="mt-1 break-words text-sm font-semibold text-slate-800">
+        <p className="mt-1 break-words text-sm font-semibold text-slate-800 dark:text-white">
           {value}
         </p>
       </div>
@@ -573,9 +586,11 @@ function InfoItem({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-      <span className="text-slate-500">{label}</span>
+      <span className="text-slate-500 dark:text-slate-400">{label}</span>
 
-      <span className="text-right font-medium text-slate-800">{value}</span>
+      <span className="text-right font-medium text-slate-800 dark:text-white">
+        {value}
+      </span>
     </div>
   );
 }
