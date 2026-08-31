@@ -1,7 +1,16 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+
 import Link from "next/link";
 import LoginForm from "@/features/auth/components/LoginForm";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth();
+
+  if (session?.user?.id) {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-md flex-col justify-center">
