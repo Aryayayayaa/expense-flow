@@ -26,7 +26,7 @@ export function ApprovalStatusFilter({
   onChange,
 }: ApprovalStatusFilterProps) {
   return (
-    <div className="min-w-0 w-full">
+    <div className="min-w-0 w-full dark:bg-slate-800">
       <select
         id="expense-approval-status-filter"
         value={value}
@@ -49,7 +49,7 @@ export function ReimbursementStatusFilter({
   onChange,
 }: ReimbursementStatusFilterProps) {
   return (
-    <div className="min-w-0 w-full">
+    <div className="min-w-0 w-full dark:bg-slate-800">
       <select
         id="expense-reimbursement-status-filter"
         value={value}

@@ -166,7 +166,7 @@ export default async function ApprovalsPage({
                   Pending Approvals
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Previously approved and rejected expenses within the selected
                   expense scope.
                 </p>
@@ -201,15 +201,14 @@ export default async function ApprovalsPage({
                 }))}
               />
             </div>
-
-            {/* Expense Scope */}
-            <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+            // Expense Scope
+            <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800">
               <div className="mb-3">
-                <h3 className="text-sm font-semibold text-slate-900">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Expense Scope
                 </h3>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Choose which pending expenses you want to view.
                 </p>
               </div>
@@ -232,7 +231,7 @@ export default async function ApprovalsPage({
                 <select
                   name="scope"
                   defaultValue={expenseScope}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-900"
                 >
                   <option value="OWN">OWN</option>
                   <option value="EMPLOYEES">Employees</option>
@@ -248,7 +247,6 @@ export default async function ApprovalsPage({
                 </button>
               </form>
             </div>
-
             <ApprovalList
               expenses={serializedPendingExpenses}
               expenseScope={expenseScope}
@@ -267,7 +265,7 @@ export default async function ApprovalsPage({
                   Approval History
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Previously approved and rejected expenses.
                 </p>
               </div>
@@ -309,11 +307,11 @@ export default async function ApprovalsPage({
             {/* Approval history filters */}
             <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-slate-900">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Filter Approval History
                 </h3>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Filter approval history by approval and reimbursement status.
                 </p>
               </div>
@@ -334,7 +332,7 @@ export default async function ApprovalsPage({
                     Approval Delete History
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Expenses deleted by Admins are preserved here with their
                     deletion reason and owner information for the selected
                     scope.
@@ -435,7 +433,7 @@ export default async function ApprovalsPage({
             My Expense Status
           </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Track the approval status of your submitted expenses.
           </p>
         </div>
@@ -472,13 +470,13 @@ export default async function ApprovalsPage({
       </div>
 
       {/* Employee / HR filters */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <div className="mb-4">
-          <h2 className="text-sm font-semibold text-slate-900">
+      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:bg-slate-800">
+        <div className="mb-4 dark:bg-slate-800">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 dark:bg-slate-800">
             Filter Expense Status
           </h2>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Filter your expenses by approval and reimbursement status.
           </p>
         </div>
@@ -498,7 +496,7 @@ export default async function ApprovalsPage({
               Deleted Expenses History
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Expenses deleted by an Admin that originally belonged to you.
             </p>
           </div>
