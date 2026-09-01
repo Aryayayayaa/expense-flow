@@ -219,7 +219,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                 label="Claims"
                 tooltip="Submit and track your account-related requests"
                 icon={<RequestsIcon />}
-                active={false}
+                active={true}
               />
 
               {isRequestsOpen && (
@@ -275,7 +275,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                 label="Administration"
                 tooltip="Manage users, expenses, and administrative activities"
                 icon={<SettingsIcon />}
-                active={false}
+                active={true}
               />
 
               {/* Administration Submenus */}
@@ -342,7 +342,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
                 label="People Management"
                 tooltip="Manage employee verification, requests, and HR activities"
                 icon={<SettingsIcon />}
-                active={false}
+                active={true}
               />
 
               {isHROpen && (

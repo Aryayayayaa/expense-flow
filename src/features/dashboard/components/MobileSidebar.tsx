@@ -165,7 +165,7 @@ export default function MobileSidebar({
                   href="/requests"
                   label="Claims"
                   icon={<RequestsIcon />}
-                  active={false}
+                  active={true}
                 />
 
                 {isRequestsOpen && (
@@ -214,7 +214,7 @@ export default function MobileSidebar({
                   label="Administration"
                   onClick={closeMenu}
                   icon={<SettingsIcon />}
-                  active={false}
+                  active={true}
                 />
 
                 {/* Administration Submenus */}
@@ -272,7 +272,7 @@ export default function MobileSidebar({
                   href="/hr"
                   label="People Management"
                   icon={<SettingsIcon />}
-                  active={false}
+                  active={true}
                 />
 
                 {isHROpen && (
