@@ -408,11 +408,11 @@ export default function Sidebar({ userRole }: SidebarProps) {
 
         <SidebarLink
           href="/contact"
-          label={userRole === "EMPLOYEE" ? "Contact Us" : "Contact Support"}
+          label={userRole === "EMPLOYEE" ? "Contact Us" : "Support Tickets"}
           tooltip={
             userRole === "EMPLOYEE"
               ? "Contact support regarding an issue or question"
-              : "View and manage employee contact requests"
+              : "View and manage support tickets"
           }
           icon={<ContactIcon />}
           active={pathname.startsWith("/contact")}

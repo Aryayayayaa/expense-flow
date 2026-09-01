@@ -39,7 +39,7 @@ export default async function ContactSupportPage() {
     <div className="m-3 w-full sm:m-5 sm:p-5 p-3">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white">
-          Contact Support
+          Support Tickets
         </h1>
 
         <p className="mt-1 max-w-[650px] text-sm leading-5 text-slate-700 dark:text-slate-300">

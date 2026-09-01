@@ -72,7 +72,7 @@ export default function SupportRequestDetailsDialog({
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Email
               </p>
-              <p className="mt-1 break-all text-sm text-slate-700">
+              <p className="mt-1 break-all text-sm text-slate-900 dark:text-white">
                 {request.user?.email ?? "—"}
               </p>
             </div>
@@ -81,7 +81,7 @@ export default function SupportRequestDetailsDialog({
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Category
               </p>
-              <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">
+              <p className="mt-1 text-sm text-slate-900 dark:text-white">
                 {request.category}
               </p>
             </div>
@@ -90,7 +90,7 @@ export default function SupportRequestDetailsDialog({
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Status
               </p>
-              <p className="mt-1 text-sm font-medium text-slate-700">
+              <p className="mt-1 text-sm font-medium text-slate-900 dark:text-white">
                 {request.status}
               </p>
             </div>
