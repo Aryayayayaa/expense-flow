@@ -176,6 +176,7 @@ export default function CategoryPieChart({
               onClick={handleLegendClick}
               wrapperStyle={{
                 cursor: "pointer",
+                fontSize: "12px",
               }}
             />
           </PieChart>
