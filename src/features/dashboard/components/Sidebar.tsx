@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import ThemeToggle from "./ThemeToggle";
 import LogoutButton from "@/features/auth/components/LogoutButton";
