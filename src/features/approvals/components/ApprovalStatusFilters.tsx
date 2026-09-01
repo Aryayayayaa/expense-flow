@@ -48,8 +48,8 @@ export default function ApprovalStatusFilters({
   }
 
   return (
-    <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800">
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 dark:bg-slate-800">
+    <div className="w-full">
+      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
         <ApprovalStatusFilter
           value={approvalStatus}
           onChange={(value) => updateFilters(value, reimbursementStatus)}

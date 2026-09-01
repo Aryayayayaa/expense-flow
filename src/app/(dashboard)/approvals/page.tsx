@@ -470,8 +470,8 @@ export default async function ApprovalsPage({
       </div>
 
       {/* Employee / HR filters */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:bg-slate-800">
-        <div className="mb-4 dark:bg-slate-800">
+      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+        <div className="mb-3">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 dark:bg-slate-800">
             Filter Expense Status
           </h2>

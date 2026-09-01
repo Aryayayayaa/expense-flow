@@ -101,72 +101,84 @@ export default function Filters({
 }: FiltersProps) {
   return (
     <div className="mt-8 rounded-xl border border-slate-200 bg-white p-5 dark:bg-slate-900 dark:text-white">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold text-slate-900 dark:bg-slate-900 dark:text-white">
               {title}
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">{description}</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {description}
+            </p>
           </div>
 
           {hasActiveFilters && onClearFilters && (
             <button
               type="button"
               onClick={onClearFilters}
-              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+              className="shrink-0 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             >
               Clear filters
             </button>
           )}
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <CurrencyFilter
-            value={selectedCurrency}
-            onChange={onCurrencyChange}
-          />
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 2xl:gap-3">
+          <div className="min-w-0">
+            <CurrencyFilter
+              value={selectedCurrency}
+              onChange={onCurrencyChange}
+            />
+          </div>
 
-          <ApprovalStatusFilter
-            value={approvalStatus}
-            onChange={onApprovalStatusChange}
-          />
+          <div className="min-w-0">
+            <ApprovalStatusFilter
+              value={approvalStatus}
+              onChange={onApprovalStatusChange}
+            />
+          </div>
 
-          <ReimbursementStatusFilter
-            value={reimbursementStatus}
-            onChange={onReimbursementStatusChange}
-          />
-
-          <CategoryFilter
-            value={selectedCategory}
-            onChange={onCategoryChange}
-            categories={categories}
-          />
-
-          <YearFilter
-            value={selectedYear}
-            years={years}
-            onChange={onYearChange}
-          />
-
-          <MonthFilter
-            value={selectedMonth}
-            selectedYear={selectedYear}
-            onChange={onMonthChange}
-          />
-
-          <DateFilter
-            value={dateFilter}
-            onChange={onDateFilterChange}
-            startDate={customStartDate}
-            endDate={customEndDate}
-            onStartDateChange={onCustomStartDateChange}
-            onEndDateChange={onCustomEndDateChange}
-            minDate={minDate}
-            maxDate={maxDate}
-            disablePresets={disableDatePresets}
-          />
+          <div className="min-w-0">
+            <ReimbursementStatusFilter
+              value={reimbursementStatus}
+              onChange={onReimbursementStatusChange}
+            />
+          </div>
+          <div className="min-w-0">
+            <CategoryFilter
+              value={selectedCategory}
+              onChange={onCategoryChange}
+              categories={categories}
+            />
+          </div>
+          <div className="min-w-0">
+            <YearFilter
+              value={selectedYear}
+              years={years}
+              onChange={onYearChange}
+            />
+          </div>
+          <div className="min-w-0">
+            <MonthFilter
+              value={selectedMonth}
+              selectedYear={selectedYear}
+              onChange={onMonthChange}
+            />
+          </div>
+          <div className="min-w-0">
+            <DateFilter
+              value={dateFilter}
+              onChange={onDateFilterChange}
+              startDate={customStartDate}
+              endDate={customEndDate}
+              onStartDateChange={onCustomStartDateChange}
+              onEndDateChange={onCustomEndDateChange}
+              minDate={minDate}
+              maxDate={maxDate}
+              disablePresets={disableDatePresets}
+            />
+          </div>
         </div>
       </div>
     </div>
