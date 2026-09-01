@@ -219,7 +219,7 @@ export async function PATCH(
                   font-weight: 600;
                 "
               >
-                View Contact Support
+                View Support Tickets
               </a>
             </p>
           </div>

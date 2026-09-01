@@ -105,7 +105,7 @@ export default function SupportRequestTable({
                   {formatCategory(request.category)}
                 </td>
 
-                <td className="px-4 py-3 font-medium text-slate-100">
+                <td className="px-4 py-3 font-medium dark:text-slate-100">
                   {request.subject}
                 </td>
 
@@ -124,7 +124,7 @@ export default function SupportRequestTable({
                   </button>
                 </td>
 
-                <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">
+                <td className="px-4 py-3 font-medium text-black dark:text-white">
                   {canUpdateStatus && mounted ? (
                     <SupportRequestStatusSelect
                       requestId={request.id}
