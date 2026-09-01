@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import ThemeToggle from "./ThemeToggle";
 import LogoutButton from "@/features/auth/components/LogoutButton";
@@ -10,11 +11,13 @@ import type { Role } from "@prisma/client";
 type MobileSidebarProps = {
   userName?: string | null;
   userRole?: Role;
+  active?: boolean;
 };
 
 export default function MobileSidebar({
   userName,
   userRole,
+  active = false,
 }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -24,6 +27,13 @@ export default function MobileSidebar({
   const closeMenu = () => {
     setIsOpen(false);
   };
+
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const isRequestsOpen = pathname.startsWith("/requests");
+  const isReimbursementsOpen = pathname.startsWith("/reimbursements");
+  const isHROpen = pathname.startsWith("/hr");
+  const isAdminOpen = pathname.startsWith("/admin");
 
   return (
     <>
@@ -104,6 +114,7 @@ export default function MobileSidebar({
               label="Dashboard"
               onClick={closeMenu}
               icon={<DashboardIcon />}
+              active={pathname === "/dashboard"}
             />
 
             <MobileNavLink
@@ -111,6 +122,7 @@ export default function MobileSidebar({
               label="My Expenses"
               onClick={closeMenu}
               icon={<ExpenseIcon />}
+              active={pathname === "/expenses"}
             />
 
             {/* <MobileNavLink
@@ -125,6 +137,7 @@ export default function MobileSidebar({
               label="Approvals"
               onClick={closeMenu}
               icon={<CheckIcon />}
+              active={pathname === "/approvals"}
             />
 
             {(userRole === "ADMIN" || userRole === "HR") && (
@@ -133,6 +146,7 @@ export default function MobileSidebar({
                 label="Reimbursements"
                 onClick={closeMenu}
                 icon={<WalletIcon />}
+                active={pathname === "/reimbursements"}
               />
             )}
 
@@ -141,33 +155,162 @@ export default function MobileSidebar({
               label="Insights"
               onClick={closeMenu}
               icon={<AnalysisIcon />}
+              active={pathname === "/insights"}
             />
 
+            {/* "Claims" for Employee Account */}
             {userRole === "EMPLOYEE" && (
-              <MobileNavLink
-                href="/requests"
-                label="Claims"
-                onClick={closeMenu}
-                icon={<RequestsIcon />}
-              />
+              <>
+                <MobileNavLink
+                  href="/requests"
+                  label="Claims"
+                  icon={<RequestsIcon />}
+                  active={false}
+                />
+
+                {isRequestsOpen && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {/* Default: Name Change */}
+                    <MobileNavLink
+                      href="/requests?type=name-change"
+                      label="Name Change"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/requests" &&
+                        (!searchParams.get("type") ||
+                          searchParams.get("type") === "name-change")
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/requests?type=role-verification"
+                      label="Role Verification"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/requests" &&
+                        searchParams.get("type") === "role-verification"
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/requests?type=identity-verification"
+                      label="Identity Verification"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/requests" &&
+                        searchParams.get("type") === "identity-verification"
+                      }
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {userRole === "ADMIN" && (
-              <MobileNavLink
-                href="/admin"
-                label="Administration"
-                onClick={closeMenu}
-                icon={<SettingsIcon />}
-              />
+              <>
+                {/* Main Administration Section */}
+                <MobileNavLink
+                  href="/admin"
+                  label="Administration"
+                  onClick={closeMenu}
+                  icon={<SettingsIcon />}
+                  active={false}
+                />
+
+                {/* Administration Submenus */}
+                {isAdminOpen && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {/* Default: Users */}
+                    <MobileNavLink
+                      href="/admin?view=users"
+                      label="Users"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/admin" &&
+                        (!searchParams.get("view") ||
+                          searchParams.get("view") === "users")
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/admin?view=employee-verification"
+                      label="Employee Verification"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/admin" &&
+                        searchParams.get("view") === "employee-verification"
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/admin?view=name-change"
+                      label="Name Change Requests"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/admin" &&
+                        searchParams.get("view") === "name-change"
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/admin?view=role-verification"
+                      label="Role Verification Requests"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/admin" &&
+                        searchParams.get("view") === "role-verification"
+                      }
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {userRole === "HR" && (
-              <MobileNavLink
-                href="/hr"
-                label="People Management"
-                onClick={closeMenu}
-                icon={<SettingsIcon />}
-              />
+              <>
+                <MobileNavLink
+                  href="/hr"
+                  label="People Management"
+                  icon={<SettingsIcon />}
+                  active={false}
+                />
+
+                {isHROpen && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {/* Default: Employee Verification */}
+                    <MobileNavLink
+                      href="/hr?section=verification"
+                      label="Employee Verification"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/hr" &&
+                        (!searchParams.get("section") ||
+                          searchParams.get("section") === "verification")
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/hr?section=name-change"
+                      label="Name Change Requests"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/hr" &&
+                        searchParams.get("section") === "name-change"
+                      }
+                    />
+
+                    <MobileNavLink
+                      href="/hr?section=role-verification"
+                      label="Role Verification Requests"
+                      icon={<span className="text-xs">•</span>}
+                      active={
+                        pathname === "/hr" &&
+                        searchParams.get("section") === "role-verification"
+                      }
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </nav>
@@ -183,6 +326,7 @@ export default function MobileSidebar({
             label="Profile"
             onClick={closeMenu}
             icon={<ProfileIcon />}
+            active={pathname === "/profile"}
           />
 
           <MobileNavLink
@@ -190,6 +334,7 @@ export default function MobileSidebar({
             label={userRole === "EMPLOYEE" ? "Contact Us" : "Contact Support"}
             onClick={closeMenu}
             icon={<ContactIcon />}
+            active={pathname === "/contact"}
           />
 
           <div className="mt-2">
@@ -209,15 +354,26 @@ type MobileNavLinkProps = {
   href: string;
   label: string;
   icon: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
+  active?: boolean;
 };
 
-function MobileNavLink({ href, label, icon, onClick }: MobileNavLinkProps) {
+function MobileNavLink({
+  href,
+  label,
+  icon,
+  active,
+  onClick,
+}: MobileNavLinkProps) {
   return (
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${
+        active
+          ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      }`}
     >
       {icon}
       {label}
