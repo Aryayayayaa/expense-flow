@@ -120,7 +120,7 @@ export default function CategoryComparisonChart({
               }).format(Number(value))
             }
             stroke="#64748b"
-            tick={{ fill: "#64748b", fontSize: 12 }}
+            tick={{ fill: "#64748b", fontSize: 15 }}
           />
 
           <YAxis
