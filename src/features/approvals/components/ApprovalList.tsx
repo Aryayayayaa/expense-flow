@@ -170,7 +170,7 @@ export default function ApprovalList({
                   >
                     <td className="px-5 py-4">
                       <div>
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-slate-900 dark:text-white">
                           {expense.user?.name ?? "Unknown"}
                         </p>
 
@@ -181,7 +181,7 @@ export default function ApprovalList({
                     </td>
 
                     <td className="px-5 py-4">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-slate-900 dark:text-white">
                         {expense.title}
                       </p>
 
@@ -201,9 +201,11 @@ export default function ApprovalList({
                       </span>
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600 dark:text-white">
                       {expense.expenseDate
-                        ? new Date(expense.expenseDate).toLocaleDateString()
+                        ? new Intl.DateTimeFormat("en-GB").format(
+                            expense.expenseDate,
+                          )
                         : "—"}
                     </td>
 
@@ -591,7 +593,7 @@ function ReviewExpenseModal({
                   OCR Extracted Information
                 </h3>
 
-                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-700">
+                <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-sm text-slate-700 dark:text-white">
                   {expense.ocrRawText}
                 </div>
               </section>
